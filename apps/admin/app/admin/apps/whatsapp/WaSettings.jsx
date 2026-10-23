@@ -160,7 +160,7 @@ function InboxSettings({ canEdit }) {
         <div>
           <label className="flex items-center gap-2 text-sm font-medium">
             <Switch size="small" disabled={!canEdit || !data.aiAvailable} checked={draft.ai.enabled} onChange={(enabled) => setDraft({ ...draft, ai: { ...draft.ai, enabled } })} />
-            AI assistant answers new conversations
+            Siyaa AI answers new conversations
           </label>
           <p className="text-xs text-ink-muted mt-1 mb-2">
             It replies only within WhatsApp&apos;s 24-hour window, only from your store&apos;s facts (the customer&apos;s orders and your instructions), and hands the conversation to your team —

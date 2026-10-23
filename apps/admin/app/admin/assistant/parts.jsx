@@ -49,32 +49,63 @@ function Activity({ a, small }) {
   );
 }
 
+const initialsOf = (label) => {
+  const words = String(label || "").replace(/[^A-Za-z\s]/g, " ").trim().split(/\s+/).filter(Boolean);
+  return words.length ? (words[0][0] + (words[1]?.[0] || "")).toUpperCase() : null;
+};
+
 export function BuyerRow({ b, onAsk }) {
+  const s = STAGE[b.stage] || STAGE.browsing;
+  const known = Boolean(b.customer || b.contact);
+  const initials = known ? initialsOf(b.label) : null;
+  const sub = b.customer ? [b.customer.phone, b.customer.email].filter((v) => v && v !== b.label).join(" · ") || `${b.customer.orders || 0} order${b.customer.orders === 1 ? "" : "s"}` : b.contact ? `${b.contact.email || ""}${b.contact.email ? " · " : ""}gave details at checkout` : "Not signed in yet";
+  const likely = b.estimate?.purchaseLikelihood;
+  const who = b.customer?.name?.trim() || b.label;
   return (
-    <div className="rounded-xl border border-app-border bg-app-surface p-3">
-      <div className="flex items-start gap-3">
-        <Thumb src={b.topProduct?.image} />
+    <div className="rounded-2xl border border-[#EDE7DF] bg-white p-3.5 transition hover:shadow-[0_12px_30px_-24px_rgba(31,27,45,0.55)]">
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold" style={{ background: s.bg, color: s.color }} aria-hidden="true">
+          {initials || <Eye size={15} />}
+        </span>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[13.5px] font-semibold text-ink truncate">{b.label}</span>
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate text-[14px] font-semibold text-ink">{b.label}</span>
             <StagePill stage={b.stage} />
-            {b.estimate?.purchaseLikelihood != null && (
-              <Tooltip title="An estimate from their activity — not a fact">
-                <span className="text-[11.5px] text-ink-muted">~{b.estimate.purchaseLikelihood}% likely to buy</span>
-              </Tooltip>
-            )}
           </div>
-          {b.topProduct && <p className="m-0 mt-0.5 text-[12.5px] text-ink-muted truncate">Interested in {b.topProduct.title}</p>}
-          <Activity a={b.topProduct?.activity || b.activity} />
-          {b.next?.text && <p className="m-0 mt-2 text-[12.5px] text-ink">{b.next.text}</p>}
+          <p className="m-0 truncate text-[12px] text-ink-muted">{sub}</p>
         </div>
       </div>
+      {likely != null && (
+        <div className="mt-3">
+          <div className="flex items-baseline justify-between text-[11.5px]">
+            <Tooltip title="An estimate from their activity — not a fact">
+              <span className="text-ink-muted">Likely to buy · estimate</span>
+            </Tooltip>
+            <b className="tabular-nums text-ink">~{likely}%</b>
+          </div>
+          <div className="mt-1 h-1.5 rounded-full bg-[#F3EFE9]">
+            <div className="h-1.5 rounded-full bg-gradient-to-r from-[#FFB547] via-[#F47A3D] to-[#DE3F5B]" style={{ width: `${Math.max(4, likely)}%` }} />
+          </div>
+        </div>
+      )}
+      {b.topProduct && (
+        <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-[#FBFAF8] p-2">
+          <Thumb src={b.topProduct.image} />
+          <div className="min-w-0 flex-1">
+            <p className="m-0 text-[11px] text-ink-muted">Interested in</p>
+            <p className="m-0 truncate text-[13px] font-medium text-ink">{b.topProduct.title}</p>
+          </div>
+          {b.topProduct.price != null && <span className="shrink-0 text-[12.5px] tabular-nums text-ink">{inr(b.topProduct.price)}</span>}
+        </div>
+      )}
+      <Activity a={b.topProduct?.activity || b.activity} />
+      {b.next?.text && <p className="m-0 mt-2.5 rounded-xl bg-[#FFF7EE] px-3 py-2 text-[12.5px] leading-relaxed text-[#7A3412]">{b.next.text}</p>}
       {onAsk && b.customer && b.stage !== "purchased" && (
-        <div className="mt-2.5 flex flex-wrap gap-2 pl-[52px]">
-          <Button size="small" icon={<Gift size={13} aria-hidden="true" />} onClick={() => onAsk(`Create a personalized deal for ${b.customer.name}`)}>
-            Make a deal
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button size="small" icon={<Gift size={13} aria-hidden="true" />} onClick={() => onAsk(`Create a personalized deal for ${who}`)}>
+            Make a personal deal
           </Button>
-          <Button size="small" icon={<MessageCircle size={13} aria-hidden="true" />} onClick={() => onAsk(`Contact ${b.customer.name} on WhatsApp`)}>
+          <Button size="small" icon={<MessageCircle size={13} aria-hidden="true" />} onClick={() => onAsk(`Contact ${who} on WhatsApp`)}>
             WhatsApp
           </Button>
         </div>
@@ -115,12 +146,12 @@ export function ActionCard({ action: initial, compact = false, onChanged }) {
 
   const [label, color] = STATUS[a.status] || [a.status, "default"];
   return (
-    <div className="rounded-xl border border-app-border bg-app-surface p-3.5">
+    <div className="rounded-2xl border border-[#EDE7DF] bg-white p-3.5">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="m-0 text-[13.5px] font-semibold text-ink">{a.title}</p>
           <p className="m-0 mt-0.5 text-[12px] text-ink-muted">
-            {a.kind === "negotiation" ? "Negotiation" : a.kind === "offer" ? "Personal offer" : "Message"} · {a.createdBy === "autopilot" ? "Autopilot" : a.createdBy === "seller" ? "You" : "AI"} · {ago(a.createdAt)}
+            {a.kind === "negotiation" ? "Negotiation" : a.kind === "offer" ? "Personal offer" : "Message"} · {a.createdBy === "autopilot" ? "Siyaa on autopilot" : a.createdBy === "seller" ? "You" : "Siyaa"} · {ago(a.createdAt)}
           </p>
         </div>
         <Tag color={color} className="!m-0 shrink-0">{label}</Tag>
@@ -161,7 +192,7 @@ export function ActionCard({ action: initial, compact = false, onChanged }) {
             </div>
           ) : null}
           <Input.TextArea className="!mt-2.5 !text-[13px]" autoSize={{ minRows: 2, maxRows: 6 }} value={text} onChange={(e) => setText(e.target.value)} />
-          {p.percent > 0 && <p className="m-0 mt-1 text-[11px] text-ink-muted">{"{CODE}"} becomes a one-use code for this buyer and product.</p>}
+          {p.percent > 0 && <p className="m-0 mt-1 text-[11px] text-ink-muted">{"{CODE}"} becomes a one-use code that only this buyer can use, for this product.</p>}
         </>
       )}
       {a.status === "sent" && p.sentText && <p className="m-0 mt-2 rounded-lg bg-[#ECFDF3] px-2.5 py-2 text-[12.5px] text-[#05603A]">“{p.sentText}”</p>}
@@ -184,15 +215,15 @@ export function ProductsCard({ products }) {
   if (!products?.length) return null;
   const max = Math.max(...products.map((p) => p.interest), 1);
   return (
-    <div className="rounded-xl border border-app-border bg-app-surface p-3.5">
+    <div className="rounded-2xl border border-[#EDE7DF] bg-white p-3.5">
       {products.map((p) => (
         <div key={p.productId} className="py-1.5">
           <div className="flex justify-between gap-3 text-[13px]">
             <span className="truncate text-ink">{p.title}</span>
             <span className="shrink-0 text-ink-muted tabular-nums">{p.buyers} interested · {p.purchases} bought</span>
           </div>
-          <div className="mt-1 h-1.5 rounded-full bg-app-bg">
-            <div className="h-1.5 rounded-full bg-gradient-to-r from-[#0067B8] to-[#2B9FE6]" style={{ width: `${Math.max(4, (p.interest / max) * 100)}%` }} />
+          <div className="mt-1 h-1.5 rounded-full bg-[#F3EFE9]">
+            <div className="h-1.5 rounded-full bg-gradient-to-r from-[#FFB547] to-[#F47A3D]" style={{ width: `${Math.max(4, (p.interest / max) * 100)}%` }} />
           </div>
         </div>
       ))}

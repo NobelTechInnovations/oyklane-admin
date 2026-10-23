@@ -467,7 +467,7 @@ function CustomerPanel({ data, team, onUpdate, onNote }) {
           onChange={(v) => onUpdate({ handledBy: v })}
           options={[
             { value: "human", label: "Team" },
-            { value: "ai", label: "AI assistant" },
+            { value: "ai", label: "Siyaa AI" },
           ]}
         />
       </div>
@@ -530,7 +530,7 @@ function Bubble({ m }) {
   return (
     <div className={`flex ${out ? "justify-end" : "justify-start"}`}>
       <div className={`max-w-[78%] rounded-lg px-2.5 py-1.5 shadow-sm text-[13.5px] ${out ? "bg-[#d9fdd3]" : "bg-white"} ${m.status === "failed" ? "ring-1 ring-red-300" : ""}`}>
-        {m.source === "ai" && <p className="text-[10.5px] text-violet-600 font-semibold m-0">AI assistant</p>}
+        {m.source === "ai" && <p className="text-[10.5px] text-violet-600 font-semibold m-0">Siyaa AI</p>}
         {m.messageType === "template" && <p className="text-[10.5px] text-ink-muted m-0 flex items-center gap-1"><FileText size={10} aria-hidden="true" /> {m.templateName}</p>}
         {media && m.messageType === "image" && (
           // eslint-disable-next-line @next/next/no-img-element

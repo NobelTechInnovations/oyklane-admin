@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SiyaaMark from "@/components/SiyaaMark";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, Dropdown, Tooltip } from "antd";
@@ -40,7 +41,6 @@ import {
   Settings2,
   Trash2,
   MessageSquare,
-  Sparkles,
 } from "lucide-react";
 import { useApps, appHref, detailsHref } from "@/lib/apps";
 import { apiFetch } from "@/lib/api";
@@ -84,10 +84,10 @@ const NAV_ITEMS = [
   { key: "/admin", icon: <Home size={16} aria-hidden="true" />, label: <Link href="/admin">Home</Link> },
   {
     key: "/admin/assistant",
-    icon: <Sparkles size={16} aria-hidden="true" />,
+    icon: <SiyaaMark size={16} />,
     label: (
       <Link href="/admin/assistant" className="inline-flex items-center gap-2">
-        AI Assistant <span className="rounded-full bg-[#E5F1FB] px-1.5 py-px text-[10px] font-semibold text-[#0067B8]">PRO</span>
+        Ask Siyaa <span className="rounded-full bg-[#FFF3E6] px-1.5 py-px text-[10px] font-semibold text-[#C2410C]">PRO</span>
       </Link>
     ),
   },
