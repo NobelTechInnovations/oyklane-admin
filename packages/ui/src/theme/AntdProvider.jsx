@@ -1,0 +1,72 @@
+"use client";
+
+// AntD v5 officially targets React 16-18; this patches its internals for
+// React 19's changed rendering entry points. Side-effect import — must run
+// before any AntD component mounts.
+import "@ant-design/v5-patch-for-react-19";
+import { ConfigProvider, App as AntdApp, theme as antdTheme } from "antd";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
+import { tokens } from "./tokens";
+
+const c = tokens.colors;
+
+/** Wraps AntD's ConfigProvider so every component (Table, Button, Modal,
+ * Drawer, Tag...) picks up the Oyklane tokens instead of AntD defaults,
+ * and the compact algorithm gives the dense "admin dashboard" density this
+ * app calls for instead of AntD's default comfortable spacing.
+ * AntdRegistry puts AntD's styles into the server-rendered HTML — without
+ * it the first paint has none (menus, buttons unstyled) until the page's
+ * JavaScript loads. */
+export function AntdProvider({ children }) {
+  return (
+    <AntdRegistry>
+      <ConfigProvider
+        theme={{
+          algorithm: antdTheme.compactAlgorithm,
+          token: {
+            // Oyklane Blue for primary buttons, links and selections.
+            colorPrimary: c.accent,
+            colorLink: c.accent,
+            colorLinkHover: c.accentHover,
+            colorSuccess: c.success,
+            colorWarning: c.warning,
+            colorError: c.danger,
+            colorInfo: c.info,
+            colorBgLayout: c.appBg,
+            colorBorder: c.border,
+            colorBorderSecondary: "#EEEEF1",
+            colorText: c.textPrimary,
+            colorTextSecondary: c.textMuted,
+            controlOutline: "rgba(0, 103, 184, 0.18)",
+            colorPrimaryHover: c.accentHover,
+            borderRadius: tokens.radius.sm,
+            borderRadiusLG: tokens.radius.md,
+            fontFamily: tokens.fontFamily,
+            boxShadowTertiary: "0 1px 2px 0 rgba(17,17,20,0.04), 0 1px 3px 0 rgba(17,17,20,0.04)",
+          },
+          components: {
+            Table: { borderRadiusLG: tokens.radius.md, headerBg: "#FAFAFB", headerColor: c.textMuted },
+            Button: { borderRadius: tokens.radius.sm, fontWeight: 500, primaryShadow: "none", defaultShadow: "none" },
+            Card: { borderRadiusLG: tokens.radius.lg, headerFontSize: 14 },
+            Modal: { borderRadiusLG: tokens.radius.lg },
+            Input: { activeBorderColor: c.accent, hoverBorderColor: "#C9C9D2" },
+            Select: { activeBorderColor: c.accent, hoverBorderColor: "#C9C9D2" },
+            Menu: {
+              itemSelectedBg: c.accentSoft,
+              itemSelectedColor: c.accentHover,
+              itemHoverBg: "#F3F3F5",
+              itemBorderRadius: tokens.radius.sm,
+              itemHeight: 34,
+              itemMarginInline: 8,
+              subMenuItemBg: "transparent",
+              iconSize: 16,
+            },
+            Drawer: {},
+          },
+        }}
+      >
+        <AntdApp>{children}</AntdApp>
+      </ConfigProvider>
+    </AntdRegistry>
+  );
+}

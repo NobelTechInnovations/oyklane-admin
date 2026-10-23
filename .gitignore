@@ -1,0 +1,14 @@
+node_modules/
+.next/
+dist/
+build/
+.turbo/
+.env
+.env.local
+.env.prod
+*.log
+.DS_Store
+apps/**/.env
+packages/**/.env
+docker/mysql-data/
+docker/redis-data/

@@ -1,0 +1,13 @@
+{
+  "name": "oyklane-admin",
+  "private": true,
+  "engines": {
+    "node": ">=20 <=24"
+  },
+  "packageManager": "pnpm@10.34.5",
+  "scripts": {
+    "dev": "pnpm --filter @shopcycle/admin dev",
+    "build": "pnpm --filter @shopcycle/admin build",
+    "start": "pnpm --filter @shopcycle/admin start"
+  }
+}

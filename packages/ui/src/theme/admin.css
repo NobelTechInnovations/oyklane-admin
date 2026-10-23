@@ -1,0 +1,116 @@
+/*
+ * Shared admin polish for both consoles (admin + super-admin), imported from
+ * each app's root layout. Plain CSS on purpose: these style AntD's own
+ * markup, which Tailwind classes can't reach, and apply to every page
+ * without touching each one.
+ */
+
+html,
+body {
+  background: #f7f7f8;
+  color: #111114;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Brand focus ring — visible on every interactive element, never removed. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #0078d4;
+  outline-offset: 2px;
+}
+
+/* ── Cards: one elevation everywhere, matching the dashboard ── */
+.ant-card {
+  box-shadow: 0 1px 2px 0 rgba(17, 17, 20, 0.04), 0 1px 3px 0 rgba(17, 17, 20, 0.04);
+}
+.ant-card .ant-card-head {
+  min-height: 48px;
+  border-bottom-color: #eeeef1;
+}
+.ant-card .ant-card-head-title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ── Tables: quieter header, clear row hover, comfortable edges ── */
+.ant-table-wrapper .ant-table-thead > tr > th {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b6b76;
+  background: #fafafb;
+}
+.ant-table-wrapper .ant-table-thead > tr > th::before {
+  display: none; /* column divider ticks */
+}
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  border-bottom-color: #f0f0f3;
+}
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row:hover > td {
+  background: #fafafb;
+}
+.ant-table-wrapper .ant-table-tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+/* Tables inside a ListCard sit flush with the card edges. */
+.oy-list-card .ant-table {
+  border-radius: 0;
+}
+.oy-list-card .ant-table-wrapper .ant-table-thead > tr > th:first-child,
+.oy-list-card .ant-table-wrapper .ant-table-tbody > tr > td:first-child {
+  padding-left: 16px;
+}
+.oy-list-card .ant-table-wrapper .ant-table-thead > tr > th:last-child,
+.oy-list-card .ant-table-wrapper .ant-table-tbody > tr > td:last-child {
+  padding-right: 16px;
+}
+.oy-list-card .ant-table-wrapper .ant-table-pagination.ant-pagination {
+  margin: 0;
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f3;
+}
+.oy-list-card .ant-table-container,
+.oy-list-card .ant-table-container table > thead > tr:first-child > *:first-child,
+.oy-list-card .ant-table-container table > thead > tr:first-child > *:last-child {
+  border-radius: 0 !important;
+}
+
+/* Rows that open something show it. */
+.oy-row-link {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Sign-in pages (AuthShell): roomier fields and buttons. */
+.oy-auth .ant-form-item-label > label { font-weight: 500; width: 100%; }
+.oy-auth .ant-form-item-label > label > span { width: 100%; }
+.oy-auth .ant-input-lg, .oy-auth .ant-input-affix-wrapper-lg { min-height: 48px; border-radius: 10px; }
+.oy-auth .ant-btn-lg, .oy-auth .ant-btn.\!h-11 { height: 48px !important; border-radius: 10px; font-weight: 600; }
+.oy-auth-social { display: flex; height: 48px; width: 100%; align-items: center; justify-content: center; gap: 10px; border-radius: 10px; border: 1px solid #E1E5EA; background: #fff; color: #111827; font-size: 15px; font-weight: 500; text-decoration: none; transition: background .15s ease, border-color .15s ease; }
+.oy-auth-social:hover { background: #F6F7F9; border-color: #CBD2DA; color: #111827; }
+.oy-auth-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; color: #6B7280; font-size: 13px; }
+.oy-auth-divider::before, .oy-auth-divider::after { content: ""; flex: 1; height: 1px; background: #E5E7EB; }
+
+/* Checkboxes and radios: the theme's hairline border was nearly invisible on white. */
+.ant-checkbox:not(.ant-checkbox-checked) .ant-checkbox-inner,
+.ant-radio:not(.ant-radio-checked) .ant-radio-inner { border-color: #9A9AA6; border-width: 1.5px; }
+.ant-checkbox-wrapper:hover .ant-checkbox:not(.ant-checkbox-checked) .ant-checkbox-inner { border-color: var(--ant-color-primary, #0078d4); }
+/* A consent row (autopay): boxed so it's clearly something to tick. */
+.oy-consent { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid #D9DEE5; border-radius: 10px; background: #F8FAFC; }
+.oy-consent .ant-checkbox { align-self: flex-start; margin-top: 2px; }
+.oy-consent .ant-checkbox-inner { width: 18px; height: 18px; }
+.oy-consent.is-checked { border-color: var(--ant-color-primary, #0078d4); background: #F0F7FD; }
