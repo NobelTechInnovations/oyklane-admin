@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { App, Button, Drawer, Input, Segmented, Skeleton, Tooltip } from "antd";
+import { App, Button, Drawer, Input, Skeleton, Tabs, Tooltip } from "antd";
 import { Plus, ArrowUp, Trash2, PanelRight, Users, ShoppingCart, Gift, MessageCircle, Zap, BadgePercent, Crown, CreditCard, Eye, ClipboardCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import SiyaaMark from "@/components/SiyaaMark";
-import { ActionCard, AutopilotPanel, BuyerRow, EmptyList, ProductsCard, RulesPanel, SettingsCard, STAGE } from "./parts";
+import { ActionCard, AutopilotPanel, BuyerRow, EmptyList, MessagesPanel, ProductsCard, RulesPanel, SettingsCard, STAGE } from "./parts";
 
 const PROMPTS = [
   [Users, "Which buyers are most interested in my products?", "Ranked by what they did this month"],
@@ -78,15 +78,17 @@ function Insights({ data, onAsk, reload, setSettings, tab, setTab }) {
           <h2 className="m-0 text-[15px] font-semibold text-ink">Live insights</h2>
           <span className="text-[11.5px] text-ink-muted">Last 30 days</span>
         </div>
-        <Segmented
-          block
-          value={tab}
+        <Tabs
+          size="small"
+          activeKey={tab}
           onChange={setTab}
-          options={[
-            { value: "buyers", label: "Buyers" },
-            { value: "deals", label: `Deals${data.pending.length ? ` · ${data.pending.length}` : ""}` },
-            { value: "rules", label: "Rules" },
-            { value: "autopilot", label: "Autopilot" },
+          className="siyaa-tabs -mb-3"
+          items={[
+            { key: "buyers", label: "Buyers" },
+            { key: "deals", label: `Deals${data.pending.length ? ` · ${data.pending.length}` : ""}` },
+            { key: "messages", label: "Messages" },
+            { key: "rules", label: "Rules" },
+            { key: "autopilot", label: "Autopilot" },
           ]}
         />
       </div>
@@ -117,6 +119,7 @@ function Insights({ data, onAsk, reload, setSettings, tab, setTab }) {
             )}
           </div>
         )}
+        {tab === "messages" && <MessagesPanel />}
         {tab === "rules" && <RulesPanel />}
         {tab === "autopilot" && <AutopilotPanel settings={data.settings} usage={data.usage} platform={data.platform} onSaved={setSettings} />}
       </div>

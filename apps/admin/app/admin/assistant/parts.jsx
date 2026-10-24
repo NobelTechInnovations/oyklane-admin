@@ -470,6 +470,77 @@ export function AutopilotPanel({ settings, usage, platform, onSaved }) {
   );
 }
 
+const MSG_STEPS = [
+  ["sent", "Sent"],
+  ["delivered", "Delivered"],
+  ["read", "Read"],
+];
+const timeOf = (d) => (d ? new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "");
+
+/** What Siyaa sent on WhatsApp, how far it got, what the buyer said back,
+ * and whether the code became an order. */
+export function MessagesPanel() {
+  const [rows, setRows] = useState(null);
+  useEffect(() => {
+    apiFetch("/api/assistant/messages")
+      .then((d) => setRows(d.messages))
+      .catch(() => setRows([]));
+  }, []);
+  if (!rows) return <p className="m-0 text-[12.5px] text-ink-muted">Loading messages…</p>;
+  if (!rows.length) return <EmptyList text="When Siyaa sends an offer on WhatsApp, it shows here — delivered, read, replies and orders." />;
+  return (
+    <div className="flex flex-col gap-2.5">
+      <p className="m-0 text-[12px] text-ink-muted">Every WhatsApp message Siyaa sent, newest first.</p>
+      {rows.map((m) => {
+        const reached = m.status === "read" ? 2 : m.status === "delivered" ? 1 : m.status === "failed" ? -1 : 0;
+        return (
+          <div key={m.id} className="rounded-2xl border border-[#EDE7DF] bg-white p-3.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="m-0 truncate text-[13.5px] font-semibold text-ink">{m.buyer}</p>
+                <p className="m-0 truncate text-[11.5px] text-ink-muted">
+                  {m.product ? `${m.product} · ` : ""}
+                  {m.by === "autopilot" ? "Sent on autopilot" : "Approved by you"} · {timeOf(m.sentAt)}
+                </p>
+              </div>
+              {m.order ? (
+                <Tag color="green" className="!m-0 shrink-0">
+                  Ordered #{m.order.number} · {inr(m.order.total)}
+                </Tag>
+              ) : m.replies.length ? (
+                <Tag color="blue" className="!m-0 shrink-0">Replied</Tag>
+              ) : null}
+            </div>
+            <p className="m-0 mt-2.5 whitespace-pre-wrap rounded-xl rounded-tl-sm bg-[#E7F8EE] px-3 py-2 text-[12.5px] leading-relaxed text-[#0B3B24]">{m.text}</p>
+            {m.replies.map((r, i) => (
+              <p key={i} className="m-0 mt-1.5 ml-6 whitespace-pre-wrap rounded-xl rounded-tr-sm bg-[#F3EFE9] px-3 py-2 text-[12.5px] leading-relaxed text-ink">
+                {r.body}
+                <span className="mt-0.5 block text-[10.5px] text-ink-muted">{timeOf(r.at)}</span>
+              </p>
+            ))}
+            {reached < 0 ? (
+              <p className="m-0 mt-2 text-[12px] text-[#B42318]">Not delivered{m.error ? `: ${m.error}` : ""}</p>
+            ) : (
+              <div className="mt-2.5 flex items-center gap-1.5 text-[11px]" aria-label={`Status: ${MSG_STEPS[reached][1]}`}>
+                {MSG_STEPS.map(([key, label], i) => (
+                  <span key={key} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${i <= reached ? "bg-[#ECFDF3] text-[#067647]" : "bg-[#F3EFE9] text-ink-muted"}`}>
+                    {i <= reached ? <Check size={11} aria-hidden="true" /> : null}
+                    {label}
+                  </span>
+                ))}
+                {m.code && <span className="ml-auto font-mono text-[11px] text-ink-muted">{m.code}</span>}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <a href="/admin/apps/whatsapp?tab=inbox" className="text-center text-[12.5px] text-[#C2410C]">
+        Open WhatsApp inbox
+      </a>
+    </div>
+  );
+}
+
 export function EmptyList({ text }) {
   return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span className="text-[12.5px] text-ink-muted">{text}</span>} />;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Switch, Button, Drawer, Input, Alert, App, Tag } from "antd";
+import { Card, Switch, Button, Drawer, Input, Alert, App, Tag, Radio } from "antd";
 import { Banknote, ExternalLink, ShieldCheck, Trash2 } from "lucide-react";
 import { StatusBadge, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
@@ -149,6 +149,18 @@ export function PaymentSettings({ initial, currency, canEdit }) {
     }
   }
 
+  async function makePrimary(key) {
+    setBusy("primary");
+    try {
+      setData(await apiFetch("/api/payments/primary", { method: "PUT", body: { provider: key } }));
+      message.success("Primary gateway saved");
+    } catch (err) {
+      message.error(err.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   function disconnect(p) {
     confirmDialog({
       title: `Disconnect ${p.name}?`,
@@ -160,6 +172,7 @@ export function PaymentSettings({ initial, currency, canEdit }) {
   }
 
   const online = data.providers.filter((p) => p.enabled).length;
+  const live = data.providers.filter((p) => p.connected && p.enabled);
   const nothing = !data.cod.enabled && online === 0;
 
   return (
@@ -201,6 +214,22 @@ export function PaymentSettings({ initial, currency, canEdit }) {
           })}
         </ul>
       </Card>
+
+      {live.length >= 2 && (
+        <Card size="small" title="Primary gateway">
+          <p className="m-0 mb-3 text-[13px] text-ink-muted">
+            Checkout uses the primary first. If it can&apos;t start a payment, the order moves to the other gateway automatically — the customer doesn&apos;t see a thing.
+          </p>
+          <Radio.Group value={data.primary} disabled={!canEdit || busy === "primary"} onChange={(e) => makePrimary(e.target.value)} className="flex flex-col gap-2">
+            {live.map((p) => (
+              <Radio key={p.key} value={p.key}>
+                <span className="text-sm text-ink">{p.name}</span>
+                <span className="ml-2 text-xs text-ink-muted">{data.primary === p.key ? "Primary" : "Backup"}</span>
+              </Radio>
+            ))}
+          </Radio.Group>
+        </Card>
+      )}
 
       <Card size="small" title="Manual payments">
         <div className="flex items-center gap-3">
