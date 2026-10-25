@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Form, Input, Card, Alert, App } from "antd";
+import { Form, Input, Card, Alert, App, Switch } from "antd";
 import { PageHeader, SaveBar } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { ImageUploadField } from "@/components/ImageUploadField";
@@ -117,6 +117,37 @@ export function PreferencesForm({ store, seo, canEdit }) {
 
         {canEdit && <SaveBar dirty={dirty} saving={saving} onDiscard={() => (form.resetFields(), setDirty(false))} />}
       </Form>
+      <CartPreferences store={store} canEdit={canEdit} />
     </div>
+  );
+}
+
+/** Cart drawer extras — saved as soon as they're switched. */
+function CartPreferences({ store, canEdit }) {
+  const { message } = App.useApp();
+  const [viewCart, setViewCart] = useState(Boolean(store.settings?.cart?.viewCartButton));
+  const [busy, setBusy] = useState(false);
+  async function toggle(on) {
+    setBusy(true);
+    try {
+      await apiFetch("/api/store", { method: "PATCH", body: { settings: { cart: { viewCartButton: on } } } });
+      setViewCart(on);
+      message.success(on ? "“View cart” button shown in the cart" : "“View cart” button hidden");
+    } catch (err) {
+      message.error(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <Card size="small" title="Cart" className="mt-6 lg:max-w-[66%]">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="m-0 text-sm text-ink">Show a “View cart” button in the cart drawer</p>
+          <p className="m-0 mt-0.5 text-xs text-ink-muted">Off: shoppers go straight from the cart to checkout.</p>
+        </div>
+        <Switch checked={viewCart} loading={busy} disabled={!canEdit} onChange={toggle} aria-label="Show View cart button" />
+      </div>
+    </Card>
   );
 }
