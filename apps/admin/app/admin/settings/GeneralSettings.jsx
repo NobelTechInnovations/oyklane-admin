@@ -5,6 +5,7 @@ import { Form, Input, Select, Button, Card, App } from "antd";
 import { apiFetch } from "@/lib/api";
 import { getTimezoneOptions } from "@/lib/timezones";
 import { SettingsSectionHeader } from "./SettingsNav";
+import { StoreAccess } from "./StoreAccess";
 
 export function GeneralSettings({ store }) {
   const { message } = App.useApp();
@@ -91,6 +92,7 @@ export function GeneralSettings({ store }) {
           </div>
         </Form>
       </Card>
+      <StoreAccess />
     </div>
   );
 }
