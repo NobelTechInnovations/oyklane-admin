@@ -77,7 +77,7 @@ function SettingsField({ field }) {
   if (field.type === "select") {
     const options = (field.options || []).map(optionOf);
     return (
-      <Form.Item name={field.id} label={field.label} initialValue={options[0]?.value} rules={[{ required: true, message: "Required" }]}>
+      <Form.Item name={field.id} label={field.label} extra={field.help} initialValue={options[0]?.value} rules={[{ required: true, message: "Required" }]}>
         <Select options={options} />
       </Form.Item>
     );
@@ -89,9 +89,10 @@ function SettingsField({ field }) {
       </Form.Item>
     );
   }
+  // `optional`: may be left empty (the placeholder is what's used then).
   return (
-    <Form.Item name={field.id} label={field.label} rules={[{ required: true, message: "Required" }]}>
-      <Input placeholder={field.placeholder} />
+    <Form.Item name={field.id} label={field.label} extra={field.help} rules={field.optional ? [] : [{ required: true, message: "Required" }]}>
+      <Input placeholder={field.placeholder} maxLength={field.maxLength} />
     </Form.Item>
   );
 }

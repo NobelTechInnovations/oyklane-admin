@@ -40,6 +40,7 @@ export function GeneralSettings({ store }) {
             timezone: store.timezone,
             supportEmail: store.supportEmail,
             supportPhone: store.supportPhone,
+            settings: { storeAddress: { address1: "", city: "", province: "", zip: "", ...(typeof store.settings?.storeAddress === "object" ? store.settings.storeAddress : {}) } },
           }}
           onFinish={handleSubmit}
           onValuesChange={() => setDirty(true)}
@@ -74,6 +75,22 @@ export function GeneralSettings({ store }) {
             </Form.Item>
             <Form.Item name="supportPhone" label="Support phone">
               <Input type="tel" autoComplete="off" inputMode="tel" placeholder="+91 98765 43210" />
+            </Form.Item>
+          </div>
+          <p className="m-0 mb-2 text-sm font-medium text-ink">Store address</p>
+          <p className="m-0 mb-3 text-[12.5px] text-ink-muted">Where customers pick up orders and rentals (store pickup, Rentals app).</p>
+          <Form.Item name={["settings", "storeAddress", "address1"]} label="Shop no., building, street, area">
+            <Input maxLength={200} placeholder="Balaji Tower, G-12 & 13, Nagarpalika Road" />
+          </Form.Item>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
+            <Form.Item name={["settings", "storeAddress", "city"]} label="City">
+              <Input maxLength={80} placeholder="Phulera" />
+            </Form.Item>
+            <Form.Item name={["settings", "storeAddress", "province"]} label="State">
+              <Input maxLength={80} placeholder="Rajasthan" />
+            </Form.Item>
+            <Form.Item name={["settings", "storeAddress", "zip"]} label="PIN code" rules={[{ pattern: /^\d{6}$/, message: "6 digits" }]}>
+              <Input maxLength={6} inputMode="numeric" placeholder="303338" />
             </Form.Item>
           </div>
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-app-border mt-2 -mx-6 px-6 -mb-6 pb-4 pt-4">

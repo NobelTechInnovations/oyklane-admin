@@ -35,6 +35,9 @@ const checkoutSchema = z.object({
   // Proof the shopper confirmed this mobile number with a code in the
   // One-Click popup (a signed, short-lived ticket; the API checks it).
   phoneTicket: z.string().max(4000).optional(),
+  // Store pickup (Settings ▸ Shipping): no delivery charge, and the API
+  // fills the address in from the store's own.
+  fulfillment: z.enum(["delivery", "pickup"]).default("delivery"),
 });
 
 const verifyRazorpayPaymentSchema = z.object({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { App, Button, Card, Form, Input, InputNumber, Radio, Skeleton } from "antd";
+import { App, Button, Card, Form, Input, InputNumber, Radio, Skeleton, Switch } from "antd";
 import { apiFetch } from "@/lib/api";
 
 /** How bookings work in this store: pay at checkout or request first,
@@ -78,16 +78,45 @@ export function RentalSettings({ settings, onSaved }) {
             name="pickupAddress"
             label="Your pickup & drop-off address"
             className="mb-0"
-            extra={needsAddress ? "Shown on the product page for customers who come to you." : "Only needed when customers can come to you."}
+            extra={needsAddress ? "Shown on the product page for customers who come to you. Leave empty to use your store address (Settings ▸ General)." : "Only needed when customers can come to you."}
           >
             <Input.TextArea rows={2} maxLength={400} placeholder="Shop 4, MG Road, Pune 411001 · 11am–8pm" />
           </Form.Item>
         </Card>
 
+        <Card size="small" title="What the customer sees">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            <Form.Item name="startPrompt" label="Calendar, first step" extra="Shown until they pick a day.">
+              <Input maxLength={80} placeholder="Select your event date" />
+            </Form.Item>
+            <Form.Item name="endPrompt" label="Calendar, second step" extra="Shown after the first day is picked.">
+              <Input maxLength={80} placeholder="Select your return date" />
+            </Form.Item>
+            <Form.Item name={["labels", "delivery"]} label="“You deliver it” button">
+              <Input maxLength={60} placeholder="Delivered to your address" />
+            </Form.Item>
+            <Form.Item name={["labels", "store_pickup"]} label="“They pick it up” button">
+              <Input maxLength={60} placeholder="Pick up from store" />
+            </Form.Item>
+            <Form.Item name={["labels", "collect"]} label="“You collect it” button">
+              <Input maxLength={60} placeholder="Pickup from your address" />
+            </Form.Item>
+            <Form.Item name={["labels", "drop_off"]} label="“They drop it back” button">
+              <Input maxLength={60} placeholder="Return to store" />
+            </Form.Item>
+          </div>
+          <Form.Item name="depositNote" label="Deposit note" className="mb-0" extra="Shown on the product page. {amount} becomes the product's deposit.">
+            <Input.TextArea rows={2} maxLength={400} />
+          </Form.Item>
+        </Card>
+
         <Card size="small" title="Money">
+          <Form.Item name="chargeReturnDay" label="Charge for the return day" valuePropName="checked" extra="Off: an event on the 24th returned on the 26th is charged for 2 days (24th and 25th).">
+            <Switch />
+          </Form.Item>
           <Form.Item name="depositCollection" label="Collect the deposit">
             <Radio.Group className="flex flex-col gap-1.5">
-              <Radio value="on_delivery">On delivery or pickup, in person</Radio>
+              <Radio value="on_delivery">At pickup or delivery, in person</Radio>
               <Radio value="checkout">At checkout, with the rent</Radio>
             </Radio.Group>
           </Form.Item>
