@@ -2,20 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Card, Switch, Input, Button, App, Alert } from "antd";
+import { Card, Switch, Input, Button, App, Alert, Select } from "antd";
 import { MapPin } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
 /** Store pickup: customers collect orders from your store — no delivery
- * charge. Uses the store address (Settings ▸ General). */
+ * charge. Offered at checkout only when the delivery address is in the
+ * pickup zone: your store's PIN code plus the ones you add here. */
 export function StorePickup() {
   const { message } = App.useApp();
   const [store, setStore] = useState(null);
   const [note, setNote] = useState("");
+  const [pins, setPins] = useState([]);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     apiFetch("/api/store")
-      .then((d) => (setStore(d.store), setNote(d.store?.settings?.pickup?.note || "")))
+      .then((d) => (setStore(d.store), setNote(d.store?.settings?.pickup?.note || ""), setPins(d.store?.settings?.pickup?.pincodes || [])))
       .catch(() => {});
   }, []);
   if (!store) return null;
@@ -45,7 +47,7 @@ export function StorePickup() {
           </span>
           <div>
             <p className="m-0 text-sm font-semibold text-ink">Store pickup</p>
-            <p className="m-0 mt-0.5 text-[13px] text-ink-muted">Customers can choose to collect their order from your store, with no delivery charge.</p>
+            <p className="m-0 mt-0.5 text-[13px] text-ink-muted">Customers whose delivery address is in your pickup zone can collect their order from your store, with no delivery charge.</p>
           </div>
         </div>
         <Switch checked={Boolean(pickup.enabled)} loading={busy} disabled={!hasAddress} onChange={(on) => save({ enabled: on }, on ? "Store pickup is on" : "Store pickup is off")} aria-label="Store pickup" />
@@ -57,6 +59,25 @@ export function StorePickup() {
           <p className="m-0 text-[13px] text-ink">
             Pickup address: <span className="text-ink-muted">{[a.address1, a.city, `${a.province} ${a.zip}`].join(", ")}</span>
           </p>
+          <div className="mt-4">
+            <span className="mb-1 block text-[13px] text-ink">Pickup zone — PIN codes</span>
+            <div className="flex flex-wrap items-start gap-2">
+              <Select
+                mode="tags"
+                className="min-w-[240px] flex-1"
+                value={pins}
+                onChange={(v) => setPins([...new Set(v.map((p) => String(p).replace(/\D/g, "")).filter((p) => /^\d{6}$/.test(p)))])}
+                tokenSeparators={[",", " "]}
+                placeholder="Type PIN codes, e.g. 303338, 303339"
+                open={false}
+                aria-label="Pickup zone PIN codes"
+              />
+              <Button disabled={busy || JSON.stringify(pins) === JSON.stringify(pickup.pincodes || [])} onClick={() => save({ pincodes: pins }, "Pickup zone saved")}>
+                Save zone
+              </Button>
+            </div>
+            <p className="m-0 mt-1 text-[12px] text-ink-muted">Your store&apos;s PIN code ({a.zip}) is always included. Only these addresses see “Pick up from store” at checkout.</p>
+          </div>
           <div className="mt-3 flex flex-wrap items-end gap-2">
             <label className="min-w-[240px] flex-1">
               <span className="mb-1 block text-[13px] text-ink">Note for customers (optional)</span>

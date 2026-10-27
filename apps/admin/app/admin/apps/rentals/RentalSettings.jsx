@@ -78,7 +78,7 @@ export function RentalSettings({ settings, onSaved }) {
             name="pickupAddress"
             label="Your pickup & drop-off address"
             className="mb-0"
-            extra={needsAddress ? "Shown on the product page for customers who come to you. Leave empty to use your store address (Settings ▸ General)." : "Only needed when customers can come to you."}
+            extra={needsAddress ? "Shown on the product page for customers who come to you." : "Only needed when customers can come to you."}
           >
             <Input.TextArea rows={2} maxLength={400} placeholder="Shop 4, MG Road, Pune 411001 · 11am–8pm" />
           </Form.Item>
