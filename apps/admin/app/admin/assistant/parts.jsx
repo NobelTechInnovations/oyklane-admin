@@ -475,6 +475,16 @@ const MSG_STEPS = [
   ["delivered", "Delivered"],
   ["read", "Read"],
 ];
+/** WhatsApp's failure text, made readable: known Meta errors get a plain
+ * fix, and any link it carries becomes a button instead of a long URL. */
+function deliveryProblem(error) {
+  const raw = String(error || "");
+  const link = (raw.match(/https:\/\/business\.facebook\.com\/\S+/) || [])[0]?.replace(/[.,)]+$/, "") || null;
+  if (/payment method|eligibility payment/i.test(raw)) return { text: "Add a payment method to your WhatsApp Business account in Meta, then messages will go out.", link };
+  if (/re-?engagement|24 hours|outside.*window/i.test(raw)) return { text: "The buyer hasn't messaged you in the last 24 hours, so WhatsApp only allows an approved template.", link };
+  return { text: raw.replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").replace(/\s*Visit\s*to resolve this issue\.?/i, "").trim(), link };
+}
+
 const timeOf = (d) => (d ? new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "");
 
 /** What Siyaa sent on WhatsApp, how far it got, what the buyer said back,
@@ -519,7 +529,19 @@ export function MessagesPanel() {
               </p>
             ))}
             {reached < 0 ? (
-              <p className="m-0 mt-2 text-[12px] text-[#B42318]">Not delivered{m.error ? `: ${m.error}` : ""}</p>
+              (() => {
+                const p = deliveryProblem(m.error);
+                return (
+                  <p className="m-0 mt-2 text-[12px] leading-relaxed text-[#B42318] [overflow-wrap:anywhere]">
+                    Not delivered{p.text ? `: ${p.text}` : ""}
+                    {p.link ? (
+                      <a href={p.link} target="_blank" rel="noopener noreferrer" className="ml-1 font-medium underline">
+                        Fix in Meta
+                      </a>
+                    ) : null}
+                  </p>
+                );
+              })()
             ) : (
               <div className="mt-2.5 flex items-center gap-1.5 text-[11px]" aria-label={`Status: ${MSG_STEPS[reached][1]}`}>
                 {MSG_STEPS.map(([key, label], i) => (

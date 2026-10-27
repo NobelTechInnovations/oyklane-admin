@@ -9,6 +9,12 @@
  * un-overridden here.
  */
 module.exports = {
+  // AntD injects its CSS after ours, and its reset (`margin: 0` on every
+  // component root) has the same specificity as a utility — so `mt-6` on a
+  // <Card> silently lost and cards stacked with no gap. Scoping utilities
+  // under `html` gives them one extra element of specificity, so a class
+  // written on a component always wins.
+  important: "html",
   theme: {
     extend: {
       colors: {
