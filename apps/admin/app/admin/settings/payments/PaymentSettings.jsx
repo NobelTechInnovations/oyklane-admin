@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, Switch, Button, Drawer, Input, Alert, App, Tag, Radio } from "antd";
 import { Banknote, ExternalLink, ShieldCheck, Trash2 } from "lucide-react";
 import { StatusBadge, useConfirmDialog } from "@shopcycle/ui";
@@ -129,6 +129,31 @@ export function PaymentSettings({ initial, currency, canEdit }) {
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(null);
 
+  // Back from Razorpay's consent page (razorpay-oauth.js callback).
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const r = q.get("razorpay");
+    if (!r) return;
+    if (r === "connected") {
+      message.success("Razorpay connected");
+      track("gateway_connected", { gateway: "razorpay", oauth: true });
+      apiFetch("/api/payments").then(setData).catch(() => {});
+    } else message.error(q.get("message") || "Razorpay wasn't connected.");
+    window.history.replaceState(null, "", window.location.pathname);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** "Connect with Razorpay": off to Razorpay to approve, then back here. */
+  async function connectRazorpay() {
+    setBusy("razorpay");
+    try {
+      const { url } = await apiFetch("/api/payments/razorpay/connect");
+      window.location.href = url;
+    } catch (err) {
+      message.error(err.message);
+      setBusy(null);
+    }
+  }
+
   async function toggle(p, enabled) {
     setBusy(p.key);
     try {
@@ -194,21 +219,39 @@ export function PaymentSettings({ initial, currency, canEdit }) {
                     {p.connected && <StatusBadge status={p.enabled ? "active" : "disabled"} label={p.enabled ? "On" : "Off"} />}
                     {p.connected && p.testMode && <Tag color="gold" className="!m-0">Test mode</Tag>}
                   </p>
-                  <p className="m-0 text-xs text-ink-muted">{unsupported ? `Not available for ${currency} stores.` : p.blurb}</p>
+                  <p className="m-0 text-xs text-ink-muted">
+                    {unsupported ? `Not available for ${currency} stores.` : p.oauth?.connected ? `Connected with Razorpay${p.oauth.accountId ? ` · ${p.oauth.accountId}` : ""}` : p.blurb}
+                  </p>
+                  {p.key === "razorpay" && p.connected && p.oauth?.available && !p.oauth.connected && (
+                    <p className="m-0 mt-1 text-xs text-ink">
+                      Connected with API keys.{" "}
+                      <button type="button" className="bg-transparent border-0 p-0 cursor-pointer text-accent underline" onClick={connectRazorpay} disabled={!canEdit}>
+                        Switch to Connect with Razorpay
+                      </button>
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {p.connected ? (
                     <>
                       <Switch size="small" checked={p.enabled} loading={busy === p.key} disabled={!canEdit} onChange={(v) => toggle(p, v)} aria-label={`Accept ${p.name}`} />
-                      <Button size="small" onClick={() => setEditing(p)}>
-                        Manage
-                      </Button>
+                      {!p.oauth?.connected && !(p.key === "razorpay" && p.oauth?.available) && (
+                        <Button size="small" onClick={() => setEditing(p)}>
+                          Manage
+                        </Button>
+                      )}
                       {canEdit && <Button size="small" type="text" danger icon={<Trash2 size={13} aria-hidden="true" />} aria-label={`Disconnect ${p.name}`} onClick={() => disconnect(p)} />}
                     </>
                   ) : (
-                    <Button size="small" type="primary" disabled={!canEdit || unsupported} onClick={() => setEditing(p)}>
-                      Connect
-                    </Button>
+                    p.key === "razorpay" && p.oauth?.available ? (
+                      <Button size="small" type="primary" disabled={!canEdit || unsupported} loading={busy === "razorpay"} onClick={connectRazorpay}>
+                        Connect with Razorpay
+                      </Button>
+                    ) : (
+                      <Button size="small" type="primary" disabled={!canEdit || unsupported} onClick={() => setEditing(p)}>
+                        Connect
+                      </Button>
+                    )
                   )}
                 </div>
               </li>
