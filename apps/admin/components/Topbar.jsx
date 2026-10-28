@@ -17,6 +17,7 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { track } from "@/lib/track";
 import { storefrontUrlFor, initials } from "@/lib/storefront";
 import { CommandPalette } from "./CommandPalette";
 import { NewOrderAlerts } from "./NewOrderAlerts";
@@ -85,7 +86,9 @@ export function Topbar({ user, store, onOpenNav }) {
   async function handleCreateStore(values) {
     try {
       await apiFetch("/api/auth/stores", { method: "POST", body: { storeName: values.storeName } });
-      window.location.href = "/admin";
+      track("store_created");
+      // A moment for the analytics beacon before the full page load.
+      setTimeout(() => (window.location.href = "/admin"), 250);
     } catch (err) {
       message.error(err.message);
     }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Form, Input, Button, Alert } from "antd";
 import { AuthShell } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { track } from "@/lib/track";
 import { GoogleSignIn } from "@/components/GoogleSignIn";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://oyklane.com";
@@ -38,8 +39,10 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     try {
-      if (google) await apiFetch("/api/auth/google/register", { method: "POST", body: { ticket: google.ticket, storeName: values.storeName } });
+      if (google) await apiFetch("/api/auth/google/register", { method: "POST", body: { ticket: google.ticket, storeName: values.storeName, whatsapp: values.whatsapp } });
       else await apiFetch("/api/auth/register", { method: "POST", body: values });
+      track("sign_up", { method: google ? "google" : "email" });
+      track("store_created");
       router.push("/welcome");
       router.refresh();
     } catch (err) {
@@ -105,6 +108,14 @@ export default function RegisterPage() {
             </Form.Item>
           </>
         )}
+        <Form.Item
+          label="WhatsApp number (optional)"
+          name="whatsapp"
+          extra="Only so our team can help if you get stuck setting up."
+          rules={[{ pattern: /^[+\d][\d\s()-]{7,22}$/, message: "Enter a valid WhatsApp number" }]}
+        >
+          <Input autoComplete="tel" inputMode="tel" placeholder="98765 43210" />
+        </Form.Item>
         <Button type="primary" htmlType="submit" block loading={loading} size="large" className="!mt-2">
           Create store
         </Button>

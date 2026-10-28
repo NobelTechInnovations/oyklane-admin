@@ -24,6 +24,7 @@ import {
 import { StatusBadge, EmptyState } from "@shopcycle/ui";
 import { formatCurrency } from "@shopcycle/utils";
 import { apiFetch } from "@/lib/api";
+import { trackOnce } from "@/lib/track";
 import { storefrontUrlFor, storefrontLabelFor } from "@/lib/storefront";
 import { VerifyEmailBanner } from "@/components/VerifyEmailBanner";
 import { AreaChart, BarList, Delta, formatValue } from "@/components/charts";
@@ -316,8 +317,13 @@ function SetupGuide({ setup }) {
 
 export function DashboardView({ data, user }) {
   const router = useRouter();
-  const { todo, recentOrders, storeStatus, setup, store, greetingName } = data;
+  const { todo, recentOrders, storeStatus, setup, store, greetingName, firstOrder } = data;
   const [range, setRange] = useState("7d");
+  // The store's first order, reported once — only while it's recent, so
+  // stores that sold before tracking existed don't count as new.
+  useEffect(() => {
+    if (firstOrder && Date.now() - new Date(firstOrder.createdAt).getTime() < 30 * 86400e3) trackOnce("first_order", firstOrder.id);
+  }, [firstOrder]);
   // The greeting depends on the viewer's own clock — computed after mount
   // so server-rendered HTML (server's timezone) never disagrees with the
   // client and trips a hydration mismatch.

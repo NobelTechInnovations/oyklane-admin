@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import { AntdProvider } from "@shopcycle/ui";
 import "@shopcycle/ui/src/theme/admin.css";
 import "./globals.css";
+import { Analytics } from "@/components/Analytics";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
@@ -15,6 +16,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={inter.variable}>
       <body className="font-sans">
         <AntdProvider>{children}</AntdProvider>
+        <Analytics />
       </body>
     </html>
   );

@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { serverApiFetch } from "@/lib/api";
 
+export const metadata = { title: "Log in – Oyklane" };
+
 /** Already signed in to a store: straight to the dashboard instead of the form. */
 export default async function LoginLayout({ children }) {
   let me = null;

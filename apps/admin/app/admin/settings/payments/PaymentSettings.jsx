@@ -5,6 +5,7 @@ import { Card, Switch, Button, Drawer, Input, Alert, App, Tag, Radio } from "ant
 import { Banknote, ExternalLink, ShieldCheck, Trash2 } from "lucide-react";
 import { StatusBadge, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { track } from "@/lib/track";
 
 // A small wordmark per gateway, so the list scans like Shopify's.
 const MARKS = {
@@ -38,6 +39,7 @@ function SetupDrawer({ provider, open, onClose, onSaved, canEdit }) {
         body: { credentials: values, testMode, enabled: provider.connected ? provider.enabled : true },
       });
       message.success(`${provider.name} ${provider.connected ? "updated" : "connected"}`);
+      if (!provider.connected) track("gateway_connected", { gateway: provider.key, test_mode: testMode });
       onSaved(next);
       onClose();
     } catch (err) {

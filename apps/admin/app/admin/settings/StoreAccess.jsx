@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, Switch, Input, Button, App, Tag } from "antd";
 import { Lock, Globe } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { track } from "@/lib/track";
 import { SettingsSectionHeader } from "./SettingsNav";
 
 /** Store access: a new store opens locked behind a password, so nobody
@@ -23,6 +24,8 @@ export function StoreAccess() {
     setBusy(true);
     try {
       const d = await apiFetch("/api/store/lock", { method: "PUT", body });
+      // Password protection switched off: the store is open to everyone.
+      if (body.enabled === false && lock?.enabled) track("store_published");
       setLock(d);
       setPassword(d.password || "");
       message.success(done);

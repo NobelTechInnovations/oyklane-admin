@@ -11,6 +11,7 @@ import { SortableUpload, moveByUid } from "@/components/SortableUpload";
 import { CustomDataFields, metafieldPayload } from "@/components/CustomDataFields";
 import { PageHeader, StatusBadge, SaveBar } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { track } from "@/lib/track";
 import { useApps } from "@/lib/apps";
 import { RentalProductCard } from "@/components/RentalProductCard";
 import { ThemeTemplateField } from "@/components/ThemeTemplateField";
@@ -406,7 +407,8 @@ export function ProductForm({ product, store, template, justCreated = false }) {
         setSaved("saved");
         router.refresh();
       } else {
-        const { product: created } = await apiFetch("/api/products", { method: "POST", body: payload });
+        const { product: created, first } = await apiFetch("/api/products", { method: "POST", body: payload });
+        if (first) track("first_product_added");
         try {
           await rentalRef.current?.save(created.id);
         } catch (err) {
