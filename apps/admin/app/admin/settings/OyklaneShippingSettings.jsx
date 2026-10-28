@@ -92,7 +92,7 @@ export function OyklaneShippingSettings() {
             <Form.Item name="pincode" label="Pincode" rules={[{ required: true, pattern: /^[1-9]\d{5}$/, message: "6-digit pincode" }]}>
               <Input maxLength={6} inputMode="numeric" />
             </Form.Item>
-            <Form.Item name="email" label="Email (optional)">
+            <Form.Item name="email" label="Email (optional)" extra="Left empty, we use your store's support email or your sign-in email.">
               <Input maxLength={120} />
             </Form.Item>
           </div>
@@ -134,6 +134,21 @@ export function OyklaneShippingSettings() {
             <p className="m-0 text-[12px] text-ink-muted">{data.payout ? `${data.payout.bank || "Account"} ${data.payout.account}` : "Add your bank account below"}</p>
           </div>
         </div>
+        <p className="m-0 mb-4 text-[12.5px] text-ink-muted">
+          Courier charges are added to your plan bill. When a COD payout is due, any courier charges not yet billed are taken from it first, and only the rest stays on your bill.
+        </p>
+        {data.deductions?.length > 0 && (
+          <div className="mb-4 rounded-xl border border-app-border px-4 py-3">
+            <p className="m-0 mb-1 text-[12px] font-medium text-ink-muted">Courier charges taken from COD payouts</p>
+            <ul className="m-0 pl-4 text-[13px]">
+              {data.deductions.slice(0, 6).map((d, i) => (
+                <li key={i}>
+                  {day(d.at)}: COD {inr(d.cod)} − courier charges {inr(d.freight)} = {inr(d.paid)} paid{d.reference ? ` (ref ${d.reference})` : ""}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {data.cod.entries.length > 0 && (
           <Table
             size="small"

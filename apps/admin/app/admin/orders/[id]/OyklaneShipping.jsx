@@ -193,9 +193,14 @@ export function OyklaneShipments({ orderId, onChange }) {
             </div>
             <div className="flex gap-2">
               {s.awb && s.status !== "cancelled" && (
-                <Button size="small" icon={<Download size={13} aria-hidden="true" />} onClick={() => label(s)}>
-                  Label
-                </Button>
+                <>
+                  <Button size="small" type="primary" icon={<Download size={13} aria-hidden="true" />} onClick={() => window.open(`/label/${s.id}`, "_blank", "noopener")}>
+                    Print label
+                  </Button>
+                  <Button size="small" type="text" onClick={() => label(s)}>
+                    Courier's label
+                  </Button>
+                </>
               )}
               {["assigned"].includes(s.status) && (
                 <Button size="small" danger type="text" icon={<XCircle size={13} aria-hidden="true" />} onClick={() => cancel(s)}>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Form, Input, Card, Alert, App, Switch } from "antd";
+import { Form, Input, Card, Alert, App, Switch, Button } from "antd";
 import { PageHeader, SaveBar } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { ImageUploadField } from "@/components/ImageUploadField";
@@ -122,31 +122,63 @@ export function PreferencesForm({ store, seo, canEdit }) {
   );
 }
 
-/** Cart drawer extras — saved as soon as they're switched. */
+/** Cart drawer extras — switches save at once; the strip text on Save. */
+const CART_SWITCHES = [
+  ["showOffers", "Offer tiers", "A progress bar to your public coupon codes that need a minimum order (e.g. ₹100 off over ₹999)."],
+  ["showCoupon", "Coupons", "A box to enter a code, plus “View all offers” with your public codes."],
+  ["showSavings", "Savings", "The MRP crossed out, the % off and “₹… saved so far”, from compare-at prices and the coupon."],
+  ["showPayIcons", "UPI app icons", "GPay, PhonePe and Paytm marks on the checkout button."],
+  ["viewCartButton", "“View cart” button", "Off: shoppers go straight from the cart to checkout."],
+];
 function CartPreferences({ store, canEdit }) {
   const { message } = App.useApp();
-  const [viewCart, setViewCart] = useState(Boolean(store.settings?.cart?.viewCartButton));
-  const [busy, setBusy] = useState(false);
-  async function toggle(on) {
-    setBusy(true);
+  const c = store.settings?.cart || {};
+  const [on, setOn] = useState({ showOffers: c.showOffers !== false, showCoupon: c.showCoupon !== false, showSavings: c.showSavings !== false, showPayIcons: c.showPayIcons !== false, viewCartButton: Boolean(c.viewCartButton) });
+  const [strip, setStrip] = useState(c.announcement || "");
+  const [busy, setBusy] = useState(null);
+  async function save(patch, key, ok) {
+    setBusy(key);
     try {
-      await apiFetch("/api/store", { method: "PATCH", body: { settings: { cart: { viewCartButton: on } } } });
-      setViewCart(on);
-      message.success(on ? "“View cart” button shown in the cart" : "“View cart” button hidden");
+      await apiFetch("/api/store", { method: "PATCH", body: { settings: { cart: patch } } });
+      message.success(ok);
+      return true;
     } catch (err) {
       message.error(err.message);
+      return false;
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
   return (
-    <Card size="small" title="Cart" className="mt-6 lg:max-w-[66%]">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="m-0 text-sm text-ink">Show a “View cart” button in the cart drawer</p>
-          <p className="m-0 mt-0.5 text-xs text-ink-muted">Off: shoppers go straight from the cart to checkout.</p>
+    <Card size="small" title="Cart drawer" className="mt-6 lg:max-w-[66%]">
+      <div className="mb-4">
+        <p className="m-0 text-sm text-ink">Strip under the header</p>
+        <p className="m-0 mt-0.5 mb-2 text-xs text-ink-muted">A short line every shopper sees, like “Same day dispatch” or “Free gift over ₹1,499”. Leave empty to hide it.</p>
+        <div className="flex gap-2">
+          <Input value={strip} onChange={(e) => setStrip(e.target.value)} maxLength={80} placeholder="Same day dispatch" disabled={!canEdit} />
+          <Button onClick={() => save({ announcement: strip.trim() }, "strip", strip.trim() ? "Strip saved" : "Strip hidden")} loading={busy === "strip"} disabled={!canEdit}>
+            Save
+          </Button>
         </div>
-        <Switch checked={viewCart} loading={busy} disabled={!canEdit} onChange={toggle} aria-label="Show View cart button" />
+      </div>
+      <div className="flex flex-col gap-3">
+        {CART_SWITCHES.map(([key, label, help]) => (
+          <div key={key} className="flex items-center justify-between gap-4">
+            <div>
+              <p className="m-0 text-sm text-ink">{label}</p>
+              <p className="m-0 mt-0.5 text-xs text-ink-muted">{help}</p>
+            </div>
+            <Switch
+              checked={on[key]}
+              loading={busy === key}
+              disabled={!canEdit}
+              aria-label={label}
+              onChange={async (v) => {
+                if (await save({ [key]: v }, key, `${label} ${v ? "shown" : "hidden"} in the cart`)) setOn((o) => ({ ...o, [key]: v }));
+              }}
+            />
+          </div>
+        ))}
       </div>
     </Card>
   );

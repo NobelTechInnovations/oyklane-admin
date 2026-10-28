@@ -10,6 +10,7 @@ import { apiFetch } from "@/lib/api";
 import { INDIAN_STATES } from "@/lib/plans";
 import { inr, STATUS, METHODS, KIND_LABEL, PURPOSE_LABEL, formatDay, daysLeft, completeCheckout, payuReturn } from "@/lib/billing";
 import { SettingsSectionHeader } from "./SettingsNav";
+import { PromoCodeBox } from "./PromoCodeBox";
 import { BillingModeNotice } from "@/components/BillingModeNotice";
 
 function Stat({ label, value, sub }) {
@@ -237,7 +238,7 @@ export function BillingSettings() {
         </div>
         {sub.freePlan && (
           <p className="text-[13px] text-ink mt-4 mb-0 rounded-lg bg-accent-soft px-3 py-2">
-            <strong>Free plan until {formatDay(sub.freePlan.until)}</strong> — no monthly plan fee. The {sub.plan?.commissionPercent}% checkout fee on paid orders is still billed with each cycle
+            <strong>Free plan until {formatDay(sub.freePlan.until)}</strong> — no monthly plan fee. The {b.promoCode?.commissionPercent ?? sub.plan?.commissionPercent}% checkout fee on paid orders is still billed with each cycle
             {sub.freePlan.note ? ` · ${sub.freePlan.note}` : ""}.
           </p>
         )}
@@ -248,6 +249,8 @@ export function BillingSettings() {
           </p>
         )}
       </Card>
+
+      <PromoCodeBox active={b.promoCode} canManage={canManage} onApplied={load} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* ── Next charge ── */}

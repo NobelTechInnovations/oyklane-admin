@@ -6,6 +6,7 @@ import { Form, Input, Select, Card, App } from "antd";
 import { PageHeader, SaveBar, StatusBadge } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { ImageUploadField } from "@/components/ImageUploadField";
+import { BlogBodyField } from "@/components/blog/BlogBodyField";
 import { storefrontUrlFor } from "@/lib/storefront";
 
 const SEO_TITLE_MAX = 70;
@@ -92,12 +93,8 @@ export function BlogPostForm({ post, store }) {
               <Form.Item name="title" label="Title" rules={[{ required: true, message: "Give the post a title" }]}>
                 <Input size="large" placeholder="How we source our turmeric" maxLength={200} />
               </Form.Item>
-              <Form.Item
-                name="body"
-                label="Content"
-                extra="Write in plain text — leave a blank line between paragraphs. HTML works too, for headings, links and lists."
-              >
-                <Input.TextArea rows={16} className="font-[inherit]" placeholder="Start writing…" />
+              <Form.Item name="body" label="Content">
+                <BlogBodyField form={form} />
               </Form.Item>
               <Form.Item name="excerpt" label="Excerpt" extra="The short summary on the blog page and home page. Leave empty to use the first lines of the post." className="mb-0">
                 <Input.TextArea rows={2} maxLength={500} showCount />

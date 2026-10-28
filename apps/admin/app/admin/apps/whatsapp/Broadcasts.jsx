@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Table, Button, Drawer, Steps, Form, Input, Select, InputNumber, Radio, DatePicker, App, Alert, Tag, Space, Statistic, Empty, Progress, Modal, Descriptions } from "antd";
 import { Plus, Send, FlaskConical, Users } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { deliveryProblem } from "@/lib/whatsapp-errors";
 import { WaPreview, money } from "./wa-ui";
 
 const STATUS = { draft: ["default", "Draft"], scheduled: ["blue", "Scheduled"], sending: ["processing", "Sending"], sent: ["green", "Sent"], cancelled: ["default", "Cancelled"], failed: ["red", "Failed"] };
@@ -273,7 +274,7 @@ function Report({ id, onClose }) {
         <p className="text-sm text-ink-muted">Loading…</p>
       ) : (
         <div className="flex flex-col gap-4">
-          {b.error && <Alert type={b.status === "failed" ? "error" : "warning"} showIcon message={b.error} />}
+          {b.error && <Alert type={b.status === "failed" ? "error" : "warning"} showIcon message={deliveryProblem(b.error).text} className="[overflow-wrap:anywhere]" />}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Statistic title="Sent" value={b.sent} suffix={`/ ${b.recipients}`} />
             <Statistic title="Delivered" value={b.delivered} suffix={<span className="text-xs">{pct(b.delivered, b.sent)}%</span>} />

@@ -41,3 +41,11 @@ body {
 .ant-menu-submenu-title a:hover {
   color: inherit;
 }
+
+/* Blog post editor (components/blog/CkBlogEditor.jsx) */
+.oy-ck .ck-editor__editable_inline { min-height: 380px; font-size: 15px; line-height: 1.65; }
+.oy-ck .ck.ck-editor__main > .ck-editor__editable { border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; }
+.oy-ck .ck.ck-toolbar { border-top-left-radius: 10px !important; border-top-right-radius: 10px !important; }
+.oy-ck .ck-content h2 { font-size: 1.4em; margin: 1em 0 0.4em; }
+.oy-ck .ck-content h3 { font-size: 1.2em; margin: 0.9em 0 0.35em; }
+.oy-ck .ck-content h4 { font-size: 1.05em; margin: 0.8em 0 0.3em; }

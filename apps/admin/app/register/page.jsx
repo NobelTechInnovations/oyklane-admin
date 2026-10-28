@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Form, Input, Button, Alert } from "antd";
 import { AuthShell } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { acquisition, rememberUtm } from "@/lib/acquisition";
 import { track } from "@/lib/track";
 import { GoogleSignIn } from "@/components/GoogleSignIn";
 
@@ -33,14 +34,15 @@ export default function RegisterPage() {
     const ticket = new URLSearchParams(window.location.search).get("google");
     const who = ticket && readTicket(ticket);
     if (who) setGoogle({ ticket, ...who });
+    rememberUtm();
   }, []);
 
   async function onFinish(values) {
     setError(null);
     setLoading(true);
     try {
-      if (google) await apiFetch("/api/auth/google/register", { method: "POST", body: { ticket: google.ticket, storeName: values.storeName, whatsapp: values.whatsapp } });
-      else await apiFetch("/api/auth/register", { method: "POST", body: values });
+      if (google) await apiFetch("/api/auth/google/register", { method: "POST", body: { ticket: google.ticket, storeName: values.storeName, whatsapp: values.whatsapp, acquisition: acquisition() } });
+      else await apiFetch("/api/auth/register", { method: "POST", body: { ...values, acquisition: acquisition() } });
       track("sign_up", { method: google ? "google" : "email" });
       track("store_created");
       router.push("/welcome");

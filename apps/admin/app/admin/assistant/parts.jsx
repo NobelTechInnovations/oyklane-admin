@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { App, Button, Input, InputNumber, Modal, Form, Segmented, Select, Switch, Tag, Tooltip, Empty } from "antd";
 import { Check, X, MessageCircle, Gift, ShieldAlert, Zap, Eye, ShoppingCart, CreditCard, Search, Pencil, Trash2, Plus, Sparkles, OctagonX, Play } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { deliveryProblem } from "@/lib/whatsapp-errors";
 
 export const inr = (n) => (n == null ? "—" : `₹${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`);
 const ago = (d) => {
@@ -475,16 +476,6 @@ const MSG_STEPS = [
   ["delivered", "Delivered"],
   ["read", "Read"],
 ];
-/** WhatsApp's failure text, made readable: known Meta errors get a plain
- * fix, and any link it carries becomes a button instead of a long URL. */
-function deliveryProblem(error) {
-  const raw = String(error || "");
-  const link = (raw.match(/https:\/\/business\.facebook\.com\/\S+/) || [])[0]?.replace(/[.,)]+$/, "") || null;
-  if (/payment method|eligibility payment/i.test(raw)) return { text: "Add a payment method to your WhatsApp Business account in Meta, then messages will go out.", link };
-  if (/re-?engagement|24 hours|outside.*window/i.test(raw)) return { text: "The buyer hasn't messaged you in the last 24 hours, so WhatsApp only allows an approved template.", link };
-  return { text: raw.replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").replace(/\s*Visit\s*to resolve this issue\.?/i, "").trim(), link };
-}
-
 const timeOf = (d) => (d ? new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "");
 
 /** What Siyaa sent on WhatsApp, how far it got, what the buyer said back,

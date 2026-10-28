@@ -21,6 +21,8 @@ export const APP_PANELS = {
   "facebook-shop": "/admin/apps/facebook-shop",
   "upi-qr": "/admin/apps/upi-qr",
   "google-analytics": "/admin/apps/google-analytics",
+  shiprocket: "/admin/apps/couriers/shiprocket",
+  "ithink-logistics": "/admin/apps/couriers/ithink-logistics",
 };
 
 export const detailsHref = (app) => `/admin/apps/details/${app.key}`;
@@ -31,6 +33,7 @@ export const APP_CATEGORIES = {
   selling: "Selling",
   automation: "Automation",
   checkout: "Checkout",
+  shipping: "Shipping",
   customers: "Customers",
   marketing: "Marketing",
   analytics: "Analytics",

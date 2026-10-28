@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Input, Segmented, Badge, Button, Empty, Tag, Select, App, Tooltip, Modal, Form, Switch, Upload, Spin, Alert } from "antd";
 import { Search, Paperclip, Sparkles, Send, ArrowLeft, StickyNote, UserRound, Clock, FileText, Lock, MessageSquarePlus } from "lucide-react";
 import { apiFetch, API_URL } from "@/lib/api";
+import { deliveryProblem } from "@/lib/whatsapp-errors";
 import { Ticks, WaPreview, relTime, money } from "./wa-ui";
 
 const FILTERS = [
@@ -547,7 +548,19 @@ function Bubble({ m }) {
           {new Date(m.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
           {out && <Ticks status={m.status} error={m.error} />}
         </p>
-        {m.status === "failed" && m.error && <p className="m-0 text-[11px] text-status-danger">{m.error}</p>}
+        {m.status === "failed" && m.error && (() => {
+          const p = deliveryProblem(m.error);
+          return (
+            <p className="m-0 text-[11px] leading-relaxed text-status-danger [overflow-wrap:anywhere]">
+              {p.text}
+              {p.link ? (
+                <a href={p.link} target="_blank" rel="noopener noreferrer" className="ml-1 font-medium underline">
+                  Fix in Meta
+                </a>
+              ) : null}
+            </p>
+          );
+        })()}
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ import { GstInvoiceCard } from "./GstInvoiceCard";
 import { apiFetch } from "@/lib/api";
 import { FulfillModal } from "./FulfillModal";
 import { ShipWithOyklane, OyklaneShipments } from "./OyklaneShipping";
+import { ShipWithCourierApps, CourierAppShipments } from "./CourierAppShipping";
 import { RefundModal } from "./RefundModal";
 import { CancelModal } from "./CancelModal";
 import { ReturnModal } from "./ReturnModal";
@@ -322,6 +323,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
               ))}
               <div className="flex flex-wrap justify-end gap-2 pt-3">
                 <ShipWithOyklane order={order} onBooked={() => router.refresh()} />
+                <ShipWithCourierApps order={order} onBooked={() => router.refresh()} />
                 <Button type="primary" icon={<Truck size={15} aria-hidden="true" />} onClick={() => setDialog("fulfill")}>
                   Ship items
                 </Button>
@@ -330,6 +332,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
           )}
 
           <OyklaneShipments orderId={order.id} onChange={() => router.refresh()} />
+          <CourierAppShipments orderId={order.id} onChange={() => router.refresh()} />
 
           {order.fulfillments.map((f, index) => {
             const byId = Object.fromEntries(order.items.map((i) => [i.id, i]));
