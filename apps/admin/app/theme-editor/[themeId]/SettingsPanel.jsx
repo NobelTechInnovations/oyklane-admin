@@ -9,11 +9,23 @@ import { defaultBlockSettings, newBlockId } from "./schema-utils";
 import { sectionMeta } from "./section-meta";
 
 // What a block is called in its row: its own text if it has any
-// ("Free shipping over ₹999"), else its type ("Message").
-function blockLabel(block, blockSchema) {
+// ("Free shipping over ₹999"), else the collection or product it shows
+// ("Lehengas"), else its type ("Message").
+function blockLabel(block, blockSchema, { collections = [], products = [] } = {}) {
   const s = block.settings || {};
   const text = s.title || s.heading || s.text || s.question || s.name || s.quote || s.author || s.value || "";
-  return String(text).replace(/<[^>]+>/g, "").slice(0, 48) || blockSchema?.name || block.type;
+  const picked =
+    (s.collection && (collections.find((c) => c.slug === s.collection)?.title || s.collection)) ||
+    (s.product && (products.find((p) => p.slug === s.product || p.handle === s.product)?.title || s.product)) ||
+    "";
+  return String(text || picked).replace(/<[^>]+>/g, "").slice(0, 48) || blockSchema?.name || block.type;
+}
+
+// "Category" → "Categories", "Slide" → "Slides", "Box" → "Boxes".
+function plural(word) {
+  if (/[^aeiou]y$/i.test(word)) return word.slice(0, -1) + "ies";
+  if (/(s|x|z|ch|sh)$/i.test(word)) return word + "es";
+  return word + "s";
 }
 
 function Guide({ onOpenSettings, onOpenGlobal }) {
@@ -122,7 +134,7 @@ export function SettingsPanel({ catalog, products, collections, menus, onOpenSet
           <div className="border-t border-app-border pt-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted m-0">
-                {blockTypes.length === 1 ? `${blockTypes[0].name}s` : "Content blocks"}
+                {blockTypes.length === 1 ? plural(blockTypes[0].name) : "Content blocks"}
                 <span className="font-normal normal-case tracking-normal"> · {blockOrder.length}</span>
               </p>
             </div>
@@ -143,7 +155,7 @@ export function SettingsPanel({ catalog, products, collections, menus, onOpenSet
                         onClick={() => setOpenBlock(open ? null : blockId)}
                       >
                         <ChevronRight size={13} className={`text-ink-subtle shrink-0 transition-transform ${open ? "rotate-90" : ""}`} aria-hidden="true" />
-                        <span className={`text-[13px] truncate ${block.disabled ? "text-ink-subtle line-through" : "text-ink"}`}>{blockLabel(block, blockSchema)}</span>
+                        <span className={`text-[13px] truncate ${block.disabled ? "text-ink-subtle line-through" : "text-ink"}`}>{blockLabel(block, blockSchema, { collections, products })}</span>
                       </button>
                       <Tooltip title={block.disabled ? "Show" : "Hide"}>
                         <Button

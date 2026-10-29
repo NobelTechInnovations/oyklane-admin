@@ -119,7 +119,10 @@ export function SettingField({ setting, value, onChange, products = [], collecti
             onChange={setLocal}
             onChangeComplete={() => onChange(local)}
           />
-          <span className="text-xs text-ink-muted w-10 text-right">{local}</span>
+          <span className="text-xs text-ink-muted w-12 text-right tabular-nums">
+            {local}
+            {setting.unit || ""}
+          </span>
         </div>
       );
 
