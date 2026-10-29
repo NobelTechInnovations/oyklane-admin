@@ -713,7 +713,7 @@ export default function Inbox() {
   const windowLeft = useMemo(() => (c?.windowEndsAt ? Math.max(0, new Date(c.windowEndsAt).getTime() - Date.now()) : 0), [c]);
 
   return (
-    <div className="rounded-lg border border-app-border bg-app-surface overflow-hidden grid md:grid-cols-[300px_1fr] xl:grid-cols-[300px_1fr_280px]" style={{ height: "calc(100vh - 230px)", minHeight: 520 }}>
+    <div className="rounded-lg border border-app-border bg-app-surface overflow-hidden grid md:grid-cols-[300px_1fr] xl:grid-cols-[300px_1fr_280px]" style={{ height: "calc(100vh - 205px)", minHeight: 480 }}>
       {/* Conversations */}
       <div className={`border-r border-app-border flex flex-col min-h-0 ${activeId ? "hidden md:flex" : "flex"}`}>
         <div className="p-2 flex flex-col gap-2 border-b border-app-border">

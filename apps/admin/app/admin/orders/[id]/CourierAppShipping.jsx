@@ -8,20 +8,19 @@ import { apiFetch } from "@/lib/api";
 import { useApps } from "@/lib/apps";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
-const STATUS = { assigned: ["Booked", "blue"], in_transit: ["In transit", "gold"], delivered: ["Delivered", "green"], rto: ["Returning", "red"], cancelled: ["Cancelled", "default"] };
-const COURIER_APPS = ["shiprocket", "ithink-logistics"];
+const STATUS = { booked: ["Sent — choose a courier", "default"], assigned: ["Booked", "blue"], in_transit: ["In transit", "gold"], delivered: ["Delivered", "green"], rto: ["Returning", "red"], cancelled: ["Cancelled", "default"] };
+const COURIER_APPS = ["shiprocket"];
 
-/** "Ship with Shiprocket / iThink Logistics" — one button per installed
- * courier app: its couriers and prices, book, then label and tracking. */
-export function ShipWithCourierApps({ order, onBooked }) {
+/** The courier apps this store has installed (Fulfillment menu entries). */
+export function useCourierApps() {
   const { installed } = useApps();
-  const apps = installed.filter((a) => COURIER_APPS.includes(a.key));
-  return apps.map((a) => <ShipWithApp key={a.key} app={a} order={order} onBooked={onBooked} />);
+  return installed.filter((a) => COURIER_APPS.includes(a.key));
 }
 
-function ShipWithApp({ app, order, onBooked }) {
+/** "Ship with Shiprocket": its couriers and prices, book, then label and
+ * tracking. Opened from the order's Fulfillment menu. */
+export function ShipWithCourierApp({ app, order, open, onClose, onBooked }) {
   const { message } = App.useApp();
-  const [open, setOpen] = useState(false);
   const [quote, setQuote] = useState(null);
   const [parcel, setParcel] = useState({});
   const [choice, setChoice] = useState(null);
@@ -50,7 +49,7 @@ function ShipWithApp({ app, order, onBooked }) {
     try {
       const { shipment } = await apiFetch(`/api/courier-apps/${app.key}/orders/${order.id}/book`, { method: "POST", body: { ...parcel, courierId: c.courierId, courierName: c.name, price: c.price } });
       message.success(`Booked with ${shipment.courier} — AWB ${shipment.awb}`);
-      setOpen(false);
+      onClose?.();
       onBooked?.();
     } catch (err) {
       message.error(err.message);
@@ -59,19 +58,16 @@ function ShipWithApp({ app, order, onBooked }) {
     }
   }
 
+  useEffect(() => {
+    if (open) {
+      setQuote(null);
+      getRates({});
+    }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <>
-      <Button
-        icon={<Truck size={15} aria-hidden="true" />}
-        onClick={() => {
-          setOpen(true);
-          setQuote(null);
-          getRates({});
-        }}
-      >
-        Ship with {app.name}
-      </Button>
-      <Modal open={open} onCancel={() => setOpen(false)} title={`Ship with ${app.name}`} width={620} footer={null} destroyOnHidden>
+      <Modal open={open} onCancel={onClose} title={`Ship with ${app.name}`} width={620} footer={null} destroyOnHidden>
         {error && (
           <Alert
             type={error.details?.reason === "not_connected" ? "info" : "error"}
@@ -124,7 +120,7 @@ function ShipWithApp({ app, order, onBooked }) {
               </Radio.Group>
             )}
             <div className="flex justify-end gap-2 mt-5">
-              <Button onClick={() => setOpen(false)}>Cancel</Button>
+              <Button onClick={onClose}>Cancel</Button>
               <Button type="primary" icon={<Truck size={15} aria-hidden="true" />} disabled={!choice} loading={busy === "book"} onClick={book}>
                 Book courier
               </Button>

@@ -23,8 +23,9 @@ import { formatCurrency } from "@shopcycle/utils";
 import { GstInvoiceCard } from "./GstInvoiceCard";
 import { apiFetch } from "@/lib/api";
 import { FulfillModal } from "./FulfillModal";
-import { ShipWithOyklane, OyklaneShipments } from "./OyklaneShipping";
-import { ShipWithCourierApps, CourierAppShipments } from "./CourierAppShipping";
+import { OyklaneShipments } from "./OyklaneShipping";
+import { CourierAppShipments } from "./CourierAppShipping";
+import { FulfillmentMenu } from "./FulfillmentMenu";
 import { RefundModal } from "./RefundModal";
 import { CancelModal } from "./CancelModal";
 import { ReturnModal } from "./ReturnModal";
@@ -243,9 +244,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
   }
 
   const primaryAction = cancelled ? null : waiting.length > 0 ? (
-    <Button type="primary" icon={<Truck size={15} aria-hidden="true" />} onClick={() => setDialog("fulfill")}>
-      Ship items
-    </Button>
+    <FulfillmentMenu order={order} onTracking={() => setDialog("fulfill")} onBooked={() => router.refresh()} />
   ) : codPending ? (
     <Button type="primary" icon={<IndianRupee size={15} aria-hidden="true" />} loading={busy === "paid"} onClick={markPaid}>
       Mark as paid
@@ -321,13 +320,6 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
               {waiting.map((item) => (
                 <ItemRow key={item.id} item={item} quantity={q[item.id].toFulfill} currency={order.currency} />
               ))}
-              <div className="flex flex-wrap justify-end gap-2 pt-3">
-                <ShipWithOyklane order={order} onBooked={() => router.refresh()} />
-                <ShipWithCourierApps order={order} onBooked={() => router.refresh()} />
-                <Button type="primary" icon={<Truck size={15} aria-hidden="true" />} onClick={() => setDialog("fulfill")}>
-                  Ship items
-                </Button>
-              </div>
             </Card>
           )}
 

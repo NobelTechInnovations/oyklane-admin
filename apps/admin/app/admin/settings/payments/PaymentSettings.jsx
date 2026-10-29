@@ -129,9 +129,18 @@ export function PaymentSettings({ initial, currency, canEdit }) {
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(null);
 
-  // Back from Razorpay's consent page (razorpay-oauth.js callback).
+  // Back from PayU's or Razorpay's own page (payu-partner.js / razorpay-oauth.js).
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
+    const pu = q.get("payu");
+    if (pu) {
+      if (pu === "connected") message.success("PayU connected — you can take payments now");
+      else if (pu === "pending") message.info("PayU account linked. PayU is finishing its checks — payments turn on by themselves once it's done.");
+      else message.error(q.get("message") || "PayU wasn't connected.");
+      if (pu !== "error") apiFetch("/api/payments").then(setData).catch(() => {});
+      window.history.replaceState(null, "", window.location.pathname);
+      return;
+    }
     const r = q.get("razorpay");
     if (!r) return;
     if (r === "connected") {
@@ -141,6 +150,18 @@ export function PaymentSettings({ initial, currency, canEdit }) {
     } else message.error(q.get("message") || "Razorpay wasn't connected.");
     window.history.replaceState(null, "", window.location.pathname);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** "Connect with PayU": PayU's own page to log in or sign up, then back. */
+  async function connectPayu() {
+    setBusy("payu");
+    try {
+      const { url } = await apiFetch("/api/payments/payu/connect");
+      window.location.href = url;
+    } catch (err) {
+      message.error(err.message);
+      setBusy(null);
+    }
+  }
 
   /** "Connect with Razorpay": off to Razorpay to approve, then back here. */
   async function connectRazorpay() {
@@ -218,10 +239,25 @@ export function PaymentSettings({ initial, currency, canEdit }) {
                     {p.name}
                     {p.connected && <StatusBadge status={p.enabled ? "active" : "disabled"} label={p.enabled ? "On" : "Off"} />}
                     {p.connected && p.testMode && <Tag color="gold" className="!m-0">Test mode</Tag>}
+                    {p.recommended && !p.connected && <Tag color="blue" className="!m-0">Recommended</Tag>}
                   </p>
                   <p className="m-0 text-xs text-ink-muted">
                     {unsupported ? `Not available for ${currency} stores.` : p.oauth?.connected ? `Connected with Razorpay${p.oauth.accountId ? ` · ${p.oauth.accountId}` : ""}` : p.blurb}
                   </p>
+                  {p.key === "payu" && p.oauth?.connected && (
+                    <div className="mt-1 text-xs text-ink">
+                      {p.oauth.ready ? `Connected with PayU · merchant ${p.oauth.merchantId}` : `PayU account ${p.oauth.merchantId} linked — PayU is finishing its checks; payments turn on by themselves.`}
+                      {p.oauth.statuses?.length > 0 && (
+                        <span className="mt-1 flex flex-wrap gap-1">
+                          {p.oauth.statuses.slice(0, 6).map((st) => (
+                            <Tag key={st.event} className="!m-0 !text-[11px]" color={/success|approved/i.test(st.status || "") ? "green" : /fail|declin/i.test(st.status || "") ? "red" : "default"}>
+                              {String(st.event).replace(/ status update$/i, "").replace(/_/g, " ").toLowerCase()}: {st.status}
+                            </Tag>
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   {p.key === "razorpay" && p.connected && p.oauth?.available && !p.oauth.connected && (
                     <p className="m-0 mt-1 text-xs text-ink">
                       Connected with API keys.{" "}
@@ -235,7 +271,7 @@ export function PaymentSettings({ initial, currency, canEdit }) {
                   {p.connected ? (
                     <>
                       <Switch size="small" checked={p.enabled} loading={busy === p.key} disabled={!canEdit} onChange={(v) => toggle(p, v)} aria-label={`Accept ${p.name}`} />
-                      {!p.oauth?.connected && !(p.key === "razorpay" && p.oauth?.available) && (
+                      {!p.oauth?.connected && !((p.key === "razorpay" || p.key === "payu") && p.oauth?.available) && (
                         <Button size="small" onClick={() => setEditing(p)}>
                           Manage
                         </Button>
@@ -243,7 +279,11 @@ export function PaymentSettings({ initial, currency, canEdit }) {
                       {canEdit && <Button size="small" type="text" danger icon={<Trash2 size={13} aria-hidden="true" />} aria-label={`Disconnect ${p.name}`} onClick={() => disconnect(p)} />}
                     </>
                   ) : (
-                    p.key === "razorpay" && p.oauth?.available ? (
+                    p.key === "payu" && p.oauth?.available ? (
+                      <Button size="small" type="primary" disabled={!canEdit || unsupported} loading={busy === "payu"} onClick={connectPayu}>
+                        Connect with PayU
+                      </Button>
+                    ) : p.key === "razorpay" && p.oauth?.available ? (
                       <Button size="small" type="primary" disabled={!canEdit || unsupported} loading={busy === "razorpay"} onClick={connectRazorpay}>
                         Connect with Razorpay
                       </Button>

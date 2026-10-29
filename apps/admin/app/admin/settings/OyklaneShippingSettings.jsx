@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { App, Alert, Button, Card, Form, Input, InputNumber, Select, Skeleton, Table, Tag } from "antd";
-import { Banknote, MapPin, PackageCheck } from "lucide-react";
+import { App, Alert, Button, Card, Form, Input, InputNumber, Segmented, Select, Skeleton, Switch, Table, Tag } from "antd";
+import { Banknote, MapPin, PackageCheck, Zap } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { PackagesCard } from "./PackagesCard";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 const day = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—");
@@ -61,14 +62,15 @@ export function OyklaneShippingSettings() {
             <h3 className="m-0 text-[15px] font-semibold text-ink">Oyklane Shipping</h3>
             <p className="m-0 mt-1 text-[13px] text-ink-muted">
               Built in. From any order: compare couriers and prices for the pincode, book in one click, print the label — tracking reaches your customer automatically.
-              Freight is billed with your plan. Cash on delivery is collected for you and paid to your bank {data.holdDays} days after delivery.
+              Shipping is billed with your plan. Cash on delivery is collected for you and paid to your bank {data.holdDays} days after delivery.
             </p>
             {!data.ready && <Alert className="!mt-3" type="info" showIcon message="Oyklane Shipping is being switched on — you can save your details now." />}
           </div>
         </div>
       </Card>
 
-      <Card size="small" title={<span className="inline-flex items-center gap-2"><MapPin size={15} aria-hidden="true" /> Pickup address {data.pickupReady && <Tag color="green" className="!ml-1">Ready</Tag>}</span>}>
+      <Card size="small" title={<span className="inline-flex items-center gap-2"><MapPin size={15} aria-hidden="true" /> Pickup address {data.pickupStatus === "approved" ? <Tag color="green" className="!ml-1">Approved</Tag> : data.pickupReady ? <Tag color="gold" className="!ml-1">Waiting for approval</Tag> : null}</span>}>
+        {data.pickupReady && data.pickupStatus !== "approved" && <Alert className="!mb-4" type="info" showIcon message="The courier checks new pickup addresses, usually within 24 hours. You can book shipments once it's approved." />}
         <Form form={pickupForm} layout="vertical" requiredMark={false} onFinish={(v) => save("pickup", v)}>
           <div className="grid gap-x-4 sm:grid-cols-2">
             <Form.Item name="name" label="Contact name" rules={[{ required: true, message: "Who hands over parcels?" }]}>
@@ -120,6 +122,10 @@ export function OyklaneShippingSettings() {
       </Card>
 
       {data.pickupReady && <RateChecker />}
+
+      <AutoShip data={data} onSaved={setData} />
+
+      <PackagesCard />
 
       <Card size="small" title={<span className="inline-flex items-center gap-2"><Banknote size={15} aria-hidden="true" /> Cash on delivery payouts</span>}>
         <div className="grid gap-3 sm:grid-cols-2 mb-4">
@@ -239,6 +245,47 @@ function RateChecker() {
           ]}
         />
       )}
+    </Card>
+  );
+}
+
+/** Book new orders by themselves — the cheapest or the fastest courier,
+ * with the parcel worked out from the products' packages. */
+function AutoShip({ data, onSaved }) {
+  const { message } = App.useApp();
+  const [busy, setBusy] = useState(false);
+  async function save(patch) {
+    setBusy(true);
+    try {
+      onSaved(await apiFetch("/api/shipping/oyklane/auto-ship", { method: "PUT", body: { mode: data.autoShip, cod: data.autoShipCod, ...patch } }));
+      message.success("Saved");
+    } catch (err) {
+      message.error(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <Card size="small" title={<span className="inline-flex items-center gap-2"><Zap size={15} aria-hidden="true" /> Automatic booking</span>}>
+      <p className="m-0 mb-3 text-[13px] text-ink-muted">Book a courier for every new order as soon as it&apos;s placed (online orders once paid). The parcel comes from the products&apos; packages. If a booking fails, the order says why and you can ship it by hand.</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <Segmented
+          value={data.autoShip || "off"}
+          disabled={busy}
+          onChange={(mode) => save({ mode })}
+          options={[
+            { label: "Off", value: "off" },
+            { label: "Cheapest courier", value: "cheapest" },
+            { label: "Fastest courier", value: "fastest" },
+          ]}
+        />
+        {data.autoShip && data.autoShip !== "off" && (
+          <label className="inline-flex items-center gap-2 text-[13px] text-ink">
+            <Switch size="small" checked={data.autoShipCod !== false} disabled={busy} onChange={(cod) => save({ cod })} />
+            Cash on delivery orders too
+          </label>
+        )}
+      </div>
     </Card>
   );
 }

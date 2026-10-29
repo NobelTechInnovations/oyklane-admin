@@ -3,8 +3,8 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Alert, Button, Skeleton, Tabs } from "antd";
-import { MessagesSquare, FileText, Megaphone, Zap, Settings } from "lucide-react";
+import { Button, Drawer, Skeleton, Tabs } from "antd";
+import { MessagesSquare, FileText, Megaphone, Zap, Settings, CheckCircle2, Clock } from "lucide-react";
 import { PageHeader } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { MetaConnectPanel } from "@/components/MetaConnectPanel";
@@ -59,8 +59,38 @@ function Suite({ shared = false }) {
   );
 }
 
+const inr = (n) => `₹${Number(n || 0).toFixed(2)}`;
+
+/** Sending from Oyklane's default number: one compact line — the number,
+ * what each message type costs, and a way to switch to your own. */
+function SharedBar({ platform, onOwn }) {
+  const [rates, setRates] = useState(null);
+  useEffect(() => {
+    apiFetch("/api/whatsapp/rates")
+      .then(setRates)
+      .catch(() => {});
+  }, []);
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-app-border bg-app-surface px-4 py-2.5 shadow-card">
+      <span className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-ink">
+        {platform?.ready ? <CheckCircle2 size={15} className="text-status-success" aria-hidden="true" /> : <Clock size={15} className="text-ink-muted" aria-hidden="true" />}
+        {platform?.ready ? `Sending from Oyklane's WhatsApp number${platform.number ? ` ${platform.number}` : ""}` : "Oyklane's WhatsApp number is being set up"}
+      </span>
+      {rates && (
+        <span className="text-[12.5px] text-ink-muted">
+          Per delivered message: updates {inr(rates.utility)} · offers {inr(rates.marketing)} · replies within 24 hours free
+        </span>
+      )}
+      <Button size="small" className="ml-auto" onClick={onOwn}>
+        Use your own number
+      </Button>
+    </div>
+  );
+}
+
 export default function WhatsappPage() {
   const [mode, setMode] = useState(null);
+  const [ownOpen, setOwnOpen] = useState(false);
   const loadMode = useCallback(() => {
     apiFetch("/api/whatsapp/mode")
       .then(setMode)
@@ -74,7 +104,7 @@ export default function WhatsappPage() {
     <div>
       <PageHeader
         title="WhatsApp"
-        subtitle="Your customers' conversations, templates, broadcasts and automatic messages — on the official WhatsApp Business Platform."
+        subtitle="Conversations, templates, broadcasts and automatic messages."
         actions={
           <>
             <Link href="/admin/customers"><Button>Customers</Button></Link>
@@ -91,18 +121,16 @@ export default function WhatsappPage() {
           </Suspense>
         </MetaConnectPanel>
       ) : (
-        <div className="flex flex-col gap-4">
-          <Alert
-            type="info"
-            showIcon
-            message={mode.platform?.ready ? `Your store sends from the default WhatsApp number${mode.platform.number ? ` — ${mode.platform.number}` : ""}` : "The default WhatsApp number is being set up"}
-            description={
-              mode.platform?.ready
-                ? "Order updates, offers, broadcasts and sign-in codes go out from it with your store's name, and customers' replies land in your Inbox below. Each message is ₹0.50 on your bill. Connect your own number to create your own templates."
-                : "Order updates on WhatsApp start once it's ready — nothing for you to do. Or connect your own number below to message customers now."
-            }
-          />
-          <MetaConnectPanel focus="whatsapp" onChange={loadMode} />
+        <div className="flex flex-col gap-3">
+          <SharedBar platform={mode.platform} onOwn={() => setOwnOpen(true)} />
+          <Drawer open={ownOpen} onClose={() => setOwnOpen(false)} width={620} title="Use your own WhatsApp number" destroyOnHidden>
+            <MetaConnectPanel
+              focus="whatsapp"
+              onChange={() => {
+                loadMode();
+              }}
+            />
+          </Drawer>
           <Suspense fallback={null}>
             <Suite shared />
           </Suspense>

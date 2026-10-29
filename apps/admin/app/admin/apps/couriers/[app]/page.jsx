@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Alert, App, Button, Card, Form, Input, InputNumber, Select, Skeleton, Tag } from "antd";
+import { Alert, App, Button, Card, Form, Input, InputNumber, Select, Skeleton, Switch, Tag } from "antd";
 import { CheckCircle2, Truck } from "lucide-react";
 import { PageHeader } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
@@ -27,7 +27,7 @@ export default function CourierAppPage() {
     try {
       const d = await apiFetch(`/api/courier-apps/${app}`);
       setData(d);
-      defaultsForm.setFieldsValue({ pickupId: d.pickupId, ...d.defaults });
+      defaultsForm.setFieldsValue({ pickupId: d.pickupId, autoSync: d.autoSync, ...d.defaults });
     } catch (err) {
       setError(err.message);
     }
@@ -117,6 +117,9 @@ export default function CourierAppPage() {
       {data.connected && (
         <Card size="small" title={<span className="inline-flex items-center gap-2"><Truck size={15} aria-hidden="true" /> Pickup and parcel</span>} styles={{ body: { padding: 20 } }}>
           <Form form={defaultsForm} layout="vertical" onFinish={saveDefaults} requiredMark={false}>
+            <Form.Item name="autoSync" valuePropName="checked" label={`Send new orders to ${data.name} automatically`} extra={`Each new order (online orders once paid) appears in your ${data.name} panel straight away. Choose the courier there, or from the order here (Fulfillment ▸ Ship with ${data.name}).`}>
+              <Switch />
+            </Form.Item>
             <Form.Item name="pickupId" label="Pickup address" extra={`Pickup addresses come from your ${data.name} account — add more there.`}>
               <Select options={data.pickups.map((p) => ({ value: p.id, label: `${p.name} — ${p.address} ${p.pincode}` }))} placeholder={data.pickups.length ? "Choose" : `No pickup address in ${data.name} yet`} />
             </Form.Item>
@@ -139,7 +142,7 @@ export default function CourierAppPage() {
               Save
             </Button>
           </Form>
-          <p className="m-0 mt-4 text-[12.5px] text-ink-muted">To ship, open an order and choose “Ship with {data.name}”.</p>
+          <p className="m-0 mt-4 text-[12.5px] text-ink-muted">To ship, open an order and choose Fulfillment ▸ Ship with {data.name}. Parcel weight and size come from your products&apos; packages (Settings ▸ Shipping) when they have one.</p>
         </Card>
       )}
     </div>

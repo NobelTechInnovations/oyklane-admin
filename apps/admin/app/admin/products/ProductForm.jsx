@@ -11,6 +11,7 @@ import { SortableUpload, moveByUid } from "@/components/SortableUpload";
 import { CustomDataFields, metafieldPayload } from "@/components/CustomDataFields";
 import { PageHeader, StatusBadge, SaveBar } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { ProductPackageCard } from "@/components/shipping/ProductPackageCard";
 import { track } from "@/lib/track";
 import { useApps } from "@/lib/apps";
 import { RentalProductCard } from "@/components/RentalProductCard";
@@ -801,6 +802,7 @@ export function ProductForm({ product, store, template, justCreated = false }) {
               />
             </Card>
 
+            <ProductPackageCard productId={isEdit ? product.id : null} />
             <Card size="small" title="GST">
               <Form.Item
                 name="hsnCode"

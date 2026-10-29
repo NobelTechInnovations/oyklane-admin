@@ -131,7 +131,7 @@ export default function ShippingLabelPage() {
           </div>
         </div>
         <div className="cell center tiny muted" style={{ paddingBottom: 0 }}>
-          Shipped with Oyklane · Supported by Shipmozo
+          Shipped with Oyklane{d.partner ? ` · Supported by ${d.partner}` : ""}
         </div>
       </div>
       <p className="noprint" style={{ textAlign: "center", fontFamily: "system-ui", fontSize: 13 }}>

@@ -42,6 +42,7 @@ import {
   Trash2,
   MessageSquare,
   Truck,
+  IndianRupee,
 } from "lucide-react";
 import { useApps, appHref, detailsHref } from "@/lib/apps";
 import { apiFetch } from "@/lib/api";
@@ -100,7 +101,16 @@ const NAV_ITEMS = [
       { key: "/admin/orders", icon: <ShoppingCart size={14} aria-hidden="true" />, label: <Link href="/admin/orders">All orders</Link> },
       { key: "/admin/orders/returns", icon: <RotateCcw size={14} aria-hidden="true" />, label: <Link href="/admin/orders/returns">Returns</Link> },
       { key: "/admin/orders/abandoned", icon: <ShoppingBag size={14} aria-hidden="true" />, label: <Link href="/admin/orders/abandoned">Abandoned checkouts</Link> },
-      { key: "/admin/orders/shipping-rates", icon: <Truck size={14} aria-hidden="true" />, label: <Link href="/admin/orders/shipping-rates">Shipping rates</Link> },
+    ],
+  },
+  {
+    key: "shipping-group",
+    icon: <Truck size={16} aria-hidden="true" />,
+    label: <Link href="/admin/shipping">Shipping</Link>,
+    children: [
+      { key: "/admin/shipping", icon: <Truck size={14} aria-hidden="true" />, label: <Link href="/admin/shipping">Shipments</Link> },
+      { key: "/admin/shipping/rates", icon: <IndianRupee size={14} aria-hidden="true" />, label: <Link href="/admin/shipping/rates">Shipping rates</Link> },
+      { key: "/admin/settings/shipping", icon: <Package size={14} aria-hidden="true" />, label: <Link href="/admin/settings/shipping">Packages & pickup</Link> },
     ],
   },
   {
@@ -267,6 +277,7 @@ export function SidebarNav() {
   if (pathname.startsWith("/admin/analytics")) openKeys.push("analytics-group");
   if (pathname.startsWith("/admin/products") || pathname.startsWith("/admin/gift-cards")) openKeys.push("products-group");
   if (pathname.startsWith("/admin/orders")) openKeys.push("orders-group");
+  if (pathname.startsWith("/admin/shipping")) openKeys.push("shipping-group");
   if (pathname.startsWith("/admin/customers")) openKeys.push("customers-group");
 
   return (

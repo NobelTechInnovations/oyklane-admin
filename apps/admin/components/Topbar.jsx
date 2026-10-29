@@ -15,6 +15,7 @@ import {
   MonitorSmartphone,
   Menu,
   LifeBuoy,
+  UserRound,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { track } from "@/lib/track";
@@ -122,6 +123,7 @@ export function Topbar({ user, store, onOpenNav }) {
       ),
     },
     { type: "divider" },
+    { key: "account", label: "Your account", icon: <UserRound size={14} aria-hidden="true" />, onClick: () => router.push("/admin/account") },
     ...(user?.isSuperAdmin
       ? [
           {

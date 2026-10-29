@@ -29,7 +29,12 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await apiFetch("/api/auth/login", { method: "POST", body: values });
-      router.push("/admin");
+      // Back to where a link sent them (e.g. accepting a store)…
+      const next = new URLSearchParams(window.location.search).get("next");
+      if (next && next.startsWith("/") && !next.startsWith("//")) return router.push(next);
+      // …else, with more than one store on this login, pick which to open.
+      const mine = await apiFetch("/api/auth/my-stores").catch(() => ({ stores: [] }));
+      router.push(mine.stores?.length > 1 ? "/choose-store" : "/admin");
       router.refresh();
     } catch (err) {
       setError(err.message);
