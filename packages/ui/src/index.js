@@ -6,6 +6,7 @@ export { PageHeader } from "./components/PageHeader";
 export { useConfirmDialog } from "./components/ConfirmDialog";
 export { AppIcon, APP_ICONS, APP_ICON_OPTIONS } from "./components/AppIcon";
 export { BrandMark } from "./components/BrandMark";
+export { ShippingLabel, StripeBarcode, SAMPLE_LABEL, LABEL_CSS } from "./components/ShippingLabel";
 export { AuthShell } from "./components/AuthShell";
 export { useHasMounted } from "./hooks/useHasMounted";
 export { ListCard } from "./components/ListCard";
