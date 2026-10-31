@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Form, Input, InputNumber, Select, Button, Card, App, Modal, Dropdown, Tooltip, Progress } from "antd";
+import { Form, Input, InputNumber, Select, Button, Card, App, Modal, Dropdown, Tooltip, Progress, Popover, Upload } from "antd";
 import Link from "next/link";
-import { Plus, Trash2, UploadCloud, Images, Wand2, ExternalLink, Copy, Sparkles, Undo2, ChevronDown, CheckCircle2, Circle, Tag as TagIcon, Layers } from "lucide-react";
+import { Plus, Trash2, UploadCloud, Images, Wand2, ExternalLink, Copy, Sparkles, Undo2, ChevronDown, CheckCircle2, Circle, Tag as TagIcon, Layers, ImagePlus, X } from "lucide-react";
 import { SavedPanel } from "@/components/SavedPanel";
 import { MediaLibraryModal } from "@/components/MediaLibraryModal";
 import { SortableUpload, moveByUid } from "@/components/SortableUpload";
@@ -224,6 +224,86 @@ function ReadyChecklist({ checks }) {
 }
 
 /** `template` (Duplicate): a product whose details pre-fill a new one. */
+/**
+ * A variant's own photo — one of the product's photos, or a new upload
+ * (added to the product's photos too). The product page switches to it
+ * when a shopper picks the variant. "Also for" copies it to the other
+ * variants that share a value ("Black" in "M / Black").
+ */
+function VariantImagePicker({ value, onChange, images, onUpload, title, onApplyToSame }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const parts = String(title || "").split("/").map((x) => x.trim()).filter(Boolean);
+  const panel = (
+    <div className="w-[264px]">
+      {images.length ? (
+        <div className="grid grid-cols-4 gap-1.5">
+          {images.map((img) => (
+            <button
+              key={img.uid}
+              type="button"
+              onClick={() => (onChange(img.url), setOpen(false))}
+              className={`aspect-square overflow-hidden rounded-md border-2 p-0 cursor-pointer bg-app-surface ${value === img.url ? "border-accent" : "border-transparent"}`}
+              aria-label="Use this photo"
+            >
+              <img src={img.url} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="m-0 text-[12.5px] text-ink-muted">No photos yet — upload one.</p>
+      )}
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <Upload
+          accept={IMAGE_ACCEPT}
+          showUploadList={false}
+          beforeUpload={async (file) => {
+            setBusy(true);
+            try {
+              const url = await onUpload(file);
+              if (url) onChange(url);
+              setOpen(false);
+            } finally {
+              setBusy(false);
+            }
+            return false;
+          }}
+        >
+          <Button size="small" icon={<UploadCloud size={13} aria-hidden="true" />} loading={busy}>
+            Upload
+          </Button>
+        </Upload>
+        {value && (
+          <Button size="small" type="text" onClick={() => (onChange(null), setOpen(false))}>
+            No photo
+          </Button>
+        )}
+      </div>
+      {value && parts.length > 1 && (
+        <div className="mt-2 border-t border-app-border pt-2 text-[12px] text-ink-muted">
+          Also for every:{" "}
+          {parts.map((part) => (
+            <Button key={part} size="small" type="link" className="!px-1" onClick={() => (onApplyToSame(part, value), setOpen(false))}>
+              {part}
+            </Button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+  return (
+    <Popover open={open} onOpenChange={setOpen} trigger="click" content={panel} title="Photo for this variant" placement="bottomLeft">
+      <button
+        type="button"
+        className="relative flex h-[58px] w-[58px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-app-border bg-app-surface p-0 cursor-pointer text-ink-muted hover:border-accent"
+        aria-label={value ? "Change this variant's photo" : "Add a photo for this variant"}
+      >
+        {value ? <img src={value} alt="" className="h-full w-full object-cover" /> : <ImagePlus size={18} aria-hidden="true" />}
+      </button>
+    </Popover>
+  );
+}
+
 export function ProductForm({ product, store, template, justCreated = false }) {
   const router = useRouter();
   const { message } = App.useApp();
@@ -231,9 +311,12 @@ export function ProductForm({ product, store, template, justCreated = false }) {
   const [dirty, setDirty] = useState(Boolean(template));
   const [saved, setSaved] = useState(justCreated ? "created" : null);
   const source = product || template;
-  const [images, setImages] = useState(
-    source ? source.images.map((img) => ({ uid: img.id, url: img.url })) : []
-  );
+  // A photo shared by several variants is stored once per variant: show it once.
+  const [images, setImages] = useState(() => {
+    if (!source) return [];
+    const seen = new Set();
+    return source.images.filter((img) => !seen.has(img.url) && seen.add(img.url)).map((img) => ({ uid: img.id, url: img.url }));
+  });
   const [uploading, setUploading] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
@@ -300,6 +383,7 @@ export function ProductForm({ product, store, template, justCreated = false }) {
           price: Number(v.price),
           comparePrice: v.comparePrice ? Number(v.comparePrice) : undefined,
           inventoryQuantity: template ? 0 : v.inventoryQuantity,
+          imageUrl: source.images.find((img) => img.variantId === v.id)?.url || null,
         })),
       }
     : {
@@ -370,6 +454,27 @@ export function ProductForm({ product, store, template, justCreated = false }) {
     return false; // stop antd's own XHR upload — we already uploaded via uploadImage
   }
 
+  /** Uploads a variant's photo: it joins the product's photos too. */
+  async function uploadVariantImage(file) {
+    try {
+      const uploaded = await uploadImage(file);
+      setImages((prev) => [...prev, { uid: uploaded.id, url: uploaded.url }]);
+      setDirty(true);
+      return uploaded.url;
+    } catch (err) {
+      message.error(err.message);
+      return null;
+    }
+  }
+
+  /** "Also for every Black": the photo for each variant with that value. */
+  function applyImageToSame(part, url) {
+    const list = form.getFieldValue("variants") || [];
+    const has = (t) => String(t || "").split("/").map((x) => x.trim().toLowerCase()).includes(part.toLowerCase());
+    form.setFieldValue("variants", list.map((v) => (has(v.title) ? { ...v, imageUrl: url } : v)));
+    setDirty(true);
+  }
+
   function removeImage(uid) {
     setImages((prev) => prev.filter((img) => img.uid !== uid));
     setDirty(true);
@@ -387,7 +492,7 @@ export function ProductForm({ product, store, template, justCreated = false }) {
       // Stock is only sent when it was changed here — otherwise the save
       // would overwrite any sales made while this page was open.
       const loadedStock = Object.fromEntries((product?.variants || []).map((v) => [v.id, v.inventoryQuantity]));
-      const variantsOut = (values.variants || []).map((v) => ({
+      const variantsOut = (values.variants || []).map(({ imageUrl, ...v }) => ({
         ...v,
         title: String(v.title || "").trim() || "Default",
         price: v.price ?? 0,
@@ -398,7 +503,13 @@ export function ProductForm({ product, store, template, justCreated = false }) {
         tags: (values.tags || []).join(", ") || null,
         variants: variantsOut,
         metafields: metafieldPayload(values.metafields),
-        images: images.map((img) => ({ url: img.url })),
+        // Each photo with the variants it belongs to (the product page
+        // switches to it when one is picked).
+        images: images.map((img, i) => ({
+          url: img.url,
+          position: i,
+          variantTitles: (values.variants || []).filter((v) => v.imageUrl && v.imageUrl === img.url).map((v) => String(v.title || "").trim() || "Default"),
+        })),
       };
       if (isEdit) {
         await apiFetch(`/api/products/${product.id}`, { method: "PATCH", body: payload });
@@ -593,7 +704,11 @@ export function ProductForm({ product, store, template, justCreated = false }) {
                           <Form.Item {...restField} name={[name, "id"]} hidden>
                             <Input />
                           </Form.Item>
-                          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                          <div className="flex items-start gap-3">
+                          <Form.Item {...restField} name={[name, "imageUrl"]} label="Photo" className="mb-0" valuePropName="value">
+                            <VariantImagePicker images={images} onUpload={uploadVariantImage} title={variants[name]?.title} onApplyToSame={applyImageToSame} onChange={() => setDirty(true)} />
+                          </Form.Item>
+                          <div className="grid min-w-0 flex-1 grid-cols-2 md:grid-cols-5 gap-3">
                             <Form.Item {...restField} name={[name, "title"]} label="Option" className="mb-0">
                               <Input placeholder="M / Black" />
                             </Form.Item>
@@ -609,6 +724,7 @@ export function ProductForm({ product, store, template, justCreated = false }) {
                             <Form.Item {...restField} name={[name, "sku"]} label="SKU" className="mb-0">
                               <Input />
                             </Form.Item>
+                          </div>
                           </div>
                           {fields.length > 1 && (
                             <Button type="text" danger size="small" className="mt-2" icon={<Trash2 size={14} aria-hidden="true" />} onClick={() => remove(name)}>

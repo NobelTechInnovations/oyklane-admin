@@ -22,6 +22,9 @@ const imageSchema = z.object({
   url: z.string().url(),
   altText: z.string().optional().nullable(),
   position: z.coerce.number().int().nonnegative().default(0),
+  // The variants this photo shows ("Black / M"…) — the product page
+  // switches to it when one is picked. Matched by title when saved.
+  variantTitles: z.array(z.string().trim().min(1).max(255)).max(200).optional(),
 });
 
 const createProductSchema = z.object({

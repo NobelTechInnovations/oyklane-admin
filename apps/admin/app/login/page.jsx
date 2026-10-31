@@ -34,7 +34,7 @@ export default function LoginPage() {
       if (next && next.startsWith("/") && !next.startsWith("//")) return router.push(next);
       // …else, with more than one store on this login, pick which to open.
       const mine = await apiFetch("/api/auth/my-stores").catch(() => ({ stores: [] }));
-      router.push(mine.stores?.length > 1 ? "/choose-store" : "/admin");
+      router.push(mine.stores?.length === 1 ? "/admin" : "/choose-store");
       router.refresh();
     } catch (err) {
       setError(err.message);

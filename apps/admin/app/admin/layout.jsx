@@ -20,6 +20,12 @@ export default async function AdminLayout({ children }) {
     redirect(process.env.NEXT_PUBLIC_SUPER_ADMIN_URL || "http://localhost:3003");
   }
 
+  // A login with no store (it was moved to another login, or deleted):
+  // the store picker offers to create one instead of an empty dashboard.
+  if (!me.store) {
+    redirect("/choose-store");
+  }
+
   // The billing engine decides whether the dashboard is open (GET
   // /api/auth/me → access, from billing/access.js — the same answer the
   // API enforces on every request). A locked store goes to the billing

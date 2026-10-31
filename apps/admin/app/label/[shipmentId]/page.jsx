@@ -9,7 +9,7 @@ import { apiFetch } from "@/lib/api";
 function Barcode({ value, height = 64, fontSize = 13 }) {
   const ref = useRef(null);
   useEffect(() => {
-    if (ref.current && value) JsBarcode(ref.current, String(value), { format: "CODE128", height, width: 2, margin: 0, fontSize, textMargin: 2, font: "monospace" });
+    if (ref.current && value) JsBarcode(ref.current, String(value), { format: "CODE128", height, width: 2, margin: 0, displayValue: fontSize > 0, fontSize: fontSize || 12, textMargin: 2, font: "monospace" });
   }, [value, height, fontSize]);
   return <svg ref={ref} className="max-w-full" />;
 }
@@ -41,8 +41,8 @@ export default function ShippingLabelPage() {
       <style>{`
         @page { size: 4in 6in; margin: 0; }
         html, body { margin: 0; background: #f2f2f2; }
-        .oy-lbl { margin: 16px auto; }
-        @media print { html, body { background: #fff; } .oy-lbl { margin: 0; border: 0 !important; } .noprint { display: none; } }
+        .oy-lbl { margin: 16px auto; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+        @media print { html, body { background: #fff; } .oy-lbl { margin: 0; box-shadow: none; } .noprint { display: none; } }
       `}</style>
       <ShippingLabel data={d} layout={d.layout} Barcode={Barcode} />
       <p className="noprint" style={{ textAlign: "center", fontFamily: "system-ui", fontSize: 13 }}>

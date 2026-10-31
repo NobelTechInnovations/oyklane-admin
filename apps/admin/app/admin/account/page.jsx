@@ -21,10 +21,11 @@ export default function AccountPage() {
   const [moveForm] = Form.useForm();
 
   useEffect(() => {
-    Promise.all([apiFetch("/api/auth/me"), apiFetch("/api/store")])
-      .then(([m, s]) => {
+    Promise.all([apiFetch("/api/auth/me"), apiFetch("/api/store"), apiFetch("/api/auth/store-transfer").catch(() => ({ transfer: null }))])
+      .then(([m, s, t]) => {
         setMe(m.user || m);
         setStore(s);
+        if (t.transfer) setSent({ sentTo: t.transfer.to, transfer: t.transfer });
       })
       .catch((err) => message.error(err.message));
   }, [message]);
@@ -48,6 +49,18 @@ export default function AccountPage() {
       emailForm.resetFields();
       codeForm.resetFields();
       message.success(`Your login email is now ${email}`);
+    } catch (err) {
+      message.error(err.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+  async function cancelMove() {
+    setBusy("cancel");
+    try {
+      await apiFetch("/api/auth/store-transfer", { method: "DELETE" });
+      setSent(null);
+      message.success("Move cancelled — the emailed links no longer work");
     } catch (err) {
       message.error(err.message);
     } finally {
@@ -109,22 +122,31 @@ export default function AccountPage() {
 
       <Card size="small" title={<span className="inline-flex items-center gap-2"><ArrowRightLeft size={15} aria-hidden="true" /> Move {storeName} to another login</span>} styles={{ body: { padding: 20 } }}>
         <p className="m-0 mb-4 text-[13.5px] text-ink">
-          Made two stores with two emails? Move this one to your other Oyklane login — then one sign-in opens both, and you pick the store. Its plan, orders and settings stay as they are; this login loses access once it&apos;s accepted.
+          Made two stores with two emails? Move this one to your other Oyklane login — then one sign-in opens both, and you pick the store. We email you to approve and the other login to accept; it moves once both have. Its plan, orders and settings stay as they are; this login then loses access.
         </p>
         {!owner ? (
           <Alert type="info" showIcon message="Only the store's owner can move it." />
         ) : sent ? (
-          <Alert type="success" showIcon message={`Sent to ${sent.sentTo}. Sign in with that email and open the link to accept.`} action={<Button size="small" onClick={() => setSent(null)}>Send again</Button>} />
+          <Alert
+            type="info"
+            showIcon
+            message={`Moving to ${sent.sentTo}`}
+            description={
+              <span>
+                {sent.transfer?.ownerApproved ? "You approved." : `Approve from the email we sent to ${me.email}.`} {sent.transfer?.accepted ? `${sent.sentTo} accepted.` : `Waiting for ${sent.sentTo} to accept from their email.`} The links work for 7 days.
+              </span>
+            }
+            action={
+              <Button size="small" danger loading={busy === "cancel"} onClick={cancelMove}>
+                Cancel move
+              </Button>
+            }
+          />
         ) : (
           <Form form={moveForm} layout="vertical" requiredMark={false} onFinish={move}>
-            <div className="grid gap-x-3 sm:grid-cols-2">
-              <Form.Item name="email" label="The other login's email" rules={[{ required: true, type: "email", message: "Enter a valid email" }]}>
-                <Input />
-              </Form.Item>
-              <Form.Item name="currentPassword" label="Your current password" rules={[{ required: true, message: "Your password" }]}>
-                <Input.Password autoComplete="current-password" />
-              </Form.Item>
-            </div>
+            <Form.Item name="email" label="The other login's email" rules={[{ required: true, type: "email", message: "Enter a valid email" }]} className="max-w-sm">
+              <Input />
+            </Form.Item>
             <Button htmlType="submit" loading={busy === "move"}>
               Send move request
             </Button>

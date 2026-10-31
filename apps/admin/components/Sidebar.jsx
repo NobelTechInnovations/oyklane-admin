@@ -43,6 +43,8 @@ import {
   MessageSquare,
   Truck,
   IndianRupee,
+  TriangleAlert,
+  Calculator,
 } from "lucide-react";
 import { useApps, appHref, detailsHref } from "@/lib/apps";
 import { apiFetch } from "@/lib/api";
@@ -109,7 +111,9 @@ const NAV_ITEMS = [
     label: <Link href="/admin/shipping">Shipping</Link>,
     children: [
       { key: "/admin/shipping", icon: <Truck size={14} aria-hidden="true" />, label: <Link href="/admin/shipping">Shipments</Link> },
-      { key: "/admin/shipping/rates", icon: <IndianRupee size={14} aria-hidden="true" />, label: <Link href="/admin/shipping/rates">Shipping rates</Link> },
+      { key: "/admin/shipping/ndr", icon: <TriangleAlert size={14} aria-hidden="true" />, label: <Link href="/admin/shipping/ndr">Failed deliveries (NDR)</Link> },
+      { key: "/admin/shipping/calculator", icon: <Calculator size={14} aria-hidden="true" />, label: <Link href="/admin/shipping/calculator">Rate calculator</Link> },
+      { key: "/admin/shipping/rates", icon: <IndianRupee size={14} aria-hidden="true" />, label: <Link href="/admin/shipping/rates">Rate chart</Link> },
       { key: "/admin/settings/shipping", icon: <Package size={14} aria-hidden="true" />, label: <Link href="/admin/settings/shipping">Packages & pickup</Link> },
     ],
   },

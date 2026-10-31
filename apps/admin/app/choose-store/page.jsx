@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, Button, Skeleton } from "antd";
+import { Alert, Button, Form, Input, Skeleton } from "antd";
 import { ChevronRight, Store } from "lucide-react";
 import { BrandMark } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
@@ -20,11 +20,28 @@ export default function ChooseStorePage() {
   useEffect(() => {
     apiFetch("/api/auth/my-stores")
       .then((d) => {
-        if ((d.stores || []).length <= 1) router.replace("/admin");
-        else setStores(d.stores);
+        if ((d.stores || []).length === 1) router.replace("/admin");
+        else setStores(d.stores || []);
       })
       .catch(() => router.replace("/login"));
   }, [router]);
+
+  async function create(v) {
+    setBusy("create");
+    setError(null);
+    try {
+      await apiFetch("/api/auth/stores", { method: "POST", body: { storeName: v.storeName } });
+      window.location.href = "/admin";
+    } catch (err) {
+      setError(err.message);
+      setBusy(null);
+    }
+  }
+
+  async function signOut() {
+    await apiFetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    router.replace("/login");
+  }
 
   async function open(id) {
     setBusy(id);
@@ -46,6 +63,25 @@ export default function ChooseStorePage() {
           <BrandMark size={28} />
         </div>
         <div className="rounded-2xl border border-app-border bg-app-surface p-6 shadow-card">
+          {stores && stores.length === 0 ? (
+            <>
+              <h1 className="m-0 text-[20px] font-semibold text-ink">No store on this login</h1>
+              <p className="m-0 mt-1 mb-5 text-[13.5px] text-ink-muted">This login doesn&apos;t have a store any more — it may have moved to another login or been closed. Create a new one, or sign in with the email that has your store.</p>
+              {error && <Alert type="error" showIcon className="!mb-4" message={error} />}
+              <Form layout="vertical" requiredMark={false} onFinish={create}>
+                <Form.Item name="storeName" label="Store name" rules={[{ required: true, message: "Give your store a name" }]}>
+                  <Input maxLength={80} autoFocus />
+                </Form.Item>
+                <Button type="primary" htmlType="submit" block size="large" loading={busy === "create"}>
+                  Create store
+                </Button>
+              </Form>
+              <Button type="link" block className="!mt-2" onClick={signOut}>
+                Sign in with another email
+              </Button>
+            </>
+          ) : (
+            <>
           <h1 className="m-0 text-[20px] font-semibold text-ink">Choose a store</h1>
           <p className="m-0 mt-1 mb-5 text-[13.5px] text-ink-muted">Your login has more than one store. You can switch any time from the store menu.</p>
           {error && <Alert type="error" showIcon className="!mb-4" message={error} />}
@@ -72,6 +108,8 @@ export default function ChooseStorePage() {
                 </li>
               ))}
             </ul>
+          )}
+            </>
           )}
         </div>
       </div>
