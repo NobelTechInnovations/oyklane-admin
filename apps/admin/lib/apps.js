@@ -21,6 +21,7 @@ export const APP_PANELS = {
   "facebook-shop": "/admin/apps/facebook-shop",
   "upi-qr": "/admin/apps/upi-qr",
   "google-analytics": "/admin/apps/google-analytics",
+  "xml-sitemap": "/admin/apps/xml-sitemap",
   shiprocket: "/admin/apps/couriers/shiprocket",
   "ithink-logistics": "/admin/apps/couriers/ithink-logistics",
 };

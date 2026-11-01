@@ -269,9 +269,16 @@ export function BillingSettings() {
             </>
           ) : b.due ? (
             <>
-              <Line label={KIND_LABEL[b.due.kind] || "Subscription"} value={inr(b.due.planAmount)} />
-              {b.due.feesAmount !== 0 && <Line label="Checkout fees" value={inr(b.due.feesAmount)} />}
-              {b.due.appsAmount > 0 && <Line label="Apps" value={inr(b.due.appsAmount)} />}
+              {b.due.lines?.length ? (
+                b.due.lines.map((l, i) => <Line key={i} label={`${l.label === "Plan" ? KIND_LABEL[b.due.kind] || "Subscription" : l.label}${l.detail ? ` · ${l.detail}` : ""}`} value={inr(l.amount)} />)
+              ) : (
+                <>
+                  <Line label={KIND_LABEL[b.due.kind] || "Subscription"} value={inr(b.due.planAmount)} />
+                  {b.due.feesAmount !== 0 && <Line label="Checkout fees" value={inr(b.due.feesAmount)} />}
+                  {b.due.appsAmount > 0 && <Line label="Apps & usage" value={inr(b.due.appsAmount)} />}
+                </>
+              )}
+              <Line label="Subtotal" value={inr(b.due.subtotal)} />
               <Line label={`GST (${b.due.taxRate}%)`} value={inr(b.due.taxAmount)} />
               <Line label="Due now" value={inr(b.due.total)} strong />
             </>

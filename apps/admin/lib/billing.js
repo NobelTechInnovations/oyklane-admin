@@ -106,7 +106,7 @@ export async function openCheckout(options) {
   });
 }
 
-function submitPayu({ action, fields }) {
+export function submitPayu({ action, fields }) {
   const form = document.createElement("form");
   form.method = "POST";
   form.action = action;

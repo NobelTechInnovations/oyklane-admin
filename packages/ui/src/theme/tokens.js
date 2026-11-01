@@ -7,7 +7,9 @@ export const tokens = {
     surface: "#FFFFFF",
     border: "#E6E6EA",
     textPrimary: "#111114",
-    textMuted: "#6B6B76",
+    textMuted: "#5F5F6B",
+    // Hints and placeholders — still 4.5:1 on white.
+    textSubtle: "#787884",
     // Primary actions — near-black, the convention premium commerce admins
     // use so the store's own content (product photos, theme colors) is what
     // carries color, not the chrome around it.

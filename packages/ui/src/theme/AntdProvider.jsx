@@ -10,6 +10,22 @@ import { tokens } from "./tokens";
 
 const c = tokens.colors;
 
+// Compact density, but 13px text (Shopify's admin size) — compact alone
+// drops every control to 12px, which read as faint and small.
+const readableText = (_seed, map) => ({
+  ...map,
+  fontSize: 13,
+  fontSizeSM: 12,
+  fontSizeLG: 15,
+  fontSizeXL: 18,
+  lineHeight: 20 / 13,
+  lineHeightSM: 18 / 12,
+  lineHeightLG: 22 / 15,
+  fontHeight: 20,
+  fontHeightSM: 18,
+  fontHeightLG: 22,
+});
+
 /** Wraps AntD's ConfigProvider so every component (Table, Button, Modal,
  * Drawer, Tag...) picks up the Oyklane tokens instead of AntD defaults,
  * and the compact algorithm gives the dense "admin dashboard" density this
@@ -22,7 +38,7 @@ export function AntdProvider({ children }) {
     <AntdRegistry>
       <ConfigProvider
         theme={{
-          algorithm: antdTheme.compactAlgorithm,
+          algorithm: [antdTheme.compactAlgorithm, readableText],
           token: {
             // Oyklane Blue for primary buttons, links and selections.
             colorPrimary: c.accent,
@@ -37,6 +53,10 @@ export function AntdProvider({ children }) {
             colorBorderSecondary: "#EEEEF1",
             colorText: c.textPrimary,
             colorTextSecondary: c.textMuted,
+            colorTextTertiary: c.textSubtle,
+            colorTextDescription: c.textMuted,
+            colorTextPlaceholder: "#9A9AA6",
+            colorTextDisabled: "#A3A3AE",
             controlOutline: "rgba(0, 103, 184, 0.18)",
             colorPrimaryHover: c.accentHover,
             borderRadius: tokens.radius.sm,
@@ -45,7 +65,10 @@ export function AntdProvider({ children }) {
             boxShadowTertiary: "0 1px 2px 0 rgba(17,17,20,0.04), 0 1px 3px 0 rgba(17,17,20,0.04)",
           },
           components: {
-            Table: { borderRadiusLG: tokens.radius.md, headerBg: "#FAFAFB", headerColor: c.textMuted },
+            Table: { borderRadiusLG: tokens.radius.md, headerBg: "#FAFAFB", headerColor: c.textMuted, cellPaddingBlock: 10, cellPaddingInline: 12, cellPaddingBlockSM: 8, cellPaddingInlineSM: 10 },
+            Form: { itemMarginBottom: 16, verticalLabelPadding: "0 0 6px", labelColor: "#303036" },
+            Tabs: { titleFontSize: 13.5, horizontalItemGutter: 24 },
+            Tag: { defaultBg: "#F3F3F5" },
             Button: { borderRadius: tokens.radius.sm, fontWeight: 500, primaryShadow: "none", defaultShadow: "none" },
             Card: { borderRadiusLG: tokens.radius.lg, headerFontSize: 14 },
             Modal: { borderRadiusLG: tokens.radius.lg },

@@ -25,8 +25,8 @@ module.exports = {
         },
         ink: {
           DEFAULT: "#111114",
-          muted: "#6B6B76",
-          subtle: "#9A9AA5",
+          muted: "#5F5F6B",
+          subtle: "#787884",
         },
         brand: {
           DEFAULT: "#111114",

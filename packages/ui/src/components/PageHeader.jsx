@@ -28,7 +28,7 @@ export function PageHeader({ title, subtitle, backHref, meta, actions, breadcrum
         <div className="min-w-0">
           {breadcrumb && <div className="text-xs text-ink-muted mb-1">{breadcrumb}</div>}
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-[22px] leading-tight font-semibold text-ink m-0" style={{ letterSpacing: "-0.02em" }}>
+            <h1 className="text-[20px] leading-tight font-semibold text-ink m-0" style={{ letterSpacing: "-0.015em" }}>
               {title}
             </h1>
             {meta}

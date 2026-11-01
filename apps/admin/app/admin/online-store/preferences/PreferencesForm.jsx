@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Form, Input, Card, Alert, App, Switch, Button } from "antd";
+import { Form, Input, Card, Alert, App, Switch, Button, Select } from "antd";
 import { PageHeader, SaveBar } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { ImageUploadField } from "@/components/ImageUploadField";
@@ -52,7 +52,7 @@ export function PreferencesForm({ store, seo, canEdit }) {
         layout="vertical"
         requiredMark={false}
         disabled={!canEdit}
-        initialValues={{ title: seo.title || "", description: seo.description || "", image: seo.image || "", favicon: seo.favicon || "" }}
+        initialValues={{ title: seo.title || "", description: seo.description || "", keywords: Array.isArray(seo.keywords) ? seo.keywords : [], image: seo.image || "", favicon: seo.favicon || "" }}
         onValuesChange={() => setDirty(true)}
         onFinish={save}
       >
@@ -65,8 +65,17 @@ export function PreferencesForm({ store, seo, canEdit }) {
               <Form.Item name="title" label="Home page title">
                 <Input maxLength={TITLE_MAX} showCount placeholder={store.name} />
               </Form.Item>
-              <Form.Item name="description" label="Meta description" className="mb-0">
+              <Form.Item name="description" label="Meta description">
                 <Input.TextArea rows={3} maxLength={DESCRIPTION_MAX} showCount placeholder="What you sell, in a sentence or two — e.g. Single-origin spices from Meghalaya, packed fresh and shipped across India." />
+              </Form.Item>
+              <Form.Item
+                name="keywords"
+                label="Keywords"
+                className="mb-0"
+                extra="What shoppers type to find stores like yours — press Enter after each. Up to 15."
+                rules={[{ validator: (_, v) => (!v || v.length <= 15 ? Promise.resolve() : Promise.reject(new Error("Keep it to 15 keywords"))) }]}
+              >
+                <Select mode="tags" tokenSeparators={[","]} open={false} suffixIcon={null} maxTagTextLength={40} placeholder="e.g. handmade kurtas, cotton sarees, ethnic wear online" />
               </Form.Item>
             </Card>
 

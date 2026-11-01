@@ -41,8 +41,8 @@ textarea:focus-visible,
 /* ── Tables: quieter header, clear row hover, comfortable edges ── */
 .ant-table-wrapper .ant-table-thead > tr > th {
   font-size: 12px;
-  font-weight: 500;
-  color: #6b6b76;
+  font-weight: 600;
+  color: #5f5f6b;
   background: #fafafb;
 }
 .ant-table-wrapper .ant-table-thead > tr > th::before {
@@ -114,3 +114,32 @@ textarea:focus-visible,
 .oy-consent .ant-checkbox { align-self: flex-start; margin-top: 2px; }
 .oy-consent .ant-checkbox-inner { width: 18px; height: 18px; }
 .oy-consent.is-checked { border-color: var(--ant-color-primary, #0078d4); background: #F0F7FD; }
+
+/* ── Shopify-like calm: labels, cards and page rhythm ── */
+.ant-form-item .ant-form-item-label > label {
+  font-weight: 500;
+}
+.ant-form-item .ant-form-item-extra {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.ant-card .ant-card-head {
+  padding-inline: 16px;
+}
+.ant-card .ant-card-head-title {
+  font-size: 14px;
+}
+.ant-card-small > .ant-card-body {
+  padding: 16px;
+}
+.ant-btn {
+  font-weight: 500;
+}
+.ant-tag {
+  font-size: 12px;
+  line-height: 20px;
+}
+.ant-empty-description {
+  color: #5f5f6b;
+}

@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { App, Alert, Button, Dropdown, InputNumber, Modal, Radio, Tag } from "antd";
-import { Download, FileText, MoreHorizontal, PackageCheck, Printer, Truck, XCircle } from "lucide-react";
+import { App, Alert, Button, Dropdown, InputNumber, Modal, Radio, Select, Tag } from "antd";
+import { Download, FileText, MoreHorizontal, PackageCheck, Printer, Truck, Wallet, XCircle } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { NdrDialog } from "@/components/shipping/NdrDialog";
+import { AddMoneyDialog } from "@/components/shipping/ShippingWallet";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 export const SHIP_STATUS = {
@@ -28,14 +29,17 @@ export function ShipWithOyklane({ order, open, onClose, onBooked }) {
   const [choice, setChoice] = useState(null);
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
+  const [pickupId, setPickupId] = useState(null);
+  const [adding, setAdding] = useState(false);
 
-  async function getRates(p = {}) {
+  async function getRates(p = {}, from = pickupId) {
     setBusy("rates");
     setError(null);
     try {
-      const q = await apiFetch(`/api/shipping/oyklane/orders/${order.id}/rates`, { method: "POST", body: p });
+      const q = await apiFetch(`/api/shipping/oyklane/orders/${order.id}/rates`, { method: "POST", body: { ...p, ...(from && { pickupId: from }) } });
       setQuote(q);
       setParcel(q.parcel);
+      setPickupId(q.pickupId || null);
       setChoice(q.couriers[0]?.courierId || null);
     } catch (err) {
       setError(err);
@@ -46,7 +50,7 @@ export function ShipWithOyklane({ order, open, onClose, onBooked }) {
   useEffect(() => {
     if (open) {
       setQuote(null);
-      getRates({});
+      getRates({}, null);
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -55,11 +59,12 @@ export function ShipWithOyklane({ order, open, onClose, onBooked }) {
     if (!c) return;
     setBusy("book");
     try {
-      const { shipment } = await apiFetch(`/api/shipping/oyklane/orders/${order.id}/book`, { method: "POST", body: { courierId: c.courierId, ...parcel } });
+      const { shipment } = await apiFetch(`/api/shipping/oyklane/orders/${order.id}/book`, { method: "POST", body: { courierId: c.courierId, ...parcel, ...(pickupId && { pickupId }) } });
       message.success(`Booked with ${shipment.courier} — AWB ${shipment.awb}`);
       onClose?.();
       onBooked?.();
     } catch (err) {
+      if (err.details?.reason === "wallet_low") setAdding(true);
       message.error(err.message);
     } finally {
       setBusy(null);
@@ -67,6 +72,9 @@ export function ShipWithOyklane({ order, open, onClose, onBooked }) {
   }
 
   const reason = error?.details?.reason;
+  const wallet = quote?.wallet?.enabled ? quote.wallet : null;
+  const picked = quote?.couriers.find((x) => x.courierId === choice);
+  const short = wallet && picked ? Math.max(0, picked.price - wallet.balance) : 0;
   return (
     <Modal open={open} onCancel={onClose} title="Ship with Oyklane Shipping" width={620} footer={null} destroyOnHidden>
       {error && (
@@ -75,11 +83,23 @@ export function ShipWithOyklane({ order, open, onClose, onBooked }) {
           showIcon
           className="mb-4"
           message={error.message}
-          action={reason === "no_pickup" ? <Link href="/admin/settings/shipping">Add pickup address</Link> : null}
+          action={reason === "no_pickup" ? <Link href="/admin/settings/shipping#pickups">Add pickup address</Link> : null}
         />
       )}
       {quote && (
         <>
+          {quote.pickups?.length > 1 && (
+            <label className="mb-3 block text-[12.5px] text-ink-muted">
+              Ship from
+              <Select
+                className="!mt-1 !block !w-full"
+                value={pickupId}
+                disabled={busy === "rates"}
+                onChange={(id) => getRates(parcel, id)}
+                options={quote.pickups.map((p) => ({ value: p.id, label: `${p.label} — ${p.city ? `${p.city}, ` : ""}${p.pincode}` }))}
+              />
+            </label>
+          )}
           <div className="mb-3 flex flex-wrap items-end gap-3">
             <label className="text-[12.5px] text-ink-muted">
               Weight (g)
@@ -97,8 +117,19 @@ export function ShipWithOyklane({ order, open, onClose, onBooked }) {
           </div>
           <p className="mt-0 mb-3 text-[12.5px] text-ink-muted">
             {quote.parcel?.packages?.length ? `Package: ${quote.parcel.packages.join(", ")}. ` : ""}
-            {quote.paymentType === "COD" ? `Cash on delivery ${inr(quote.codAmount)} — collected by Oyklane and paid to your bank after delivery.` : "Prepaid order."} Shipping is billed with your plan.
+            {quote.paymentType === "COD" ? `Cash on delivery ${inr(quote.codAmount)} — collected by Oyklane and paid to your bank after delivery.` : "Prepaid order."} {wallet ? "Shipping is paid from your wallet." : "Shipping is billed with your plan."}
           </p>
+          {wallet && (
+            <div className={`mb-3 flex flex-wrap items-center justify-between gap-2 rounded-[10px] border px-3 py-2 ${short > 0 ? "border-[#F5D08A] bg-[#FFF8EB]" : "border-app-border bg-app-surface"}`}>
+              <span className="inline-flex items-center gap-2 text-[13px] text-ink">
+                <Wallet size={15} aria-hidden="true" /> Wallet balance <b className="tabular-nums">{inr(wallet.balance)}</b>
+                {short > 0 && <span className="text-[#B45309]">· add {inr(short)} more for this courier</span>}
+              </span>
+              <Button size="small" type={short > 0 ? "primary" : "default"} onClick={() => setAdding(true)}>
+                Add money
+              </Button>
+            </div>
+          )}
           {quote.couriers.length === 0 ? (
             <Alert type="warning" showIcon message="No courier serves this pincode right now." />
           ) : (
@@ -127,10 +158,11 @@ export function ShipWithOyklane({ order, open, onClose, onBooked }) {
           )}
           <div className="mt-5 flex justify-end gap-2">
             <Button onClick={onClose}>Cancel</Button>
-            <Button type="primary" icon={<Truck size={15} aria-hidden="true" />} disabled={!choice} loading={busy === "book"} onClick={book}>
-              Book courier
+            <Button type="primary" icon={<Truck size={15} aria-hidden="true" />} disabled={!choice || short > 0} loading={busy === "book"} onClick={book}>
+              Book courier{picked ? ` · ${inr(picked.price)}` : ""}
             </Button>
           </div>
+          {wallet && <AddMoneyDialog open={adding} onClose={() => setAdding(false)} minTopup={wallet.minTopup} suggest={short} onAdded={(balance) => setQuote((q) => ({ ...q, wallet: { ...q.wallet, balance } }))} />}
         </>
       )}
       {!quote && !error && <p className="text-sm text-ink-muted">Finding couriers for this pincode…</p>}
@@ -163,7 +195,7 @@ export function OyklaneShipments({ orderId, onChange }) {
   function cancel(s) {
     modal.confirm({
       title: "Cancel this shipment?",
-      content: "The courier booking is cancelled and the shipping charge comes off your bill.",
+      content: "The courier booking is cancelled and its shipping charge is refunded — to your shipping wallet, or off your bill.",
       okText: "Cancel shipment",
       okButtonProps: { danger: true },
       onOk: async () => {
