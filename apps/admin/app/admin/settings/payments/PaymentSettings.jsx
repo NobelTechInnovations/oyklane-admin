@@ -219,6 +219,7 @@ export function PaymentSettings({ initial, currency, canEdit }) {
     });
   }
 
+  const payu = data.providers.find((p) => p.key === "payu");
   const online = data.providers.filter((p) => p.enabled).length;
   const live = data.providers.filter((p) => p.connected && p.enabled);
   const nothing = !data.cod.enabled && online === 0;
@@ -226,6 +227,30 @@ export function PaymentSettings({ initial, currency, canEdit }) {
   return (
     <div className="max-w-3xl flex flex-col gap-4">
       {nothing && <Alert type="warning" showIcon message="No payment method is on — customers can't place orders." />}
+
+      {payu && !payu.connected && (
+        <Card size="small" styles={{ body: { padding: 18 } }}>
+          <div className="flex flex-wrap items-start gap-4">
+            <Mark k="payu" />
+            <div className="min-w-[220px] flex-1">
+              <p className="m-0 flex flex-wrap items-center gap-2 text-[15px] font-semibold text-ink">
+                PayU, our payment partner <Tag color="green" className="!m-0">Partner</Tag>
+              </p>
+              <ul className="m-0 mt-2 grid list-none gap-1.5 p-0 text-[13px] text-ink sm:grid-cols-3">
+                <li>0% on UPI payments</li>
+                <li>No extra gateway fee from oyklane</li>
+                <li>No hidden charges</li>
+              </ul>
+              <p className="m-0 mt-2 text-[12.5px] text-ink-muted">Open your PayU account from here — money settles straight into your bank account.</p>
+            </div>
+            {payu.oauth?.available && (
+              <Button type="primary" disabled={!canEdit} loading={busy === "payu"} onClick={connectPayu}>
+                Connect with PayU
+              </Button>
+            )}
+          </div>
+        </Card>
+      )}
 
       <Card size="small" title="Online payments" extra={<span className="text-xs text-ink-muted">{online} active</span>}>
         <ul className="m-0 p-0 list-none divide-y divide-app-border">
@@ -239,7 +264,7 @@ export function PaymentSettings({ initial, currency, canEdit }) {
                     {p.name}
                     {p.connected && <StatusBadge status={p.enabled ? "active" : "disabled"} label={p.enabled ? "On" : "Off"} />}
                     {p.connected && p.testMode && <Tag color="gold" className="!m-0">Test mode</Tag>}
-                    {p.recommended && !p.connected && <Tag color="blue" className="!m-0">Recommended</Tag>}
+                    {p.key === "payu" ? <Tag color="green" className="!m-0">Partner</Tag> : p.recommended && !p.connected && <Tag color="blue" className="!m-0">Recommended</Tag>}
                   </p>
                   <p className="m-0 text-xs text-ink-muted">
                     {unsupported ? `Not available for ${currency} stores.` : p.oauth?.connected ? `Connected with Razorpay${p.oauth.accountId ? ` · ${p.oauth.accountId}` : ""}` : p.blurb}
