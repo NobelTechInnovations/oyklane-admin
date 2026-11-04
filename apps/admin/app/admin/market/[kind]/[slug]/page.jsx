@@ -141,18 +141,18 @@ export default function MarketGetPage({ params }) {
   const applyForRefund = () => {
     let reason = "";
     modal.confirm({
-      title: "Apply for a refund?",
+      title: "Refund this theme?",
       content: (
         <div className="text-[13px]">
-          <p className="mb-2">We'll refund {inr(data.price?.total)} to the way you paid. Your purchase code stops working once it's refunded.</p>
+          <p className="mb-2">{inr(data.price?.total)} goes back to the way you paid, straight away. Your purchase code stops working.</p>
           <Input.TextArea rows={3} maxLength={1000} placeholder="What went wrong? (optional)" onChange={(e) => (reason = e.target.value)} />
         </div>
       ),
-      okText: "Apply for refund",
+      okText: "Refund me",
       onOk: () =>
         run("refund", async () => {
-          await themeAction("refund", { reason: reason || undefined });
-          message.success("Refund requested. We'll review it soon.");
+          const out = await themeAction("refund", { reason: reason || undefined });
+          message.success(out.status === "refunded" ? "Refunded. It's on its way back to you." : "Your refund is going through.");
           await load();
         }),
     });
@@ -319,15 +319,14 @@ export default function MarketGetPage({ params }) {
           )}
           {refund && !done && (refund.status || refund.eligible) && (
             <Card size="small" title="Refund">
-              {refundPending && <p className="m-0 text-[13px]">You've applied for a refund. We'll review it soon. The theme can't be installed until then.</p>}
-              {refund.status === "declined" && <p className="m-0 text-[13px]">Your refund wasn't approved{refund.note ? `: ${refund.note}` : "."}</p>}
+              {refundPending && <p className="m-0 text-[13px]">Your refund is going through. The theme can't be installed until it's done.</p>}
               {refund.status === "failed" && <p className="m-0 text-[13px]">The refund didn't go through. Our team is looking into it.</p>}
               {refund.eligible && (
                 <>
-                  <p className="m-0 text-[13px] text-ink-muted">You can get your money back until {day(refund.deadline)}. {data.installed ? "Uninstall the theme first." : "After that, the payment can't be refunded."}</p>
+                  <p className="m-0 text-[13px] text-ink-muted">You can get your money back until {day(refund.deadline)}, straight away. {data.installed ? "Uninstall the theme first." : "After that, the payment can't be refunded."}</p>
                   {!data.installed && (
                     <Button block className="mt-3" loading={busy === "refund"} onClick={applyForRefund}>
-                      Apply for a refund
+                      Refund this theme
                     </Button>
                   )}
                 </>
