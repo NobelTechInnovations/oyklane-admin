@@ -106,7 +106,9 @@ export default function ThemesPage() {
 
   const live = themes.find((t) => t.isActive);
   const others = themes.filter((t) => !t.isActive);
-  const liveHasUpdate = live?.updateAvailable && !themes.some((t) => t.handle === live.handle && t.version === live.latestVersion);
+  const liveHasUpdate = live?.updateAvailable && !live.market && !themes.some((t) => t.handle === live.handle && t.version === live.latestVersion);
+  // Oyklane Store themes update in place, when the seller chooses.
+  const storeUpdates = themes.filter((t) => t.market && t.updateAvailable);
 
   return (
     <div>
@@ -155,6 +157,23 @@ export default function ThemesPage() {
           </Button>
         </div>
       )}
+
+      {storeUpdates.map((t) => (
+        <div key={t.id} className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-accent/30 bg-accent/5 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <Sparkles size={18} className="text-accent mt-0.5 shrink-0" aria-hidden="true" />
+            <p className="text-sm text-ink m-0">
+              <strong className="font-semibold">
+                {t.name} {t.latestVersion} is available.
+              </strong>{" "}
+              Update it when you're ready. Your layouts and settings stay as they are.
+            </p>
+          </div>
+          <Link href={`/admin/market/theme/${encodeURIComponent(t.market.slug)}`}>
+            <Button type="primary">Review update</Button>
+          </Link>
+        </div>
+      ))}
 
       {live && store && (
         <Card className="mb-8" styles={{ body: { padding: 20 } }}>

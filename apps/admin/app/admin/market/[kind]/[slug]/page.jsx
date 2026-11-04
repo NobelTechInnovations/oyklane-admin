@@ -3,7 +3,7 @@
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { App, Alert, Button, Card, Skeleton, Tag } from "antd";
+import { App, Alert, Button, Card, Input, Skeleton, Tag } from "antd";
 import { ExternalLink, ShieldCheck, Store } from "lucide-react";
 import { formatCurrency } from "@shopcycle/utils";
 import { PageHeader } from "@shopcycle/ui";
@@ -12,29 +12,36 @@ import { openCheckout } from "@/lib/billing";
 
 const MARKET = process.env.NEXT_PUBLIC_MARKET_ORIGIN || "https://market.oyklane.com";
 const inr = (n) => formatCurrency(Number(n || 0), "INR");
+const day = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
 /**
  * Get something from the Oyklane Store (market.oyklane.com sends sellers
  * here — they're signed in to their store here). Free: install. Paid
- * theme: pay with Razorpay (the API checks the payment with Razorpay
- * before the licence exists), then install. Apps install from here too.
+ * theme: one payment for a year (the API checks it with the gateway before
+ * the licence exists), then install with the purchase code. From here the
+ * seller also takes a new version, uninstalls, renews or applies for a
+ * refund. Apps install from here too.
  */
 export default function MarketGetPage({ params }) {
   const { kind, slug } = use(params);
   const router = useRouter();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(null);
   const [done, setDone] = useState(null);
+  const [typedCode, setTypedCode] = useState(null);
   const auto = useSearchParams().get("install") === "1";
   const autoRan = useRef(false);
 
   const load = useCallback(async () => {
     try {
-      setData(await apiFetch(`/api/market/store/${encodeURIComponent(kind)}/${encodeURIComponent(slug)}`));
+      const next = await apiFetch(`/api/market/store/${encodeURIComponent(kind)}/${encodeURIComponent(slug)}`);
+      setData(next);
+      return next;
     } catch (err) {
       setError(err.message);
+      return null;
     }
   }, [kind, slug]);
   useEffect(() => {
@@ -52,11 +59,15 @@ export default function MarketGetPage({ params }) {
     }
   }
 
+  const themeAction = (action, body = {}) => apiFetch(`/api/market/store/themes/${encodeURIComponent(slug)}/${action}`, { method: "POST", body });
+  // The code comes filled in from the licence; it stays on the page to copy.
+  const purchaseCode = typedCode ?? data?.license?.code ?? "";
+
   const installTheme = () =>
     run("install", async () => {
       const out = data.official
         ? (await apiFetch("/api/themes/install", { method: "POST", body: { handle: slug } })).theme
-        : await apiFetch(`/api/market/store/themes/${encodeURIComponent(slug)}/install`, { method: "POST", body: {} });
+        : await themeAction("install", purchaseCode ? { purchaseCode } : {});
       const themeId = out.themeId || out.id;
       setDone({ themeId });
       message.success(`${data.item.name} added to your themes`);
@@ -76,7 +87,8 @@ export default function MarketGetPage({ params }) {
 
   const buy = () =>
     run("buy", async () => {
-      const started = await apiFetch(`/api/market/store/themes/${encodeURIComponent(slug)}/buy`, { method: "POST", body: {} });
+      const renewing = Boolean(data.license);
+      const started = await themeAction("buy");
       if (!started.owned) {
         const paid = await openCheckout(started.checkout);
         const verified = await apiFetch("/api/market/store/verify", { method: "POST", body: paid });
@@ -86,11 +98,65 @@ export default function MarketGetPage({ params }) {
           return;
         }
       }
+      const fresh = await load();
+      if (renewing) return message.success("Renewed for another year.");
       message.success("Paid — it's yours. Installing…");
-      await load();
-      const out = await apiFetch(`/api/market/store/themes/${encodeURIComponent(slug)}/install`, { method: "POST", body: {} });
+      const out = await themeAction("install", { purchaseCode: fresh?.license?.code });
       setDone({ themeId: out.themeId });
+      await load();
     });
+
+  const update = () =>
+    modal.confirm({
+      title: `Update to version ${data.update.to}?`,
+      content: (
+        <div className="text-[13px]">
+          {data.update.changelog && <p className="mb-2 whitespace-pre-line">{data.update.changelog}</p>}
+          <p className="m-0 text-ink-muted">Your theme stays the same one, and your layouts and settings stay as they are. Its code moves to the new version.</p>
+        </div>
+      ),
+      okText: "Update",
+      onOk: () =>
+        run("update", async () => {
+          await themeAction("update");
+          message.success(`Updated to version ${data.update.to}`);
+          await load();
+        }),
+    });
+
+  const uninstall = () =>
+    modal.confirm({
+      title: `Uninstall ${data.item.name}?`,
+      content: <p className="m-0 text-[13px]">It comes off your themes, with every copy of it and your changes to them.{data.license ? " You can install it again until your licence ends." : ""}</p>,
+      okText: "Uninstall",
+      okButtonProps: { danger: true },
+      onOk: () =>
+        run("uninstall", async () => {
+          await themeAction("uninstall");
+          message.success("Uninstalled");
+          await load();
+        }),
+    });
+
+  const applyForRefund = () => {
+    let reason = "";
+    modal.confirm({
+      title: "Apply for a refund?",
+      content: (
+        <div className="text-[13px]">
+          <p className="mb-2">We'll refund {inr(data.price?.total)} to the way you paid. Your purchase code stops working once it's refunded.</p>
+          <Input.TextArea rows={3} maxLength={1000} placeholder="What went wrong? (optional)" onChange={(e) => (reason = e.target.value)} />
+        </div>
+      ),
+      okText: "Apply for refund",
+      onOk: () =>
+        run("refund", async () => {
+          await themeAction("refund", { reason: reason || undefined });
+          message.success("Refund requested. We'll review it soon.");
+          await load();
+        }),
+    });
+  };
 
   const installApp = () =>
     run("install", async () => {
@@ -108,9 +174,11 @@ export default function MarketGetPage({ params }) {
     );
   if (!data) return <Skeleton active paragraph={{ rows: 6 }} />;
 
-  const { item, price } = data;
+  const { item, price, license, refund } = data;
   const theme = kind === "theme";
   const paid = !item.free && !data.official;
+  const refundPending = ["requested", "processing"].includes(refund?.status);
+  const canRenew = paid && license?.renewable;
   return (
     <div>
       <PageHeader title={item.name} subtitle={item.tagline} backHref={theme ? "/admin/online-store/themes" : "/admin/apps"} />
@@ -159,7 +227,7 @@ export default function MarketGetPage({ params }) {
                 <p className="m-0 text-[26px] font-semibold tabular-nums">{item.free || data.official ? "Free" : inr(price?.amount)}</p>
                 {paid && (
                   <p className="m-0 mt-1 text-[12.5px] text-ink-muted">
-                    {price.monthly ? "a month, billed with your plan" : "one-time, for this store"} · + {price.rate}% GST ({inr(price.gst)}) = <b>{inr(price.total)}</b>
+                    {price.monthly ? "a month, billed with your plan" : "a year, for this store"} · + {price.rate}% GST ({inr(price.gst)}) = <b>{inr(price.total)}</b>
                   </p>
                 )}
                 <div className="flex flex-col gap-2 mt-4">
@@ -170,12 +238,32 @@ export default function MarketGetPage({ params }) {
                       </Button>
                     ) : paid && !data.owned ? (
                       <Button type="primary" size="large" block loading={busy === "buy"} disabled={data.payments === "unconfigured"} onClick={buy}>
-                        Buy for {inr(price.total)}
+                        {license ? "Renew" : "Buy"} for {inr(price.total)}
                       </Button>
+                    ) : data.installed && !data.official ? (
+                      <>
+                        {data.update ? (
+                          <Button type="primary" size="large" block loading={busy === "update"} onClick={update}>
+                            Update to version {data.update.to}
+                          </Button>
+                        ) : (
+                          <Button block onClick={() => router.push("/admin/online-store/themes")}>
+                            Installed — open Themes
+                          </Button>
+                        )}
+                      </>
                     ) : (
-                      <Button type="primary" size="large" block loading={busy === "install"} onClick={installTheme}>
-                        {data.installed ? "Install again (latest version)" : "Add to my themes"}
-                      </Button>
+                      <>
+                        {paid && (
+                          <label className="block text-[12.5px] text-ink-muted">
+                            Purchase code
+                            <Input className="mt-1 font-mono" value={purchaseCode} onChange={(e) => setTypedCode(e.target.value)} placeholder="OYK-XXXX-XXXX-XXXX-XXXX" disabled={refundPending} />
+                          </label>
+                        )}
+                        <Button type="primary" size="large" block loading={busy === "install"} disabled={refundPending || (paid && !purchaseCode.trim())} onClick={installTheme}>
+                          Add to my themes
+                        </Button>
+                      </>
                     )
                   ) : data.installed ? (
                     <Button block onClick={() => router.push("/admin/apps")}>
@@ -186,6 +274,11 @@ export default function MarketGetPage({ params }) {
                       {paid ? `Install — ${inr(price.amount)}/month` : "Install"}
                     </Button>
                   )}
+                  {theme && data.installed && !data.official && (
+                    <Button block danger loading={busy === "uninstall"} onClick={uninstall}>
+                      Uninstall
+                    </Button>
+                  )}
                   {theme && data.preview && (
                     <a href={`${MARKET}/themes/${encodeURIComponent(slug)}/preview`} target="_blank" rel="noopener noreferrer">
                       <Button block icon={<ExternalLink size={14} aria-hidden="true" />}>
@@ -194,16 +287,58 @@ export default function MarketGetPage({ params }) {
                     </a>
                   )}
                 </div>
-                {theme && data.owned && paid && <Tag color="green" className="mt-3">Bought — this store's licence</Tag>}
+                {theme && data.owned && paid && !license?.expired && <Tag color="green" className="mt-3">Bought — this store's licence</Tag>}
+                {data.update && license?.expired && <p className="m-0 mt-3 text-[12.5px] text-ink-muted">Version {data.update.to} is out. Renew to get it.</p>}
                 {data.payments === "unconfigured" && paid && !data.owned && <p className="m-0 mt-3 text-[12.5px] text-[#B45309]">Payments aren't available right now — try again later.</p>}
               </>
             )}
           </Card>
+          {license && !done && (
+            <Card size="small" title="Your licence">
+              <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-[13px]">
+                <dt className="text-ink-muted">Purchase code</dt>
+                <dd className="m-0 font-mono break-all">{license.code || "Ask your store owner"}</dd>
+                <dt className="text-ink-muted">Seller</dt>
+                <dd className="m-0 break-all">{license.seller}</dd>
+                <dt className="text-ink-muted">Domain</dt>
+                <dd className="m-0 break-all">{license.domain}</dd>
+                {license.expiresAt && (
+                  <>
+                    <dt className="text-ink-muted">{license.expired ? "Ended" : "Valid until"}</dt>
+                    <dd className="m-0">{day(license.expiresAt)}</dd>
+                  </>
+                )}
+              </dl>
+              {license.expired && <p className="m-0 mt-2 text-[12.5px] text-ink-muted">Your live theme keeps working. Renew to install it again or get updates.</p>}
+              {canRenew && data.owned && (
+                <Button block className="mt-3" loading={busy === "buy"} disabled={data.payments === "unconfigured"} onClick={buy}>
+                  Renew for {inr(price.total)}
+                </Button>
+              )}
+            </Card>
+          )}
+          {refund && !done && (refund.status || refund.eligible) && (
+            <Card size="small" title="Refund">
+              {refundPending && <p className="m-0 text-[13px]">You've applied for a refund. We'll review it soon. The theme can't be installed until then.</p>}
+              {refund.status === "declined" && <p className="m-0 text-[13px]">Your refund wasn't approved{refund.note ? `: ${refund.note}` : "."}</p>}
+              {refund.status === "failed" && <p className="m-0 text-[13px]">The refund didn't go through. Our team is looking into it.</p>}
+              {refund.eligible && (
+                <>
+                  <p className="m-0 text-[13px] text-ink-muted">You can get your money back until {day(refund.deadline)}. {data.installed ? "Uninstall the theme first." : "After that, the payment can't be refunded."}</p>
+                  {!data.installed && (
+                    <Button block className="mt-3" loading={busy === "refund"} onClick={applyForRefund}>
+                      Apply for a refund
+                    </Button>
+                  )}
+                </>
+              )}
+            </Card>
+          )}
           {paid && theme && (
             <Card size="small">
               <p className="m-0 text-[12.5px] text-ink-muted flex gap-2">
                 <ShieldCheck size={15} className="shrink-0 mt-0.5 text-[#047857]" aria-hidden="true" />
-                Paid through Oyklane with Razorpay. The theme is licensed to this store; its code is locked, and you customise it in the editor like any theme.
+                Paid through Oyklane. One payment covers a year on this store, with updates when you choose them, and a refund up to 7 days after you first install it. The theme's code is locked, and you customise it in the editor like any theme.
               </p>
             </Card>
           )}
