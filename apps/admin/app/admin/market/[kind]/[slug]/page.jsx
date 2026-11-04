@@ -8,7 +8,7 @@ import { ExternalLink, ShieldCheck, Store } from "lucide-react";
 import { formatCurrency } from "@shopcycle/utils";
 import { PageHeader } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
-import { openCheckout } from "@/lib/billing";
+import { openCheckout, payuReturn, submitPayu } from "@/lib/billing";
 
 const MARKET = process.env.NEXT_PUBLIC_MARKET_ORIGIN || "https://market.oyklane.com";
 const inr = (n) => formatCurrency(Number(n || 0), "INR");
@@ -46,7 +46,15 @@ export default function MarketGetPage({ params }) {
   }, [kind, slug]);
   useEffect(() => {
     load();
-  }, [load]);
+    // Back from PayU's page: the API has already checked the payment.
+    const back = payuReturn();
+    if (!back) return;
+    if (back.status === "success") message.success("Paid — it's yours. Add it to your themes when you're ready.");
+    else if (back.status === "pending") {
+      message.info("Your payment is being confirmed — this page updates in a moment.");
+      setTimeout(load, 5000);
+    } else message.error(back.reason || "The payment didn't go through.");
+  }, [load, message]);
 
   async function run(key, fn) {
     setBusy(key);
@@ -89,6 +97,8 @@ export default function MarketGetPage({ params }) {
     run("buy", async () => {
       const renewing = Boolean(data.license);
       const started = await themeAction("buy");
+      // PayU: its own page, which comes back to this one (?payu=).
+      if (started.checkout?.provider === "payu") return submitPayu(started.checkout);
       if (!started.owned) {
         const paid = await openCheckout(started.checkout);
         const verified = await apiFetch("/api/market/store/verify", { method: "POST", body: paid });
