@@ -11,7 +11,7 @@ import { RichTextField } from "./RichTextField";
 // numerals for ₹ prices). Sans first, then serif/display.
 const FONT_OPTIONS = [
   { label: "Sans serif", options: ["Inter", "Archivo", "Jost", "Manrope", "DM Sans", "Plus Jakarta Sans", "Outfit", "Poppins", "Figtree", "Work Sans", "Mulish", "Nunito Sans", "Space Grotesk", "Fira Sans", "Mukta"].map((f) => ({ value: f, label: f })) },
-  { label: "Serif & display", options: ["Playfair Display", "Fraunces", "Cormorant Garamond", "Lora", "DM Serif Display", "Libre Baskerville", "Marcellus", "Bodoni Moda", "Italiana"].map((f) => ({ value: f, label: f })) },
+  { label: "Serif & display", options: ["Playfair Display", "Fraunces", "Cormorant Garamond", "Lora", "DM Serif Display", "Libre Baskerville", "Marcellus", "Bodoni Moda", "Italiana", "Rozha One"].map((f) => ({ value: f, label: f })) },
 ];
 
 /** A real upload, not a URL paste — matches how the Products page picks
