@@ -114,7 +114,29 @@ export function CollectionForm({ collection, template, store, justCreated = fals
                   mode="multiple"
                   placeholder="Search products"
                   optionFilterProp="label"
-                  options={products.map((p) => ({ value: p.id, label: p.title }))}
+                  options={products.map((p) => ({ value: p.id, label: p.title, image: p.images?.[0]?.url || null }))}
+                  optionRender={(o) => (
+                    <span className="flex items-center gap-2.5">
+                      <span className="h-8 w-8 shrink-0 overflow-hidden rounded-md border border-app-border bg-app-bg">
+                        {o.data.image && <img src={o.data.image} alt="" className="h-full w-full object-cover" loading="lazy" />}
+                      </span>
+                      <span className="truncate">{o.data.label}</span>
+                    </span>
+                  )}
+                  tagRender={({ label, value, closable, onClose }) => {
+                    const img = products.find((x) => x.id === value)?.images?.[0]?.url;
+                    return (
+                      <span className="mr-1 my-0.5 inline-flex max-w-[260px] items-center gap-1.5 rounded-md border border-app-border bg-app-bg py-0.5 pl-0.5 pr-1.5 text-[12.5px]">
+                        <span className="h-6 w-6 shrink-0 overflow-hidden rounded bg-white">{img && <img src={img} alt="" className="h-full w-full object-cover" />}</span>
+                        <span className="truncate">{label}</span>
+                        {closable && (
+                          <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={onClose} className="ml-0.5 cursor-pointer border-0 bg-transparent p-0 text-ink-muted hover:text-ink" aria-label={`Remove ${label}`}>
+                            ×
+                          </button>
+                        )}
+                      </span>
+                    );
+                  }}
                 />
               </Form.Item>
             </Card>

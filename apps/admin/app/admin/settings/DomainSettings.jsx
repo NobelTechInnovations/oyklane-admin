@@ -26,6 +26,47 @@ function CopyButton({ value }) {
 
 const hrefFor = (address) => (address.startsWith("http") ? address : `https://${address}`);
 
+/** "Hang on, it's happening": the steps to a live domain, the current one
+ * moving, re-checked every 20 seconds by the page. */
+function GoingLive({ stage }) {
+  const steps = [
+    { key: "added", label: "Domain added to your store", done: true },
+    { key: "dns", label: stage === "checking" ? "Checking your DNS records" : "DNS records found", done: stage !== "checking", active: stage === "checking" },
+    { key: "ssl", label: "Issuing the security certificate (HTTPS)", done: false, active: stage === "hosting" },
+    { key: "live", label: "Your store opens on your domain", done: false },
+  ];
+  return (
+    <div className="rounded-xl border border-[#CFE0F5] bg-[#F4F8FD] px-4 py-4">
+      <p className="m-0 text-[14px] font-medium text-ink">Setting up your domain — you can relax, this page updates by itself.</p>
+      <p className="m-0 mt-1 text-[12.5px] text-ink-muted">Usually a few minutes. Your free address keeps working meanwhile.</p>
+      <ol className="m-0 mt-3 flex list-none flex-col gap-2.5 p-0">
+        {steps.map((st) => (
+          <li key={st.key} className="flex items-center gap-2.5 text-[13px]">
+            {st.done ? (
+              <CheckCircle2 size={18} className="shrink-0 text-[#16A34A]" aria-hidden="true" />
+            ) : st.active ? (
+              <span className="relative flex h-[18px] w-[18px] shrink-0 items-center justify-center" aria-hidden="true">
+                <span className="absolute inset-0 animate-ping rounded-full bg-[#0078d4] opacity-25" />
+                <RefreshCw size={14} className="animate-spin text-[#0078d4]" />
+              </span>
+            ) : (
+              <span className="h-[18px] w-[18px] shrink-0 rounded-full border-2 border-app-border" aria-hidden="true" />
+            )}
+            <span className={st.done || st.active ? "text-ink" : "text-ink-muted"}>
+              {st.label}
+              {st.active && <span className="sr-only"> — in progress</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <div className="mt-3 h-1 overflow-hidden rounded-full bg-[#DCE8F7]" aria-hidden="true">
+        <div className="h-full w-1/3 animate-[oyslide_1.6s_ease-in-out_infinite] rounded-full bg-[#0078d4]" />
+      </div>
+      <style>{`@keyframes oyslide{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}@media (prefers-reduced-motion: reduce){.animate-spin,.animate-ping{animation:none}}`}</style>
+    </div>
+  );
+}
+
 export function DomainSettings({ canEdit = true }) {
   const { message } = App.useApp();
   const { confirmDialog } = useConfirmDialog();
@@ -74,6 +115,14 @@ export function DomainSettings({ canEdit = true }) {
   useEffect(() => {
     load(true);
   }, [load]);
+  // Not live yet: check again by itself every 20 seconds, so the seller can
+  // just wait — the page turns live on its own.
+  const waiting = Boolean(info?.domain && !info.live);
+  useEffect(() => {
+    if (!waiting) return;
+    const t = setInterval(() => load(true), 20000);
+    return () => clearInterval(t);
+  }, [waiting, load]);
 
   async function connect() {
     setBusy("connect");
@@ -183,7 +232,9 @@ export function DomainSettings({ canEdit = true }) {
                       ? "Needs one more record"
                       : info.hosting.notAdded
                         ? "Waiting for activation"
-                        : "Activating HTTPS"
+                        : info.stage === "checking"
+                          ? "Checking DNS"
+                          : "Activating HTTPS"
               }
             />
           ) : null
@@ -285,14 +336,8 @@ export function DomainSettings({ canEdit = true }) {
                   </>
                 }
               />
-            ) : info.stage === "hosting" ? (
-              <Alert
-                type="info"
-                showIcon
-                icon={<Clock size={16} />}
-                message="DNS is set up correctly — activating HTTPS"
-                description="The security certificate is being issued. This usually takes a few minutes; we check again automatically, or press Check again."
-              />
+            ) : info.stage === "hosting" || info.stage === "checking" ? (
+              <GoingLive stage={info.stage} />
             ) : (
               <Alert
                 type="info"

@@ -63,6 +63,36 @@ function parseUrl(url) {
   return { linkType: "custom", target: url };
 }
 
+// Link names that mean a store-wide page, whatever the store sells.
+const NAMED_ROUTES = [
+  [/^(shop\s*all|all\s*products|shop|all|products|catalog(ue)?)$/i, { linkType: "store", target: "/collections/all" }],
+  [/^(home|home\s*page)$/i, { linkType: "home", target: undefined }],
+  [/^(contact|contact\s*us)$/i, { linkType: "store", target: "/contact" }],
+  [/^(track(\s*(your)?\s*order)?|order\s*tracking)$/i, { linkType: "store", target: "/orders/lookup" }],
+  [/^(blog|journal|stories)$/i, { linkType: "store", target: "/blog" }],
+  [/^search$/i, { linkType: "store", target: "/search" }],
+  [/^(cart|bag|basket)$/i, { linkType: "store", target: "/cart" }],
+  [/^(account|my\s*account|login|sign\s*in)$/i, { linkType: "store", target: "/account" }],
+];
+const squash = (v) => String(v || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/** What a link called `label` most likely points to: a store-wide page
+ * (Shop all, Contact…), else a collection, product or page with that
+ * name. null when nothing matches. */
+function guessTarget(label, { collections, products, pages }) {
+  const name = String(label || "").trim();
+  if (!name) return null;
+  for (const [re, to] of NAMED_ROUTES) if (re.test(name)) return to;
+  const key = squash(name);
+  const c = collections.find((x) => squash(x.title) === key);
+  if (c) return { linkType: "collection", target: c.slug };
+  const pg = pages.find((x) => squash(x.title) === key);
+  if (pg) return { linkType: "page", target: pg.slug };
+  const pr = products.find((x) => squash(x.title) === key);
+  if (pr) return { linkType: "product", target: pr.slug };
+  return null;
+}
+
 function buildUrl(linkType, target) {
   if (linkType === "home") return "/";
   if (linkType === "collection") return `/collections/${target}`;
@@ -103,15 +133,15 @@ function MenuItemRow({ item, index, items, depth, collections, products, pages, 
 
   const targetField =
     item.linkType === "collection" ? (
-      <Select size="small" className="w-full" value={item.target} onChange={(target) => onChange({ target })} placeholder="Choose a collection" showSearch optionFilterProp="label" options={collections.map((c) => ({ value: c.slug, label: c.title }))} />
+      <Select size="small" className="w-full" value={item.target} onChange={(target) => onChange({ target, guessed: false })} placeholder="Choose a collection" showSearch optionFilterProp="label" options={collections.map((c) => ({ value: c.slug, label: c.title }))} />
     ) : item.linkType === "product" ? (
-      <Select size="small" className="w-full" value={item.target} onChange={(target) => onChange({ target })} placeholder="Choose a product" showSearch optionFilterProp="label" options={products.map((p) => ({ value: p.slug, label: p.title }))} />
+      <Select size="small" className="w-full" value={item.target} onChange={(target) => onChange({ target, guessed: false })} placeholder="Choose a product" showSearch optionFilterProp="label" options={products.map((p) => ({ value: p.slug, label: p.title }))} />
     ) : item.linkType === "page" ? (
       <Select
         size="small"
         className="w-full"
         value={item.target}
-        onChange={(target) => onChange({ target })}
+        onChange={(target) => onChange({ target, guessed: false })}
         placeholder="Choose a page"
         showSearch
         optionFilterProp="label"
@@ -119,9 +149,19 @@ function MenuItemRow({ item, index, items, depth, collections, products, pages, 
         notFoundContent={<span className="text-[12px] text-ink-muted">No pages yet. For Contact, Track order and the like, pick “Store page”.</span>}
       />
     ) : item.linkType === "store" ? (
-      <Select size="small" className="w-full" value={item.target} onChange={(target) => onChange({ target })} placeholder="Choose a store page" options={STORE_PAGES} />
+      <Select size="small" className="w-full" value={item.target} onChange={(target) => onChange({ target, guessed: false })} placeholder="Choose a store page" options={STORE_PAGES} />
     ) : item.linkType === "custom" ? (
-      <Input size="small" value={item.target} onChange={(e) => onChange({ target: e.target.value })} placeholder="/collections/all or https://…" />
+      <Input
+        size="small"
+        value={item.target}
+        onChange={(e) => {
+          // A path the store knows (/collections/all, /pages/about…) switches to its own picker.
+          const parsed = parseUrl(e.target.value.trim());
+          const known = parsed.linkType !== "custom" && e.target.value.trim().startsWith("/") && (parsed.linkType !== "collection" || collections.some((c) => c.slug === parsed.target));
+          onChange(known ? { ...parsed, guessed: false } : { target: e.target.value, guessed: false });
+        }}
+        placeholder="/collections/all or https://…"
+      />
     ) : (
       <span className="text-[12px] text-ink-muted px-1">Your home page</span>
     );
@@ -138,8 +178,20 @@ function MenuItemRow({ item, index, items, depth, collections, products, pages, 
           <GripVertical size={15} aria-hidden="true" />
         </button>
         <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2">
-          <Input size="small" value={item.label} status={missing ? "error" : undefined} onChange={(e) => onChange({ label: e.target.value })} placeholder={depth ? "Sub-link name" : "Link name, e.g. Shop"} aria-label="Link name" />
-          <Select size="small" value={item.linkType} onChange={(linkType) => onChange({ linkType, target: undefined })} options={LINK_TYPES} aria-label="Links to" />
+          <Input
+            size="small"
+            value={item.label}
+            status={missing ? "error" : undefined}
+            onChange={(e) => {
+              const label = e.target.value;
+              // Nothing chosen yet (or the last guess): follow the name.
+              const guess = (!String(item.target || "").trim() || item.guessed) && guessTarget(label, { collections, products, pages });
+              onChange(guess ? { label, ...guess, guessed: true } : { label });
+            }}
+            placeholder={depth ? "Sub-link name" : "Link name, e.g. Shop"}
+            aria-label="Link name"
+          />
+          <Select size="small" value={item.linkType} onChange={(linkType) => onChange({ linkType, target: undefined, guessed: false })} options={LINK_TYPES} aria-label="Links to" />
           {targetField}
         </div>
         <div className="flex items-center shrink-0">

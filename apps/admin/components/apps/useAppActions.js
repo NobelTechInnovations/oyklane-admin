@@ -17,8 +17,9 @@ export function useAppActions() {
 
   async function doInstall(app, settings = {}) {
     try {
-      await apiFetch(`/api/apps/${app.key}/install`, { method: "POST", body: { settings } });
-      message.success(app.installed ? `${app.name} saved` : `${app.name} installed — find it in your sidebar`);
+      const res = await apiFetch(`/api/apps/${app.key}/install`, { method: "POST", body: { settings } });
+      const also = res?.app?.alsoInstalled;
+      message.success(app.installed ? `${app.name} saved` : also ? `${app.name} installed, with ${also} — it signs shoppers in with their phone` : `${app.name} installed — find it in your sidebar`);
       announceAppsChanged();
       return true;
     } catch (err) {

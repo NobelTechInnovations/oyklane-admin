@@ -154,6 +154,32 @@ export function CourierAppShipments({ orderId, onChange }) {
     }
   }
 
+  async function invoice(s) {
+    try {
+      const { url } = await apiFetch(`/api/courier-apps/shipments/${s.id}/invoice`);
+      window.open(url, "_blank", "noopener");
+    } catch (err) {
+      message.error(err.message);
+    }
+  }
+
+  function returnPickup(s) {
+    modal.confirm({
+      title: "Book a return pickup?",
+      content: `${s.appName} creates a return from the customer's address back to your pickup address. You then assign its courier in your ${s.appName} panel.`,
+      okText: "Create return",
+      onOk: async () => {
+        try {
+          await apiFetch(`/api/courier-apps/shipments/${s.id}/return`, { method: "POST", body: {} });
+          message.success("Return created");
+          onChange?.();
+        } catch (err) {
+          message.error(err.message);
+        }
+      },
+    });
+  }
+
   function cancel(s) {
     modal.confirm({
       title: "Cancel this shipment?",
@@ -194,6 +220,16 @@ export function CourierAppShipments({ orderId, onChange }) {
               {s.awb && s.status !== "cancelled" && (
                 <Button size="small" icon={<Download size={13} aria-hidden="true" />} onClick={() => label(s)}>
                   Label
+                </Button>
+              )}
+              {s.app === "shiprocket" && s.awb && (
+                <Button size="small" onClick={() => invoice(s)}>
+                  Invoice
+                </Button>
+              )}
+              {s.app === "shiprocket" && s.status === "delivered" && (
+                <Button size="small" onClick={() => returnPickup(s)}>
+                  Return pickup
                 </Button>
               )}
               {s.status === "assigned" && (

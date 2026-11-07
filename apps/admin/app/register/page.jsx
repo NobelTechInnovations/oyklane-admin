@@ -28,6 +28,38 @@ export default function RegisterPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [google, setGoogle] = useState(null);
+  // Email sign-up: the 6-digit code step (values kept until it's confirmed).
+  const [pending, setPending] = useState(null); // { values, ticket }
+  const [code, setCode] = useState("");
+  const [resendIn, setResendIn] = useState(0);
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
+
+  async function sendCode(values) {
+    const { ticket } = await apiFetch("/api/auth/register/code", { method: "POST", body: { email: values.email, name: values.name } });
+    setPending({ values, ticket });
+    setCode("");
+    setResendIn(45);
+  }
+
+  async function confirm() {
+    setError(null);
+    setLoading(true);
+    try {
+      await apiFetch("/api/auth/register", { method: "POST", body: { ...pending.values, emailCode: code, emailTicket: pending.ticket, acquisition: acquisition() } });
+      track("sign_up", { method: "email" });
+      track("store_created");
+      router.push("/welcome");
+      router.refresh();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // Back from "Continue with Google" with a new email: just name the store.
   useEffect(() => {
@@ -41,9 +73,12 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     try {
-      if (google) await apiFetch("/api/auth/google/register", { method: "POST", body: { ticket: google.ticket, storeName: values.storeName, whatsapp: values.whatsapp, acquisition: acquisition() } });
-      else await apiFetch("/api/auth/register", { method: "POST", body: { ...values, acquisition: acquisition() } });
-      track("sign_up", { method: google ? "google" : "email" });
+      if (!google) {
+        await sendCode(values);
+        return;
+      }
+      await apiFetch("/api/auth/google/register", { method: "POST", body: { ticket: google.ticket, storeName: values.storeName, whatsapp: values.whatsapp, acquisition: acquisition() } });
+      track("sign_up", { method: "google" });
       track("store_created");
       router.push("/welcome");
       router.refresh();
@@ -86,6 +121,38 @@ export default function RegisterPage() {
           description="Name your store to finish. You'll sign in with Google."
         />
       )}
+      {pending ? (
+        <div className="flex flex-col gap-4">
+          <p className="m-0 text-[14px] text-ink">
+            We sent a 6-digit code to <b>{pending.values.email}</b>. Enter it to create your store.
+          </p>
+          <Input.OTP length={6} size="large" value={code} onChange={setCode} autoFocus inputMode="numeric" aria-label="6-digit code" />
+          <Button type="primary" block size="large" loading={loading} disabled={code.length !== 6} onClick={confirm}>
+            Create store
+          </Button>
+          <div className="flex items-center justify-between text-[13px]">
+            <button type="button" className="cursor-pointer border-0 bg-transparent p-0 text-ink-muted underline underline-offset-2" onClick={() => (setPending(null), setError(null))}>
+              Change email
+            </button>
+            <button
+              type="button"
+              disabled={resendIn > 0 || loading}
+              className="cursor-pointer border-0 bg-transparent p-0 text-ink underline underline-offset-2 disabled:cursor-default disabled:text-ink-subtle disabled:no-underline"
+              onClick={async () => {
+                setError(null);
+                try {
+                  await sendCode(pending.values);
+                } catch (err) {
+                  setError(err.message);
+                }
+              }}
+            >
+              {resendIn > 0 ? `Send again in ${resendIn}s` : "Send the code again"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
       {!google && <GoogleSignIn divider="Or sign up with email" />}
 
       <Form layout="vertical" onFinish={onFinish} requiredMark={false} size="large">
@@ -119,9 +186,11 @@ export default function RegisterPage() {
           <Input autoComplete="tel" inputMode="tel" placeholder="98765 43210" />
         </Form.Item>
         <Button type="primary" htmlType="submit" block loading={loading} size="large" className="!mt-2">
-          Create store
+          {google ? "Create store" : "Continue"}
         </Button>
       </Form>
+        </>
+      )}
     </AuthShell>
   );
 }
