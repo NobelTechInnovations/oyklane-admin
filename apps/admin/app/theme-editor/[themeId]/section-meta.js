@@ -24,6 +24,8 @@ import {
   MessageSquareText,
 } from "lucide-react";
 
+export const GROUP_ORDER = ["Apps", "Banners", "Products", "Story", "Trust", "Text", "Other"];
+
 /** How each section type is described to a merchant in the editor — an
  * icon and one line on what it's for. Unknown types (a merchant's own
  * section from the code editor) fall back to a generic entry. */
@@ -94,8 +96,10 @@ const META = {
   "app-google-reviews": { icon: Star, group: "Apps", text: "Your Google rating and best reviews. From the Google Reviews app." },
 };
 
-export function sectionMeta(type) {
-  return META[type] || { icon: Layers, group: "Other", text: "A custom section." };
+/** A developer's section can describe itself: `description` and `group`
+ * in its schema. */
+export function sectionMeta(type, schema) {
+  if (META[type]) return META[type];
+  return { icon: Layers, group: GROUP_ORDER.includes(schema?.group) ? schema.group : "Other", text: schema?.description || "A custom section." };
 }
 
-export const GROUP_ORDER = ["Apps", "Banners", "Products", "Story", "Trust", "Text", "Other"];

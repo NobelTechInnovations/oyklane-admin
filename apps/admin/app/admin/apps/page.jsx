@@ -94,6 +94,11 @@ function AppCard({ app }) {
             >
               Open
             </Button>
+            {app.marketplace && app.settingsSchema?.length > 0 && (
+              <Button size="small" onClick={() => router.push(appHref(app))}>
+                Settings
+              </Button>
+            )}
           </>
         ) : app.locked ? (
           <>

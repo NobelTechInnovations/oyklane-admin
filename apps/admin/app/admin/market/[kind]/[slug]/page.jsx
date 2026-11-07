@@ -67,6 +67,7 @@ export default function MarketGetPage({ params }) {
     }
   }
 
+  const theme = kind === "theme";
   const themeAction = (action, body = {}) => apiFetch(`/api/market/store/themes/${encodeURIComponent(slug)}/${action}`, { method: "POST", body });
   // The code comes filled in from the licence; it stays on the page to copy.
   const purchaseCode = typedCode ?? data?.license?.code ?? "";
@@ -168,6 +169,19 @@ export default function MarketGetPage({ params }) {
     });
   };
 
+  // A developer's own listing on their own store: before or during review.
+  const testIt = () =>
+    run("test", async () => {
+      if (theme) {
+        const out = await apiFetch(`/api/market/store/themes/${encodeURIComponent(slug)}/test`, { method: "POST", body: {} });
+        message.success(`Version ${out.version} is on your store`);
+        return router.push(`/theme-editor/${out.themeId}`);
+      }
+      await apiFetch(`/api/market/store/apps/${encodeURIComponent(slug)}/test`, { method: "POST", body: {} });
+      message.success(`${data.item.name} installed for testing`);
+      return router.push("/admin/apps");
+    });
+
   const installApp = () =>
     run("install", async () => {
       await apiFetch(`/api/apps/${encodeURIComponent(data.official ? slug : `mkt-${slug}`)}/install`, { method: "POST", body: { settings: {} } });
@@ -184,8 +198,32 @@ export default function MarketGetPage({ params }) {
     );
   if (!data) return <Skeleton active paragraph={{ rows: 6 }} />;
 
+  if (data.testing)
+    return (
+      <div>
+        <PageHeader title={data.item.name} subtitle="Your own listing, on your own store" backHref={theme ? "/admin/online-store/themes" : "/admin/apps"} />
+        <Card className="max-w-xl">
+          <p className="m-0 text-[14px]">
+            {theme ? `Version ${data.version || "—"} is your newest upload.` : "Install it here with a real API key and real events."} This store uses your developer email, so you can test it before review. It's free and sellers don't see it.
+          </p>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {!theme && data.installed ? (
+              <Button type="primary" onClick={() => router.push("/admin/apps")}>
+                Installed — open Apps
+              </Button>
+            ) : (
+              <Button type="primary" loading={busy === "test"} disabled={theme && !data.version} onClick={testIt}>
+                {theme ? (data.installed ? "Update and open the customizer" : "Install and open the customizer") : "Install on this store"}
+              </Button>
+            )}
+            {data.installed && theme && <Button onClick={() => router.push(`/theme-editor/${data.theme.id}`)}>Open the customizer</Button>}
+          </div>
+          {theme && !data.version && <p className="m-0 mt-3 text-[12.5px] text-ink-muted">Upload it first: oyklane push</p>}
+        </Card>
+      </div>
+    );
+
   const { item, price, license, refund } = data;
-  const theme = kind === "theme";
   const paid = !item.free && !data.official;
   const refundPending = ["requested", "processing"].includes(refund?.status);
   const canRenew = paid && license?.renewable;

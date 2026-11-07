@@ -78,7 +78,7 @@ export function SettingsPanel({ catalog, products, collections, menus, onOpenSet
     return <div className="p-6 text-sm text-ink-muted">Unknown section type: {entry.type}</div>;
   }
 
-  const meta = sectionMeta(entry.type);
+  const meta = sectionMeta(entry.type, schema);
   const Icon = meta.icon;
   const blockOrder = entry.block_order || [];
   const blockTypes = schema.blocks || [];

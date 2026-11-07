@@ -7,21 +7,17 @@ import { useEditorStore } from "./store";
 import { SettingsFieldList } from "./SettingField";
 import { hydrateGlobalSectionDefaults, newBlockId, defaultBlockSettings } from "./schema-utils";
 
-const GLOBAL_SECTION_TYPES = [
-  { key: "announcement-bar", label: "Announcement bar" },
-  { key: "header", label: "Header" },
-  { key: "footer", label: "Footer" },
-];
-
 /**
- * Header/footer/announcement-bar live outside any template (they render
- * on every page via `{% section %}` in layout.liquid), so they don't show
- * up in the per-template SectionList + SettingsPanel — this is their own
- * settings surface, same schema-driven fields, writing to
- * settingsData.sections[type] instead of the draft template.
+ * Sections the layout places on every page (`{% section %}` in
+ * layout/theme.liquid: header, footer, anything else a theme adds) live
+ * outside any template, so they don't show up in the per-template
+ * SectionList + SettingsPanel — this is their own settings surface, same
+ * schema-driven fields, writing to settingsData.sections[type] instead of
+ * the draft template.
  */
-export function GlobalSectionsDrawer({ open, onClose, catalog, products, collections, menus }) {
-  const [activeType, setActiveType] = useState("header");
+export function GlobalSectionsDrawer({ open, onClose, catalog, products, collections, menus, globalTypes = [] }) {
+  const types = globalTypes.filter((key) => catalog[key]).map((key) => ({ key, label: catalog[key].name || key }));
+  const [activeType, setActiveType] = useState(globalTypes.includes("header") ? "header" : globalTypes[0]);
   const settingsData = useEditorStore((s) => s.settingsData);
   const updateGlobalSectionSetting = useEditorStore((s) => s.updateGlobalSectionSetting);
   const addGlobalSectionBlock = useEditorStore((s) => s.addGlobalSectionBlock);
@@ -35,10 +31,10 @@ export function GlobalSectionsDrawer({ open, onClose, catalog, products, collect
       <Tabs
         activeKey={activeType}
         onChange={setActiveType}
-        items={GLOBAL_SECTION_TYPES.filter((t) => catalog[t.key]).map((t) => ({ key: t.key, label: t.label }))}
+        items={types}
       />
-      {GLOBAL_SECTION_TYPES.map((t) => {
-        if (t.key !== activeType || !catalog[t.key]) return null;
+      {types.map((t) => {
+        if (t.key !== activeType) return null;
         const schema = catalog[t.key];
         const { settings, blocks, block_order: blockOrder } = hydrateGlobalSectionDefaults(
           catalog,

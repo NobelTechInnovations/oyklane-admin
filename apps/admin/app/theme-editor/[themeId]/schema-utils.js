@@ -106,8 +106,11 @@ export function materializeDefaultBlocks(schema) {
 }
 
 // Sections the layout renders on every page — edited under "Header &
-// footer", never added to a page's section list.
+// footer", never added to a page's section list. The API reads them from
+// the theme's layout, whatever a developer called them; these are for a
+// theme loaded before it did.
 export const GLOBAL_SECTION_TYPES = ["announcement-bar", "header", "footer"];
+export const globalSectionsOf = (theme) => (theme?.globalSections?.length ? theme.globalSections : GLOBAL_SECTION_TYPES);
 
 export function newSectionKey(type) {
   return `${type}-${Math.random().toString(36).slice(2, 8)}`;

@@ -7,7 +7,7 @@ import { SettingField } from "./SettingField";
 // Stored with the theme's settings; the storefront prints it last in <head>.
 const CUSTOM_CSS = { type: "css", id: "custom_css" };
 
-export function ThemeSettingsDrawer({ open, onClose, schemaGroups }) {
+export function ThemeSettingsDrawer({ open, onClose, schemaGroups, products, collections, menus }) {
   const settingsData = useEditorStore((s) => s.settingsData);
   const updateThemeSetting = useEditorStore((s) => s.updateThemeSetting);
 
@@ -25,7 +25,8 @@ export function ThemeSettingsDrawer({ open, onClose, schemaGroups }) {
             ) : (
               <div key={setting.id} className="mb-3">
                 <label className="block text-xs font-medium text-ink-muted mb-1">{setting.label}</label>
-                <SettingField setting={setting} value={settingsData[setting.id]} onChange={(value) => updateThemeSetting(setting.id, value)} />
+                <SettingField setting={setting} value={settingsData[setting.id] ?? setting.default} products={products} collections={collections} menus={menus} onChange={(value) => updateThemeSetting(setting.id, value)} />
+                {setting.info && <p className="text-[11px] text-ink-muted mt-1 mb-0">{setting.info}</p>}
               </div>
             )
           )}

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Undo2, Redo2, Monitor, Smartphone, Settings2, PanelTop, Lock, Users, Info } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useEditorStore } from "./store";
-import { buildSectionCatalog, defaultSettingsFor, newSectionKey, hydrateTemplateDefaults, materializeDefaultBlocks } from "./schema-utils";
+import { buildSectionCatalog, globalSectionsOf, defaultSettingsFor, newSectionKey, hydrateTemplateDefaults, materializeDefaultBlocks } from "./schema-utils";
 import { SectionList } from "./SectionList";
 import { PreviewFrame } from "./PreviewFrame";
 import { SettingsPanel } from "./SettingsPanel";
@@ -514,6 +514,7 @@ export function EditorView({ theme, platform, templates: initialTemplates, templ
       </div>
 
       <AddSectionModal
+        globalTypes={globalSectionsOf(theme)}
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         catalog={catalog}
@@ -545,6 +546,9 @@ export function EditorView({ theme, platform, templates: initialTemplates, templ
         />
       )}
       <ThemeSettingsDrawer
+        products={products}
+        collections={collections}
+        menus={menus}
         open={settingsDrawerOpen}
         onClose={() => setSettingsDrawerOpen(false)}
         schemaGroups={settingsSchemaGroups}
@@ -568,6 +572,7 @@ export function EditorView({ theme, platform, templates: initialTemplates, templ
         <p className="text-[13.5px] text-ink-muted m-0">You changed this page and haven&apos;t saved yet. Save the changes so they show on your store, or discard them.</p>
       </Modal>
       <GlobalSectionsDrawer
+        globalTypes={globalSectionsOf(theme)}
         open={globalSectionsOpen}
         onClose={() => setGlobalSectionsOpen(false)}
         catalog={catalog}
