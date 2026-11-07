@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { App, Alert, Button, Card, Form, Input, Select, Skeleton, Switch, Table, Tag, Tooltip } from "antd";
+import { App, Alert, Button, Card, Form, Input, Select, Skeleton, Space, Switch, Table, Tag, Tooltip } from "antd";
 import { Check, X, QrCode, Search, Copy, MessageSquareText } from "lucide-react";
 import { formatCurrency } from "@shopcycle/utils";
 import { PageHeader, EmptyState, ListCard, SearchInput, useConfirmDialog } from "@shopcycle/ui";
@@ -210,8 +210,8 @@ function UpiQr() {
                   message={`${s.toCheck} payment${s.toCheck === 1 ? "" : "s"} to check`}
                   description={
                     data.settings.autoSms
-                      ? "Your bank's SMS didn't match these by itself (the SMS hasn't come yet, or two orders had the same amount). Check the amount in your bank app, then press Received."
-                      : "Find each amount (and UPI reference, if given) in your UPI or bank app, then press Received. The customer's page moves on by itself."
+                      ? "Your bank's SMS didn't confirm these by itself (it hasn't come yet, or it couldn't be matched — see Automatic confirmation). Check the amount in your bank app, then press Received."
+                      : "Find each amount in your UPI or bank app, then press Received. The customer's page moves on by itself."
                   }
                 />
               )}
@@ -242,7 +242,7 @@ function UpiQr() {
                   pagination={data.total > data.pageSize && { current: page, pageSize: data.pageSize, total: data.total, onChange: setPage, showSizeChanger: false }}
                   locale={{
                     emptyText: q ? (
-                      <EmptyState icon={<Search />} title="Nothing matches" description="Try the full 12-digit reference or the customer's phone." />
+                      <EmptyState icon={<Search />} title="Nothing matches" description="Try the full 12-digit reference, or the customer's name or phone." />
                     ) : (
                       <EmptyState icon={<QrCode />} title={tab === "submitted" ? "Nothing to check" : "No payments here yet"} description="UPI QR payments from checkout show up here." />
                     ),
@@ -326,9 +326,44 @@ function SetupCard({ settings, onSaved, onCancel }) {
   );
 }
 
+/** A bank that isn't on the built-in list: the sender its SMS come from. */
+function BankSenders({ senders, onChanged }) {
+  const { message } = App.useApp();
+  const [value, setValue] = useState(senders[0] || "");
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    setBusy(true);
+    try {
+      await apiFetch("/api/upi-qr/bank-senders", { method: "PUT", body: { senders: value.trim() ? [value.trim()] : [] } });
+      message.success("Saved");
+      onChanged();
+    } catch (err) {
+      message.error(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <p className="m-0 mb-1 text-ink-muted">
+        My bank's SMS sender <span className="text-[12px]">(only if your bank's SMS is ignored below — copy it from the message, like XYZBNK)</span>
+      </p>
+      <Space.Compact className="w-full">
+        <Input size="small" value={value} maxLength={20} placeholder="XYZBNK" onChange={(e) => setValue(e.target.value)} />
+        <Button size="small" loading={busy} onClick={save}>
+          Save
+        </Button>
+      </Space.Compact>
+    </div>
+  );
+}
+
 /**
  * Automatic confirmation: the seller's phone forwards each bank SMS to a
- * secret link; a "credited ₹X" SMS confirms the QR that asked for ₹X.
+ * secret link; a bank's "credited ₹X" SMS with an unused UPI reference
+ * confirms the QR that asked for ₹X.
  */
 function AutoSmsCard({ settings, onChanged }) {
   const { message } = App.useApp();
@@ -361,8 +396,8 @@ function AutoSmsCard({ settings, onChanged }) {
     >
       {!on ? (
         <p className="m-0 text-[13px] text-ink-muted">
-          No more pressing Received: your phone forwards your bank's “credited” SMS to Oyklane, and the order with that amount is confirmed in seconds. The
-          shopper's page moves on by itself — they don't need to type anything.
+          No more pressing Received: your phone forwards your bank's “credited” SMS to Oyklane, and the order is confirmed in seconds. The shopper's page moves
+          on by itself — they don't type anything. Your phone must stay on and online.
         </p>
       ) : (
         <div className="flex flex-col gap-3 text-[13px]">
@@ -382,21 +417,25 @@ function AutoSmsCard({ settings, onChanged }) {
             <p className="m-0 font-medium text-ink">Android</p>
             <ol className="m-0 pl-5 text-ink-muted">
               <li>Install an SMS forwarder app (e.g. “SMS Forwarder” — free) on the phone that gets your bank's SMS.</li>
-              <li>Add a rule: forward messages containing “credited” (or from your bank's sender) to a <b>webhook / URL</b> — paste the link above.</li>
-              <li>Send a test from the app — it shows below.</li>
+              <li>
+                Add a rule: forward messages containing “credited” to a <b>webhook / URL</b> — paste the link above, and send it as JSON with both the sender and
+                the text: <code className="text-[12px]">{`{"from":"%from%","text":"%text%"}`}</code>
+              </li>
+              <li>Send yourself ₹1 from another UPI ID: the result shows below.</li>
             </ol>
           </div>
           <div>
             <p className="m-0 font-medium text-ink">iPhone</p>
             <p className="m-0 text-ink-muted">
-              Shortcuts ▸ Automation ▸ Message ▸ contains “credited” ▸ Run immediately ▸ “Get contents of URL”: the link above, method POST, request body
-              Text = Shortcut Input.
+              Shortcuts ▸ Automation ▸ Message ▸ contains “credited” ▸ Run immediately ▸ “Get contents of URL”: the link above, method POST, request body JSON with{" "}
+              <b>from</b> = Sender and <b>text</b> = Shortcut Input.
             </p>
           </div>
           <p className="m-0 text-ink-muted">
-            So every SMS points at one order, a QR asks a few paise less when another QR for the same amount is showing (at most ₹0.99). Anything that doesn't
-            match stays in “To check”.
+            Only an SMS from a bank, with a UPI reference that hasn't been used, confirms an order. Every QR asks a few paise less than the price (at most ₹0.99) so
+            the amount points at one order. Anything else stays in “To check”, and the reason shows below.
           </p>
+          <BankSenders senders={settings.bankSenders || []} onChanged={onChanged} />
           <div className={`rounded-[10px] px-3 py-2 ${last ? (last.ok ? "bg-[#ECFDF5] text-[#065F46]" : "bg-[#FFFBEA] text-[#92400E]") : "bg-app-bg text-ink-muted"}`}>
             {last ? (
               <>
