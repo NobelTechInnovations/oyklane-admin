@@ -1,8 +1,8 @@
 const { z } = require("zod");
 
 const checkoutSchema = z.object({
-  cartId: z.string().min(1, "Missing cart"),
-  sessionId: z.string().optional(),
+  cartId: z.string().regex(/^[A-Za-z0-9_-]{1,100}$/, "Missing cart"),
+  sessionId: z.string().max(100).optional(),
   email: z.string().email("Enter a valid email"),
   // Whether phone, landmark, company, GSTIN and the note are asked for
   // (and required) is the store's choice — Settings ▸ Checkout, enforced

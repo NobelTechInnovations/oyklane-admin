@@ -48,6 +48,14 @@ function buildDefaultSettings(schema) {
   return settings;
 }
 
+/** The defaults in config/settings_schema.json ([{ name, settings }]), for
+ * a theme's starting settings. */
+function globalSettingDefaults(groups) {
+  const out = {};
+  for (const group of Array.isArray(groups) ? groups : []) Object.assign(out, buildDefaultSettings(group));
+  return out;
+}
+
 /** Provided values win; anything unset falls back to the schema default —
  * this is what lets a template JSON omit fields entirely and still render
  * sane output, and what lets the Phase 3 editor show every field even
@@ -113,6 +121,7 @@ module.exports = {
   stripSchema,
   defaultForSetting,
   buildDefaultSettings,
+  globalSettingDefaults,
   mergeSettings,
   findBlockSchema,
   mergeBlockSettings,
