@@ -137,6 +137,9 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
   const liveShipments = order.fulfillments.filter((f) => f.status !== "cancelled");
   const paid = ["paid", "partially_refunded"].includes(order.paymentStatus);
   const codPending = order.paymentStatus === "pending" && !cancelled;
+  // Partial payment: received online at checkout; the rest is due on delivery.
+  const advance = order.advancePaidAt ? Number(order.advanceAmount) : 0;
+  const balance = Math.max(0, Math.round((Number(order.total) - Number(order.giftCardAmount || 0) - advance) * 100) / 100);
   const canCancel = !cancelled && liveShipments.length === 0;
   const refundedTotal = Number(order.refundedAmount || 0);
 
@@ -500,12 +503,18 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
                   }
                   value={`−${formatCurrency(order.giftCardAmount, order.currency)}`}
                 />
-                {Number(order.total) - Number(order.giftCardAmount) > 0 && (
+                {!advance && Number(order.total) - Number(order.giftCardAmount) > 0 && (
                   <SummaryRow
                     label={order.paymentMethod === "cod" ? "Cash on delivery" : order.paymentMethod === "upi_qr" ? "UPI QR payment" : "Online payment"}
                     value={formatCurrency(Number(order.total) - Number(order.giftCardAmount), order.currency)}
                   />
                 )}
+              </>
+            )}
+            {advance > 0 && (
+              <>
+                <SummaryRow label={`Part paid online${order.advanceMethod ? ` · ${order.advanceMethod === "upi_qr" ? "UPI QR" : order.advanceMethod}` : ""}`} value={`−${formatCurrency(advance, order.currency)}`} />
+                {order.paymentStatus === "pending" && <SummaryRow label="Balance to collect" value={formatCurrency(balance, order.currency)} strong />}
               </>
             )}
             {order.refunds.map((r) => (
@@ -524,7 +533,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
               <div className="flex items-center justify-between gap-3 mt-3 rounded-lg bg-app-bg px-3 py-2.5">
                 <span className="text-sm text-ink-muted">
                   {order.paymentMethod === "cod"
-                    ? `Collect ${formatCurrency(Number(order.total) - Number(order.giftCardAmount || 0), order.currency)} cash on delivery, then mark it paid.`
+                    ? `Collect ${formatCurrency(balance, order.currency)} ${advance > 0 ? "balance" : "cash"} on delivery, then mark it paid.`
                     : "Waiting for the online payment."}
                 </span>
                 {order.paymentMethod === "cod" && (

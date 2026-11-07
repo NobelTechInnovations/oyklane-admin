@@ -15,6 +15,8 @@ export function OneClickSettings({ app, onSave, saving }) {
   const s = app.settings || {};
   const crossSell = Form.useWatch("crossSell", form);
   const source = Form.useWatch("crossSellSource", form);
+  const partial = Form.useWatch("partial", form);
+  const partialType = Form.useWatch("partialType", form);
 
   useEffect(() => {
     apiFetch("/api/products?pageSize=100&status=active").then((d) => setProducts(d.products || [])).catch(() => {});
@@ -35,6 +37,10 @@ export function OneClickSettings({ app, onSave, saving }) {
       crossSellLayout: s.crossSellLayout || "row",
       crossSellCard: s.crossSellCard || "bordered",
       crossSellLimit: Number(s.crossSellLimit) || 4,
+      partial: s.partial === "on",
+      partialType: s.partialType === "fixed" ? "fixed" : "percent",
+      partialValue: Number(s.partialValue) || (s.partialType === "fixed" ? 99 : 20),
+      partialMinOrder: Number(s.partialMinOrder) || 0,
     });
   }, [app]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -53,6 +59,10 @@ export function OneClickSettings({ app, onSave, saving }) {
       crossSellLayout: v.crossSellLayout,
       crossSellCard: v.crossSellCard,
       crossSellLimit: String(v.crossSellLimit || 4),
+      partial: v.partial ? "on" : "off",
+      partialType: v.partialType,
+      partialValue: String(v.partialValue || 0),
+      partialMinOrder: String(v.partialMinOrder || 0),
     });
   }
 
@@ -134,6 +144,32 @@ export function OneClickSettings({ app, onSave, saving }) {
             </Form.Item>
           </div>
         </>
+      )}
+      <h3 className="text-[13px] font-semibold text-ink m-0 mb-1 mt-2 pt-4 border-t border-app-border">Partial payment</h3>
+      <p className="text-[12.5px] text-ink-muted m-0 mb-3">
+        Shoppers pay part of the order online and the rest on delivery, by cash or online. Fewer returned orders than plain cash on delivery. Shows on the checkout
+        page and in this popup. It needs cash on delivery and at least one online way to pay turned on. Not offered for rentals.
+      </p>
+      <Form.Item name="partial" label="Offer partial payment" valuePropName="checked">
+        <Switch />
+      </Form.Item>
+      {partial && (
+        <div className="grid gap-x-4 sm:grid-cols-3">
+          <Form.Item name="partialType" label="Shopper pays now">
+            <Select
+              options={[
+                { value: "percent", label: "A percentage of the order" },
+                { value: "fixed", label: "A fixed amount" },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item name="partialValue" label={partialType === "fixed" ? "Amount" : "Percentage"} rules={[{ required: true, message: "Enter a value" }]}>
+            <InputNumber min={1} max={partialType === "fixed" ? 100000 : 90} addonBefore={partialType === "fixed" ? "₹" : undefined} addonAfter={partialType === "fixed" ? undefined : "%"} className="w-full" />
+          </Form.Item>
+          <Form.Item name="partialMinOrder" label="Only for orders from" extra="0 means every order.">
+            <InputNumber min={0} max={1000000} addonBefore="₹" className="w-full" />
+          </Form.Item>
+        </div>
       )}
       <p className="text-[12.5px] text-ink-muted m-0 mb-3">Which fields checkout asks for is in Settings ▸ Checkout.</p>
       <div className="flex justify-end">

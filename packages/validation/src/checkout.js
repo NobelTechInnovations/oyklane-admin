@@ -22,7 +22,7 @@ const checkoutSchema = z.object({
   // decides that from the cart, whatever the form says.
   paymentMethod: z.enum(["cod", "gift_card", "razorpay", "cashfree", "payu", "stripe", "paypal", "upi_qr"]).default("cod"),
   // The way to pay the shopper picked (UPI, card, …): the gateway opens on it.
-  payMode: z.enum(["upi", "card", "netbanking", "wallet", "emi", "paylater", "paypal", "cod"]).optional().catch(undefined),
+  payMode: z.enum(["upi", "card", "netbanking", "wallet", "emi", "paylater", "paypal", "cod", "partial"]).optional().catch(undefined),
   // The storefront address the shopper is on — where a gateway sends them
   // back after paying (…/checkout/return/:provider).
   returnBase: z.string().url().max(500).optional(),
