@@ -19,9 +19,127 @@ const MARKS = {
 function Mark({ k }) {
   const m = MARKS[k];
   return (
-    <span className="inline-flex items-center justify-center h-9 min-w-[88px] px-2 rounded-md text-[12px] font-bold tracking-tight shrink-0" style={{ background: m.bg, color: m.fg }}>
+    <span className="inline-flex items-center justify-center h-11 min-w-[96px] px-3 rounded-lg text-[13px] font-bold tracking-tight shrink-0" style={{ background: m.bg, color: m.fg }}>
       {m.text}
     </span>
+  );
+}
+
+// What each gateway takes, and a line on why a seller would pick it.
+const METHODS = {
+  payu: ["UPI", "Cards", "RuPay", "Net banking", "Wallets", "EMI", "Pay later"],
+  razorpay: ["UPI", "Cards", "RuPay", "Net banking", "Wallets", "EMI", "Pay later"],
+  cashfree: ["UPI", "Cards", "Net banking", "Wallets", "EMI", "Pay later"],
+  stripe: ["Cards", "Apple Pay", "Google Pay"],
+  paypal: ["PayPal", "Cards"],
+};
+const PERKS = {
+  payu: ["0% on UPI payments", "No extra gateway fee from oyklane", "No hidden charges"],
+  razorpay: ["Connect your Razorpay account in one click", "Money settles to your bank account"],
+  cashfree: ["Use your own Cashfree account", "Money settles to your bank account"],
+  stripe: ["For international cards", "Money settles to your Stripe account"],
+  paypal: ["For buyers abroad who pay with PayPal"],
+};
+
+/** One gateway: what it takes, its state, and its buttons. PayU (Oyklane's
+ * partner) shows on top, larger, with its perks. */
+function Gateway({ p, featured = false, currency, canEdit, busy, toggle, disconnect, connectPayu, connectRazorpay, edit }) {
+  const unsupported = p.currencies && !p.currencies.includes(currency);
+  const oauthHere = (p.key === "razorpay" || p.key === "payu") && p.oauth?.available;
+  return (
+    <div className="flex flex-wrap items-start gap-4">
+      <Mark k={p.key} />
+      <div className="min-w-[220px] flex-1">
+        <p className={`m-0 flex flex-wrap items-center gap-2 font-semibold text-ink ${featured ? "text-[16px]" : "text-[14.5px]"}`}>
+          {featured ? "PayU, our payment partner" : p.name}
+          {p.key === "payu" && <Tag color="green" className="!m-0">Partner</Tag>}
+          {p.connected && <StatusBadge status={p.enabled ? "active" : "disabled"} label={p.enabled ? "On" : "Off"} />}
+          {p.connected && p.testMode && <Tag color="gold" className="!m-0">Test mode</Tag>}
+          {p.key !== "payu" && p.recommended && !p.connected && <Tag color="blue" className="!m-0">Recommended</Tag>}
+        </p>
+        {unsupported ? (
+          <p className="m-0 mt-1 text-[13px] text-ink-muted">Not available for {currency} stores.</p>
+        ) : (
+          <>
+            {PERKS[p.key] && (
+              <ul className={`m-0 mt-2 grid list-none gap-x-4 gap-y-1 p-0 text-[13px] text-ink ${featured ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+                {PERKS[p.key].map((t) => (
+                  <li key={t} className="flex items-start gap-1.5">
+                    <ShieldCheck size={14} className="mt-[3px] shrink-0 text-[#16A34A]" aria-hidden="true" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {METHODS[p.key] && (
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                <span className="text-[12px] text-ink-muted">Takes</span>
+                {METHODS[p.key].map((m) => (
+                  <span key={m} className="rounded-md border border-app-border bg-app-bg px-1.5 py-0.5 text-[11.5px] text-ink">
+                    {m}
+                  </span>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+        {p.oauth?.connected ? (
+          <div className="mt-2 text-[12.5px] text-ink">
+            {p.key === "payu"
+              ? p.oauth.ready
+                ? `Connected with PayU · merchant ${p.oauth.merchantId}`
+                : `PayU account ${p.oauth.merchantId} linked — PayU is finishing its checks; payments turn on by themselves.`
+              : `Connected with ${p.name}${p.oauth.accountId ? ` · ${p.oauth.accountId}` : ""}`}
+            {p.oauth.statuses?.length > 0 && (
+              <span className="mt-1 flex flex-wrap gap-1">
+                {p.oauth.statuses.slice(0, 6).map((st) => (
+                  <Tag key={st.event} className="!m-0 !text-[11px]" color={/success|approved/i.test(st.status || "") ? "green" : /fail|declin/i.test(st.status || "") ? "red" : "default"}>
+                    {String(st.event).replace(/ status update$/i, "").replace(/_/g, " ").toLowerCase()}: {st.status}
+                  </Tag>
+                ))}
+              </span>
+            )}
+          </div>
+        ) : (
+          featured && !p.connected && <p className="m-0 mt-2 text-[12.5px] text-ink-muted">Open your PayU account from here — money settles straight into your bank account.</p>
+        )}
+        {p.key === "razorpay" && p.connected && p.oauth?.available && !p.oauth.connected && (
+          <p className="m-0 mt-1.5 text-[12.5px] text-ink">
+            Connected with API keys.{" "}
+            <button type="button" className="cursor-pointer border-0 bg-transparent p-0 text-accent underline" onClick={connectRazorpay} disabled={!canEdit}>
+              Switch to Connect with Razorpay
+            </button>
+          </p>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        {p.connected ? (
+          <>
+            <Switch checked={p.enabled} loading={busy === p.key} disabled={!canEdit} onChange={(v) => toggle(p, v)} aria-label={`Accept ${p.name}`} />
+            {!p.oauth?.connected && !oauthHere && <Button onClick={() => edit(p)}>Manage</Button>}
+            {canEdit && <Button type="text" danger icon={<Trash2 size={14} aria-hidden="true" />} aria-label={`Disconnect ${p.name}`} onClick={() => disconnect(p)} />}
+          </>
+        ) : p.key === "payu" ? (
+          oauthHere ? (
+            <Button type="primary" disabled={!canEdit || unsupported} loading={busy === "payu"} onClick={connectPayu}>
+              Connect with PayU
+            </Button>
+          ) : (
+            <Button type="primary" disabled={!canEdit || unsupported} onClick={() => edit(p)}>
+              Connect with key and salt
+            </Button>
+          )
+        ) : p.key === "razorpay" && oauthHere ? (
+          <Button type="primary" disabled={!canEdit || unsupported} loading={busy === "razorpay"} onClick={connectRazorpay}>
+            Connect with Razorpay
+          </Button>
+        ) : (
+          <Button type="primary" disabled={!canEdit || unsupported} onClick={() => edit(p)}>
+            Connect
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -220,6 +338,7 @@ export function PaymentSettings({ initial, currency, canEdit }) {
   }
 
   const payu = data.providers.find((p) => p.key === "payu");
+  const rowProps = { currency, canEdit, busy, toggle, disconnect, connectPayu, connectRazorpay, edit: setEditing };
   const online = data.providers.filter((p) => p.enabled).length;
   const live = data.providers.filter((p) => p.connected && p.enabled);
   const nothing = !data.cod.enabled && online === 0;
@@ -228,100 +347,21 @@ export function PaymentSettings({ initial, currency, canEdit }) {
     <div className="max-w-3xl flex flex-col gap-4">
       {nothing && <Alert type="warning" showIcon message="No payment method is on — customers can't place orders." />}
 
-      {payu && !payu.connected && (
-        <Card size="small" styles={{ body: { padding: 18 } }}>
-          <div className="flex flex-wrap items-start gap-4">
-            <Mark k="payu" />
-            <div className="min-w-[220px] flex-1">
-              <p className="m-0 flex flex-wrap items-center gap-2 text-[15px] font-semibold text-ink">
-                PayU, our payment partner <Tag color="green" className="!m-0">Partner</Tag>
-              </p>
-              <ul className="m-0 mt-2 grid list-none gap-1.5 p-0 text-[13px] text-ink sm:grid-cols-3">
-                <li>0% on UPI payments</li>
-                <li>No extra gateway fee from oyklane</li>
-                <li>No hidden charges</li>
-              </ul>
-              <p className="m-0 mt-2 text-[12.5px] text-ink-muted">Open your PayU account from here — money settles straight into your bank account.</p>
-            </div>
-            {payu.oauth?.available && (
-              <Button type="primary" disabled={!canEdit} loading={busy === "payu"} onClick={connectPayu}>
-                Connect with PayU
-              </Button>
-            )}
-          </div>
+      {payu && (
+        <Card size="small" styles={{ body: { padding: 20 } }}>
+          <Gateway p={payu} featured {...rowProps} />
         </Card>
       )}
 
-      <Card size="small" title="Online payments" extra={<span className="text-xs text-ink-muted">{online} active</span>}>
-        <ul className="m-0 p-0 list-none divide-y divide-app-border">
-          {data.providers.map((p) => {
-            const unsupported = p.currencies && !p.currencies.includes(currency);
-            return (
-              <li key={p.key} className="flex flex-wrap items-center gap-3 py-3">
-                <Mark k={p.key} />
-                <div className="flex-1 min-w-[180px]">
-                  <p className="m-0 text-sm font-medium text-ink flex items-center gap-2 flex-wrap">
-                    {p.name}
-                    {p.connected && <StatusBadge status={p.enabled ? "active" : "disabled"} label={p.enabled ? "On" : "Off"} />}
-                    {p.connected && p.testMode && <Tag color="gold" className="!m-0">Test mode</Tag>}
-                    {p.key === "payu" ? <Tag color="green" className="!m-0">Partner</Tag> : p.recommended && !p.connected && <Tag color="blue" className="!m-0">Recommended</Tag>}
-                  </p>
-                  <p className="m-0 text-xs text-ink-muted">
-                    {unsupported ? `Not available for ${currency} stores.` : p.oauth?.connected ? `Connected with Razorpay${p.oauth.accountId ? ` · ${p.oauth.accountId}` : ""}` : p.blurb}
-                  </p>
-                  {p.key === "payu" && p.oauth?.connected && (
-                    <div className="mt-1 text-xs text-ink">
-                      {p.oauth.ready ? `Connected with PayU · merchant ${p.oauth.merchantId}` : `PayU account ${p.oauth.merchantId} linked — PayU is finishing its checks; payments turn on by themselves.`}
-                      {p.oauth.statuses?.length > 0 && (
-                        <span className="mt-1 flex flex-wrap gap-1">
-                          {p.oauth.statuses.slice(0, 6).map((st) => (
-                            <Tag key={st.event} className="!m-0 !text-[11px]" color={/success|approved/i.test(st.status || "") ? "green" : /fail|declin/i.test(st.status || "") ? "red" : "default"}>
-                              {String(st.event).replace(/ status update$/i, "").replace(/_/g, " ").toLowerCase()}: {st.status}
-                            </Tag>
-                          ))}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {p.key === "razorpay" && p.connected && p.oauth?.available && !p.oauth.connected && (
-                    <p className="m-0 mt-1 text-xs text-ink">
-                      Connected with API keys.{" "}
-                      <button type="button" className="bg-transparent border-0 p-0 cursor-pointer text-accent underline" onClick={connectRazorpay} disabled={!canEdit}>
-                        Switch to Connect with Razorpay
-                      </button>
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {p.connected ? (
-                    <>
-                      <Switch size="small" checked={p.enabled} loading={busy === p.key} disabled={!canEdit} onChange={(v) => toggle(p, v)} aria-label={`Accept ${p.name}`} />
-                      {!p.oauth?.connected && !((p.key === "razorpay" || p.key === "payu") && p.oauth?.available) && (
-                        <Button size="small" onClick={() => setEditing(p)}>
-                          Manage
-                        </Button>
-                      )}
-                      {canEdit && <Button size="small" type="text" danger icon={<Trash2 size={13} aria-hidden="true" />} aria-label={`Disconnect ${p.name}`} onClick={() => disconnect(p)} />}
-                    </>
-                  ) : (
-                    p.key === "payu" && p.oauth?.available ? (
-                      <Button size="small" type="primary" disabled={!canEdit || unsupported} loading={busy === "payu"} onClick={connectPayu}>
-                        Connect with PayU
-                      </Button>
-                    ) : p.key === "razorpay" && p.oauth?.available ? (
-                      <Button size="small" type="primary" disabled={!canEdit || unsupported} loading={busy === "razorpay"} onClick={connectRazorpay}>
-                        Connect with Razorpay
-                      </Button>
-                    ) : (
-                      <Button size="small" type="primary" disabled={!canEdit || unsupported} onClick={() => setEditing(p)}>
-                        Connect
-                      </Button>
-                    )
-                  )}
-                </div>
+      <Card size="small" title="Other payment gateways" extra={<span className="text-xs text-ink-muted">{online} active in all</span>} styles={{ body: { padding: "4px 20px" } }}>
+        <ul className="m-0 list-none divide-y divide-app-border p-0">
+          {data.providers
+            .filter((p) => p.key !== "payu")
+            .map((p) => (
+              <li key={p.key} className="py-4">
+                <Gateway p={p} {...rowProps} />
               </li>
-            );
-          })}
+            ))}
         </ul>
       </Card>
 

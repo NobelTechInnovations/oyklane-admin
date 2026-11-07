@@ -85,7 +85,7 @@ function UpiQr() {
     if (kind === "reject") {
       const ok = await confirmDialog({
         title: `Mark ${inr(row.amount)} as not received?`,
-        content: `Order #${row.orderNumber} is cancelled, its stock goes back, and ${row.buyerName || "the customer"} is told.`,
+        content: `Order #${row.orderNumber} stays, as cash on delivery. ${row.buyerName || "The customer"} is emailed to pay online from their order page, or to send the UPI reference if they did pay — it then comes back here to check.`,
         okText: "Not received",
         danger: true,
       });
@@ -94,7 +94,7 @@ function UpiQr() {
     setBusy(`${row.id}:${kind}`);
     try {
       await apiFetch(`/api/upi-qr/${row.id}/${kind}`, { method: "POST" });
-      message.success(kind === "confirm" ? `Order #${row.orderNumber} is paid` : `Order #${row.orderNumber} cancelled`);
+      message.success(kind === "confirm" ? `Order #${row.orderNumber} is paid` : `Order #${row.orderNumber} is cash on delivery now`);
       load();
     } catch (err) {
       message.error(err.message);
