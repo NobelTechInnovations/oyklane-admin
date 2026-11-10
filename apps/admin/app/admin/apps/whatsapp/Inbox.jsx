@@ -571,6 +571,9 @@ export default function Inbox() {
   const [filter, setFilter] = useState("open");
   const [q, setQ] = useState("");
   const [list, setList] = useState(null);
+  // How many conversations are shown; grows by 40 as the list scrolls.
+  const [size, setSize] = useState(40);
+  const [total, setTotal] = useState(0);
   const [activeId, setActiveId] = useState(null);
   const [thread, setThread] = useState(null);
   const [text, setText] = useState("");
@@ -586,13 +589,18 @@ export default function Inbox() {
 
   const loadList = useCallback(async () => {
     try {
-      const data = await apiFetch(`/api/whatsapp/conversations?${filterQuery(filter)}${q ? `&q=${encodeURIComponent(q)}` : ""}`);
+      const data = await apiFetch(`/api/whatsapp/conversations?${filterQuery(filter)}${q ? `&q=${encodeURIComponent(q)}` : ""}&limit=${size}`);
       setList(data.conversations);
+      setTotal(data.total || 0);
     } catch (err) {
       setList([]);
       message.error(err.message);
     }
-  }, [filter, q, message]);
+  }, [filter, q, size, message]);
+  // A new filter or search starts from the top again.
+  useEffect(() => setSize(40), [filter, q]);
+  const more = list && list.length < total;
+  const loadMore = () => more && setSize((n) => Math.min(500, n + 40));
 
   const loadThread = useCallback(
     async (id, { scroll } = {}) => {
@@ -725,7 +733,13 @@ export default function Inbox() {
           </div>
           <Segmented size="small" block value={filter} onChange={setFilter} options={FILTERS} />
         </div>
-        <div className="overflow-y-auto flex-1">
+        <div
+          className="overflow-y-auto flex-1"
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            if (more && el.scrollTop + el.clientHeight > el.scrollHeight - 120) loadMore();
+          }}
+        >
           {list === null ? (
             <div className="p-6 text-center">
               <Spin />
@@ -763,6 +777,17 @@ export default function Inbox() {
                 </div>
               </button>
             ))
+          )}
+          {list?.length > 0 && (
+            <div className="px-3 py-3 text-center text-[12px] text-ink-muted">
+              {more ? (
+                <Button size="small" onClick={loadMore}>
+                  Show more ({list.length} of {total})
+                </Button>
+              ) : (
+                `${total} conversation${total === 1 ? "" : "s"}`
+              )}
+            </div>
           )}
         </div>
       </div>
