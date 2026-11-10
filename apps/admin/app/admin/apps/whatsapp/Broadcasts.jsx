@@ -11,7 +11,7 @@ import { CustomerPicker } from "@/components/broadcasts/CustomerPicker";
 const STATUS = { draft: ["default", "Draft"], scheduled: ["blue", "Scheduled"], sending: ["processing", "Sending"], sent: ["green", "Sent"], cancelled: ["default", "Cancelled"], failed: ["red", "Failed"] };
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 
-function Wizard({ open, onClose, templates, meta, onDone }) {
+function Wizard({ open, onClose, templates, meta, onDone, draft }) {
   const { message, modal } = App.useApp();
   const [form] = Form.useForm();
   const [step, setStep] = useState(0);
@@ -27,14 +27,28 @@ function Wizard({ open, onClose, templates, meta, onDone }) {
   useEffect(() => {
     if (open) {
       form.resetFields();
-      form.setFieldsValue({ name: `Broadcast ${new Date().toLocaleDateString()}`, segment: "consented", variables: [] });
+      // A saved draft opens where it was left: its template, blanks and audience.
+      form.setFieldsValue(
+        draft
+          ? {
+              name: draft.name,
+              template: `${draft.templateName}|${draft.templateLanguage}`,
+              variables: Array.isArray(draft.variables) ? draft.variables : [],
+              headerMediaUrl: draft.headerMediaUrl || undefined,
+              segment: draft.audience?.segment || "consented",
+              days: draft.audience?.days,
+              minOrders: draft.audience?.minOrders,
+              customerIds: draft.audience?.customerIds || [],
+            }
+          : { name: `Broadcast ${new Date().toLocaleDateString()}`, segment: "consented", variables: [] }
+      );
       setStep(0);
       setPreview(null);
-      setSaved(null);
-      setWhen("now");
+      setSaved(draft || null);
+      setWhen(draft?.status === "scheduled" && draft.scheduledAt ? "later" : "now");
       setAt(null);
     }
-  }, [open, form]);
+  }, [open, form, draft]);
 
   const body = () => ({
     name: v.name,
@@ -320,6 +334,7 @@ export default function Broadcasts({ canEdit }) {
   const [meta, setMeta] = useState({});
   const [templates, setTemplates] = useState([]);
   const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(null);
   const [report, setReport] = useState(null);
 
   const load = useCallback(async () => {
@@ -347,7 +362,15 @@ export default function Broadcasts({ canEdit }) {
       <div className="flex justify-between gap-2 flex-wrap">
         <p className="text-sm text-ink-muted m-0 max-w-2xl">Send an approved template to a group of customers who agreed to hear from you on WhatsApp. Delivery, reads, replies and the orders that followed are tracked.</p>
         {canEdit && (
-          <Button type="primary" icon={<Plus size={14} aria-hidden="true" />} onClick={() => setOpen(true)} disabled={!templates.length}>
+          <Button
+            type="primary"
+            icon={<Plus size={14} aria-hidden="true" />}
+            onClick={() => {
+              setDraft(null);
+              setOpen(true);
+            }}
+            disabled={!templates.length}
+          >
             New broadcast
           </Button>
         )}
@@ -358,10 +381,18 @@ export default function Broadcasts({ canEdit }) {
         loading={rows === null}
         dataSource={rows || []}
         scroll={{ x: 820 }}
-        onRow={(r) => ({ onClick: () => r.status !== "draft" && setReport(r.id), className: r.status !== "draft" ? "cursor-pointer" : "" })}
+        onRow={(r) => ({
+          onClick: () => {
+            if (r.status !== "draft") return setReport(r.id);
+            if (!canEdit) return;
+            setDraft(r);
+            setOpen(true);
+          },
+          className: "cursor-pointer",
+        })}
         locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No broadcasts yet." /> }}
         columns={[
-          { title: "Name", dataIndex: "name", render: (v, r) => <span className="font-medium">{v}<span className="block text-xs text-ink-muted font-normal">{r.templateName}</span></span> },
+          { title: "Name", dataIndex: "name", render: (v, r) => <span className="font-medium">{v}<span className="block text-xs text-ink-muted font-normal">{r.templateName}{r.status === "draft" && canEdit ? " · click to edit" : ""}</span></span> },
           { title: "Status", dataIndex: "status", render: (s, r) => <Tag color={STATUS[s]?.[0]}>{STATUS[s]?.[1] || s}{s === "scheduled" && r.scheduledAt ? ` · ${new Date(r.scheduledAt).toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}` : ""}</Tag> },
           { title: "Sent", render: (_, r) => (r.recipients ? `${r.sent}/${r.recipients}` : "—") },
           { title: "Delivered", render: (_, r) => (r.sent ? `${pct(r.delivered, r.sent)}%` : "—") },
@@ -394,6 +425,7 @@ export default function Broadcasts({ canEdit }) {
       />
       <Wizard
         open={open}
+        draft={draft}
         onClose={() => setOpen(false)}
         // Broadcasts can't fill a per-customer link, so those templates are left out.
         templates={templates.filter((t) => t.urlButtonVariable < 0)}

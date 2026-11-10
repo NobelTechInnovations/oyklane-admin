@@ -22,6 +22,7 @@ export default function CustomersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
+  const [selected, setSelected] = useState([]);
   const pageSize = 20;
 
   const load = useCallback(async () => {
@@ -133,10 +134,28 @@ export default function CustomersPage() {
           />
         }
       >
+        {selected.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-app-border bg-accent-soft/60" role="region" aria-label="Bulk actions">
+            <span className="text-sm font-medium text-ink mr-1 tabular-nums">{selected.length} selected</span>
+            <Button size="small" type="primary" disabled={selected.length > 200} onClick={() => router.push(`/admin/customers/bulk-edit?ids=${selected.join(",")}`)}>
+              Bulk edit
+            </Button>
+            <Button size="small" type="text" className="ml-auto" onClick={() => setSelected([])}>
+              Clear
+            </Button>
+          </div>
+        )}
         <Table
           rowKey="id"
           scroll={{ x: "max-content" }}
           loading={loading}
+          rowSelection={{
+            selectedRowKeys: selected,
+            onChange: setSelected,
+            preserveSelectedRowKeys: true,
+            columnWidth: 44,
+            getCheckboxProps: () => ({ onClick: (e) => e.stopPropagation() }),
+          }}
           columns={columns}
           dataSource={customers}
           rowClassName="oy-row-link"

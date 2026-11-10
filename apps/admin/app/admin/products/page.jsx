@@ -469,6 +469,9 @@ export default function ProductsPage() {
         {selected.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-app-border bg-accent-soft/60" role="region" aria-label="Bulk actions">
             <span className="text-sm font-medium text-ink mr-1 tabular-nums">{selected.length} selected</span>
+            <Button size="small" type="primary" disabled={selected.length > 100} title={selected.length > 100 ? "Up to 100 at a time" : undefined} onClick={() => router.push(`/admin/products/bulk-edit?ids=${selected.join(",")}`)}>
+              Bulk edit
+            </Button>
             <Button size="small" loading={bulkBusy} onClick={() => runBulk("activate")}>
               Set active
             </Button>
