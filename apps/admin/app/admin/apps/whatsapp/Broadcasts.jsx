@@ -6,6 +6,7 @@ import { Plus, Send, FlaskConical, Users } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { deliveryProblem } from "@/lib/whatsapp-errors";
 import { WaPreview, money } from "./wa-ui";
+import { CustomerPicker } from "@/components/broadcasts/CustomerPicker";
 
 const STATUS = { draft: ["default", "Draft"], scheduled: ["blue", "Scheduled"], sending: ["processing", "Sending"], sent: ["green", "Sent"], cancelled: ["default", "Cancelled"], failed: ["red", "Failed"] };
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
@@ -41,7 +42,7 @@ function Wizard({ open, onClose, templates, meta, onDone }) {
     templateLanguage: tpl?.language,
     variables: (v.variables || []).slice(0, tpl?.bodyVariables || 0),
     headerMediaUrl: v.headerMediaUrl || undefined,
-    audience: { segment: v.segment, days: v.days, minOrders: v.minOrders },
+    audience: { segment: v.segment, days: v.days, minOrders: v.minOrders, customerIds: v.segment === "selected" ? v.customerIds || [] : undefined },
   });
 
   async function runPreview() {
@@ -58,7 +59,7 @@ function Wizard({ open, onClose, templates, meta, onDone }) {
   useEffect(() => {
     if (step === 1 && tpl) runPreview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, v.segment, v.days, v.minOrders]);
+  }, [step, v.segment, v.days, v.minOrders, (v.customerIds || []).length]);
 
   async function saveDraft() {
     const out = saved
@@ -155,6 +156,11 @@ function Wizard({ open, onClose, templates, meta, onDone }) {
                 ))}
               </Radio.Group>
             </Form.Item>
+            {v.segment === "selected" && (
+              <Form.Item name="customerIds" label="Customers" initialValue={[]}>
+                <CustomerPicker channel="whatsapp" />
+              </Form.Item>
+            )}
             {v.segment === "lapsed" && (
               <Form.Item name="days" label="No order in the last (days)" initialValue={60}>
                 <InputNumber min={7} max={730} />

@@ -39,7 +39,7 @@ export default function GoogleAnalyticsPage() {
   const signedIn = data.account?.connected;
   return (
     <div>
-      <PageHeader title="Google Analytics & Tag Manager" backHref="/admin/apps" subtitle="Visitors, sales and ad conversions from your store — connected through your Google account, no codes to copy." />
+      <PageHeader title="Google Analytics & Tag Manager" backHref="/admin/apps" />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 flex flex-col gap-6 min-w-0">
           {!signedIn ? (

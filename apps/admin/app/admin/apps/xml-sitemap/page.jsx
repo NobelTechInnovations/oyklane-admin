@@ -52,7 +52,7 @@ export default function XmlSitemapPage() {
 
   return (
     <div>
-      <PageHeader title="XML Sitemap" backHref="/admin/apps" subtitle="Every page of your store in one file for search engines — it updates the moment you add or change something." />
+      <PageHeader title="XML Sitemap" backHref="/admin/apps" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-2">
           <Card size="small" title="Your sitemap">

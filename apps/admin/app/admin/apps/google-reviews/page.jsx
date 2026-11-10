@@ -60,14 +60,17 @@ function FindBusiness({ onConnected, onCancel }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onPressEnter={() => query.trim().length >= 3 && search()}
-          placeholder="Your business name and city, e.g. Loomwear Pune"
+          placeholder="Business name and city, or your Google Maps link"
           prefix={<Search size={15} className="text-ink-subtle" aria-hidden="true" />}
         />
         <Button size="large" type="primary" loading={busy === "search"} disabled={query.trim().length < 3} onClick={search}>
           Search
         </Button>
       </div>
-      {places && places.length === 0 && <p className="m-0 text-[13px] text-ink-muted">Nothing found. Try the exact name shown on Google Maps, with your city.</p>}
+      {places && places.length === 0 && <p className="m-0 text-[13px] text-ink-muted">Nothing found. Use the exact name shown on Google Maps, or paste its link.</p>}
+      {places && places.length > 0 && !/^https?:/i.test(query.trim()) && (
+        <p className="m-0 text-[12.5px] text-ink-muted">Not in the list? Open your business on Google Maps ▸ Share ▸ Copy link, and paste the link above — new and unverified listings often don't come up by name.</p>
+      )}
       {places?.map((pl) => (
         <div key={pl.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-app-border px-3 py-2.5">
           <div className="min-w-0">
@@ -227,7 +230,7 @@ export default function GoogleReviewsPage() {
   const googleReady = Boolean(data.business && data.account?.connected && data.account.access?.reviews);
   return (
     <div>
-      <PageHeader title="Google Reviews" backHref="/admin/apps" subtitle="Your Google rating and reviews on your store — refreshed every day." />
+      <PageHeader title="Google Reviews" backHref="/admin/apps" />
       {data.connected && !changing && <AccountLine kind="google" account={data.via === "google" ? data.account : null} />}
       {!data.ready && !data.business && (
         <Alert className="mb-6" type="info" showIcon message="Google reviews is almost ready" description="Oyklane's Google connection is still being set up. You'll be able to connect your business here soon." />
@@ -264,7 +267,7 @@ export default function GoogleReviewsPage() {
             )}
             {data.ready && (
               <Card title={data.business ? "Or find your business by name" : "Find your business on Google"}>
-                <p className="m-0 mb-3 text-[13px] text-ink-muted">The listing customers review on Google Maps — no sign-in needed. Google shares the five most relevant reviews this way.</p>
+                <p className="m-0 mb-3 text-[13px] text-ink-muted">Search by the name shown on Google Maps, or paste your business's Google Maps link. Google shares the five most relevant reviews this way.</p>
                 <FindBusiness
                   onConnected={(d) => {
                     setData((cur) => ({ ...cur, ...d }));

@@ -137,6 +137,7 @@ const NAV_ITEMS = [
     children: [
       { key: "/admin/customers", icon: <Users size={14} aria-hidden="true" />, label: <Link href="/admin/customers">All customers</Link> },
       { key: "/admin/customers/queries", icon: <MessageSquare size={14} aria-hidden="true" />, label: <QueriesLink /> },
+      { key: "/admin/customers/broadcasts", icon: <Megaphone size={14} aria-hidden="true" />, label: <Link href="/admin/customers/broadcasts">Broadcasts</Link> },
     ],
   },
   {

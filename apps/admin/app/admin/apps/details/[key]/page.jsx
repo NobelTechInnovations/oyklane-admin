@@ -109,6 +109,7 @@ export default function AppDetailsPage({ params }) {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] items-start">
         <div className="flex flex-col gap-5">
+          {!app.installed && (
           <Panel>
             <div className="flex items-start gap-4">
               <AppTile app={app} size={56} />
@@ -127,6 +128,7 @@ export default function AppDetailsPage({ params }) {
               </ul>
             )}
           </Panel>
+          )}
 
           {hasSettings && (
             <Panel title={app.installed ? "Settings" : "Set up and install"}>
@@ -151,11 +153,15 @@ export default function AppDetailsPage({ params }) {
             </Panel>
           )}
 
-          {app.installed && !hasSettings && !APP_PANELS[app.key] && app.key !== "one-click-checkout" && (
+          {app.installed && !hasSettings && app.key !== "one-click-checkout" && (
             <Panel title="Settings">
-              <p className="text-[13px] text-ink-muted m-0">
-                Nothing to set up — {app.name} is working on your store. {app.key === "one-click-checkout" ? "Choose which fields checkout asks for in Settings ▸ Checkout." : ""}
-              </p>
+              {APP_PANELS[app.key] ? (
+                <Button type="primary" icon={<ExternalLink size={14} aria-hidden="true" />} onClick={() => router.push(appHref(app))}>
+                  Open {app.name} settings
+                </Button>
+              ) : (
+                <p className="text-[13px] text-ink-muted m-0">{app.name} is on — there&apos;s nothing to set.</p>
+              )}
             </Panel>
           )}
         </div>

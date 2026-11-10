@@ -12,6 +12,7 @@ export const APP_PANELS = {
   flow: "/admin/apps/flow",
   "instagram-feed": "/admin/apps/instagram",
   "google-reviews": "/admin/apps/google-reviews",
+  "shoppable-videos": "/admin/apps/shoppable-videos",
   "meta-ads": "/admin/apps/meta-ads",
   "google-ads": "/admin/apps/google-ads",
   whatsapp: "/admin/apps/whatsapp",

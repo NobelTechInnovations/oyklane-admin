@@ -186,7 +186,6 @@ export default function MetaAdsPage() {
     <div>
       <PageHeader
         title="Meta Ads"
-        subtitle="Create and manage Facebook and Instagram ads, see what's working, and get suggestions — all from your store."
         actions={
           <>
             <Link href="/admin/analytics"><Button>Store analytics</Button></Link>

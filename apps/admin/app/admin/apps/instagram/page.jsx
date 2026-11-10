@@ -176,7 +176,7 @@ function InstagramPanel() {
   const facebookReady = Boolean(data.facebook && data.account?.connected && data.account.access?.instagram);
   return (
     <div>
-      <PageHeader title="Instagram Feed" backHref="/admin/apps" subtitle="Your latest Instagram posts on your store, kept up to date by themselves." />
+      <PageHeader title="Instagram Feed" backHref="/admin/apps" />
 
       {!data.connected || changing ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

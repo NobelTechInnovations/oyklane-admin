@@ -170,7 +170,7 @@ function UpiQr() {
 
   return (
     <div>
-      <PageHeader title="UPI QR payments" backHref="/admin/apps" subtitle="Shoppers pay your UPI ID by QR at checkout — no gateway, no fee. You confirm each payment arrived." />
+      <PageHeader title="UPI QR payments" backHref="/admin/apps" />
 
       {data.hiddenBy && (
         <Alert

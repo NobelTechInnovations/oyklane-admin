@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, Alert, Card, Tag, Button, App, Skeleton, Select, Popconfirm, Form, Input } from "antd";
-import { Megaphone, LineChart, Images, Bot, ShieldCheck, FileClock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Megaphone, LineChart, Images, Bot, ShieldCheck, FileClock, CheckCircle2, AlertTriangle, HelpCircle, ExternalLink } from "lucide-react";
 import { PageHeader } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { AccountSignIn, AccountLine } from "@/components/accounts/AccountConnect";
@@ -159,61 +159,167 @@ function ChooseAccount({ onChosen, status, google, storeName }) {
   );
 }
 
+const CATEGORY = { PURCHASE: "Purchase", ADD_TO_CART: "Add to cart", BEGIN_CHECKOUT: "Checkout", PAGE_VIEW: "Page view", SUBMIT_LEAD_FORM: "Lead", QUALIFIED_LEAD: "Lead", CONVERTED_LEAD: "Lead", ENGAGEMENT: "Engagement", DEFAULT: "Other" };
+const ORDER = ["Purchase", "Checkout", "Add to cart", "Lead", "Page view", "Engagement", "Other"];
+
+/** Conversion actions grouped by what they count — Google lists every GA4
+ * event as its own action, so a flat list reads as noise. */
+function Conversions({ list }) {
+  const [all, setAll] = useState(false);
+  if (!list.length) return <p className="m-0 text-[13px] text-ink-muted">None yet.</p>;
+  const groups = new Map();
+  for (const c of list) {
+    const g = CATEGORY[c.category] || "Other";
+    groups.set(g, [...(groups.get(g) || []), c]);
+  }
+  const rows = ORDER.filter((g) => groups.has(g)).map((g) => [g, groups.get(g)]);
+  const shown = all ? rows : rows.slice(0, 3);
+  return (
+    <div className="flex flex-col gap-2.5">
+      {shown.map(([g, items]) => (
+        <div key={g}>
+          <p className="m-0 mb-1 text-[12px] font-medium text-ink-muted">
+            {g} <span className="tabular-nums">· {items.length}</span>
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {items.slice(0, all ? 99 : 4).map((c) => (
+              <Tag key={c.id} className="m-0 max-w-full truncate" color={c.primary && g === "Purchase" ? "blue" : undefined} title={c.name}>
+                {c.name}
+              </Tag>
+            ))}
+            {!all && items.length > 4 && <Tag className="m-0" bordered={false}>+{items.length - 4}</Tag>}
+          </div>
+        </div>
+      ))}
+      {(rows.length > 3 || rows.some(([, i]) => i.length > 4)) && (
+        <Button type="link" size="small" className="!px-0 self-start" onClick={() => setAll((v) => !v)}>
+          {all ? "Show less" : `Show all ${list.length}`}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 function Setup({ caps, reload, canEdit }) {
   const { message } = App.useApp();
   const [busy, setBusy] = useState(false);
   if (!caps) return <Skeleton active />;
+  const checks = caps.checks || [];
+  const done = checks.filter((c) => c.ok).length;
+  const setupTracking = async () => {
+    setBusy(true);
+    try {
+      const r = await apiFetch("/api/google-ads/conversions/setup", { method: "POST" });
+      message.success(`Purchase tracking on (${r.tagId}) — your store sends each order to Google`);
+      reload();
+    } catch (err) {
+      message.error(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const extra = (caps.problems || []).filter((p) => !/payment setup|purchase tracking|purchases aren't sent|Merchant Center isn't linked|Auto-tagging|status is/i.test(p.text));
   return (
-    <div className="grid lg:grid-cols-2 gap-4 items-start">
-      <Card size="small" title="Account check">
-        {caps.problems.length ? (
-          <ul className="list-none p-0 m-0 flex flex-col gap-2">
-            {caps.problems.map((p, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm">
-                <AlertTriangle size={16} className="text-status-warning shrink-0 mt-0.5" aria-hidden="true" />
+    <div className="grid lg:grid-cols-5 gap-4 items-start">
+      <Card
+        className="lg:col-span-3"
+        title="Ready to run ads?"
+        extra={<span className="text-[12.5px] text-ink-muted tabular-nums">{done} of {checks.length} done</span>}
+      >
+        <div className="h-1.5 w-full rounded-full bg-[#EDEFF3] overflow-hidden mb-4" aria-hidden="true">
+          <div className="h-full rounded-full bg-[#047857] transition-[width] duration-500" style={{ width: `${checks.length ? (done / checks.length) * 100 : 0}%` }} />
+        </div>
+        <ul className="list-none p-0 m-0 flex flex-col">
+          {checks.map((c) => (
+            <li key={c.key} className="flex items-start gap-3 py-3 border-t border-app-border first:border-t-0 first:pt-0">
+              {c.ok ? (
+                <CheckCircle2 size={18} className="text-status-success shrink-0 mt-[1px]" aria-label="Done" />
+              ) : c.ok === null ? (
+                <HelpCircle size={18} className="text-ink-subtle shrink-0 mt-[1px]" aria-label="Couldn't check" />
+              ) : (
+                <AlertTriangle size={18} className="text-status-warning shrink-0 mt-[1px]" aria-label="To do" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className={`m-0 text-[14px] ${c.ok ? "text-ink" : "text-ink font-medium"}`}>{c.label}</p>
+                {!c.ok && <p className="m-0 mt-0.5 text-[12.5px] text-ink-muted">{c.ok === null ? "Google didn't say — check in Google Ads." : c.fix}</p>}
+              </div>
+              {!c.ok && c.action === "setup_conversions" && canEdit && (
+                <Button size="small" type="primary" loading={busy} onClick={setupTracking} className="shrink-0">
+                  Set up
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+        {extra.length > 0 && (
+          <ul className="list-none p-0 m-0 mt-3 flex flex-col gap-2">
+            {extra.map((p, i) => (
+              <li key={i} className="flex items-start gap-2 text-[13px]">
+                <AlertTriangle size={15} className="text-status-warning shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   {p.text}
-                  {p.fix && <span className="block text-xs text-ink-muted">{p.fix}</span>}
-                  {p.action === "setup_conversions" && canEdit && (
-                    <Button
-                      size="small"
-                      type="primary"
-                      className="mt-1"
-                      loading={busy}
-                      onClick={async () => {
-                        setBusy(true);
-                        try {
-                          const r = await apiFetch("/api/google-ads/conversions/setup", { method: "POST" });
-                          message.success(`Purchase tracking on (${r.tagId}) — your store sends each order to Google`);
-                          reload();
-                        } catch (err) {
-                          message.error(err.message);
-                        } finally {
-                          setBusy(false);
-                        }
-                      }}
-                    >
-                      Set up purchase tracking
-                    </Button>
-                  )}
+                  {p.fix && <span className="block text-[12px] text-ink-muted">{p.fix}</span>}
                 </span>
               </li>
             ))}
           </ul>
-        ) : (
-          <p className="text-sm m-0 flex items-center gap-2"><CheckCircle2 size={16} className="text-status-success" aria-hidden="true" /> Everything&apos;s ready.</p>
         )}
       </Card>
-      <Card size="small" title="Account">
-        <ul className="text-sm m-0 pl-4">
-          <li>{caps.account.name} ({caps.account.id.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}){caps.account.test ? " — test account" : ""}</li>
-          <li>{caps.account.currency} · {caps.account.timeZone}</li>
-          <li>Purchase tracking: {caps.purchaseTracking ? "on" : "off"}</li>
-          <li>Merchant Center: {caps.merchants.length ? caps.merchants.join(", ") : "not linked"}</li>
-          <li>Conversions: {caps.conversions.map((c) => c.name).join(", ") || "none"}</li>
-        </ul>
-        <p className="text-xs text-ink-muted mt-2 mb-0">Google bills your ad spend to this account&apos;s payment method — never through Oyklane.</p>
-      </Card>
+      <div className="lg:col-span-2 flex flex-col gap-4">
+        <Card size="small" title="Account">
+          <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">
+            <dt className="text-ink-muted">ID</dt>
+            <dd className="m-0 tabular-nums">{fmtId(caps.account.id)}{caps.account.test ? " (test)" : ""}</dd>
+            <dt className="text-ink-muted">Currency</dt>
+            <dd className="m-0">{caps.account.currency}</dd>
+            <dt className="text-ink-muted">Time zone</dt>
+            <dd className="m-0">{caps.account.timeZone}</dd>
+            <dt className="text-ink-muted">Merchant Center</dt>
+            <dd className="m-0 tabular-nums">{caps.merchants.length ? caps.merchants.join(", ") : "Not linked"}</dd>
+          </dl>
+          <p className="text-[12px] text-ink-muted mt-3 mb-0">Google bills your ad spend to this account&apos;s payment method — never through Oyklane.</p>
+        </Card>
+        <Card size="small" title={`Conversions Google counts (${caps.conversions.length})`}>
+          <Conversions list={caps.conversions} />
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+/** The connected account at a glance: name, ID, what's on — and the way
+ * to Google Ads itself. */
+function AccountBar({ account, onChange }) {
+  const id = fmtId(account.customerId);
+  const named = account.name && account.name.replace(/\D/g, "") !== account.customerId;
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[12px] border border-app-border bg-white px-4 py-3">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-[#EEF3FD]" aria-hidden="true">
+        <Megaphone size={18} className="text-[#3D6BD6]" />
+      </span>
+      <div className="min-w-0 mr-auto">
+        <p className="m-0 text-[15px] font-semibold text-ink truncate">{named ? account.name : "Google Ads account"}</p>
+        <p className="m-0 text-[12.5px] text-ink-muted tabular-nums">
+          {id}
+          {account.currency ? ` · ${account.currency}` : ""}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {account.purchaseTracking ? (
+          <Tag className="m-0" color="green" icon={<CheckCircle2 size={12} className="mr-1 -mt-px inline" aria-hidden="true" />}>Purchase tracking on</Tag>
+        ) : (
+          <Tag className="m-0" color="gold">Purchase tracking off</Tag>
+        )}
+        {account.merchantId ? <Tag className="m-0">Merchant Center {account.merchantId}</Tag> : <Tag className="m-0" color="default">No Merchant Center</Tag>}
+      </div>
+      <div className="flex items-center gap-1">
+        <a href="https://ads.google.com/aw/overview" target="_blank" rel="noopener noreferrer">
+          <Button size="small" icon={<ExternalLink size={13} aria-hidden="true" />}>Google Ads</Button>
+        </a>
+        <Popconfirm title="Use a different Google Ads account?" onConfirm={onChange}>
+          <Button size="small" type="text">Change</Button>
+        </Popconfirm>
+      </div>
     </div>
   );
 }
@@ -324,7 +430,6 @@ export default function GoogleAdsPage() {
     <div>
       <PageHeader
         title="Google Ads"
-        subtitle="Search, Shopping, Performance Max and Display campaigns — set up, results and suggestions in one place."
         actions={
           <>
             <Link href="/admin/apps/meta-ads"><Button>Meta Ads</Button></Link>
@@ -345,15 +450,7 @@ export default function GoogleAdsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <Card size="small" className="!py-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <Tag>{status.account.name} · {status.account.customerId.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}</Tag>
-              {status.account.purchaseTracking ? <Tag color="green">Purchase tracking on</Tag> : <Tag color="gold">No purchase tracking</Tag>}
-              <Popconfirm title="Use a different Google Ads account?" onConfirm={() => apiFetch("/api/google-ads/account", { method: "DELETE" }).then(load)}>
-                <Button size="small" type="link">Change</Button>
-              </Popconfirm>
-            </div>
-          </Card>
+          <AccountBar account={status.account} onChange={() => apiFetch("/api/google-ads/account", { method: "DELETE" }).then(load)} />
           <Suspense fallback={null}>
             <Suite storeInfo={storeInfo} />
           </Suspense>

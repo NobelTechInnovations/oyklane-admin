@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { App, Alert, Button, Card, Skeleton, Tag } from "antd";
-import { RefreshCw, Unlink, ExternalLink, Globe } from "lucide-react";
+import { RefreshCw, Unlink, ExternalLink, Globe, CheckCircle2, XCircle } from "lucide-react";
 import { PageHeader, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { AppNotInstalled } from "@/components/apps/AppPanelParts";
@@ -83,10 +83,62 @@ function ChooseMerchant({ onConnected, onNeedsAccount, onUnavailable }) {
   );
 }
 
-/** Apps ▸ Google & YouTube: products on Google through Merchant Center. */
+/** Account-level issues (Misrepresentation stops every product at once)
+ * and what Google's review looks for, checked against this store. */
+function AccountHealth({ issues, trust }) {
+  const list = Array.isArray(issues) ? issues : [];
+  const misrep = list.some((i) => i.misrepresentation);
+  const missing = (trust || []).filter((t) => !t.ok);
+  if (!list.length && !missing.length) return null;
+  return (
+    <div className="mt-4 flex flex-col gap-3">
+      {list.map((i, k) => (
+        <Alert
+          key={k}
+          type={i.severity === "CRITICAL" || i.blocksAll ? "error" : "warning"}
+          showIcon
+          message={<span className="font-medium">{i.title}{i.blocksAll ? " — stops all your products" : ""}</span>}
+          description={
+            <div className="text-[12.5px]">
+              {i.detail && <p className="m-0">{i.detail}</p>}
+              {i.misrepresentation && (
+                <p className="m-0 mt-1.5">
+                  This is about the whole store, not one product. Fix what's missing below, then in Merchant Center press <b>Request review</b> (once a review is running, wait for it — it takes a few days).
+                </p>
+              )}
+              {i.link && (
+                <a href={i.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1">
+                  Google's guide <ExternalLink size={11} aria-hidden="true" />
+                </a>
+              )}
+            </div>
+          }
+        />
+      ))}
+      {trust?.length > 0 && (misrep || missing.length > 0) && (
+        <div className="rounded-[10px] border border-app-border px-3 py-2.5">
+          <p className="m-0 mb-1.5 text-[13px] font-medium text-ink">What Google checks on your store</p>
+          <ul className="m-0 p-0 list-none grid sm:grid-cols-2 gap-x-4 gap-y-1">
+            {trust.map((t) => (
+              <li key={t.key} className="flex items-start gap-2 text-[12.5px]">
+                {t.ok ? <CheckCircle2 size={14} className="mt-[2px] shrink-0 text-[#047857]" aria-label="Done" /> : <XCircle size={14} className="mt-[2px] shrink-0 text-[#B91C1C]" aria-label="Missing" />}
+                <span className="text-ink">
+                  {t.label}
+                  {!t.ok && <span className="block text-ink-muted">{t.fix}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** What Merchant Center holds and whether Google shows it — "Last read"
  * only says the feed was fetched; this says what happened next. */
 function OnGoogle({ data }) {
+  const [all, setAll] = useState(false);
   if (!data) return null;
   if (data.error) return <p className="mt-3 mb-0 text-[12.5px] text-ink-muted">Couldn't ask Merchant Center about your products: {data.error}</p>;
   const tile = (label, value, tone) => (
@@ -95,9 +147,11 @@ function OnGoogle({ data }) {
       <p className="m-0 text-[12px] text-ink-muted truncate">{label}</p>
     </div>
   );
+  const issues = data.issues || [];
+  const items = (data.items || []).filter((i) => i.issues.length);
   return (
     <div className="mt-4">
-      <p className="m-0 mb-2 text-[13px] font-medium text-ink">In your Merchant Center</p>
+      <p className="m-0 mb-2 text-[13px] font-medium text-ink">Your Oyklane products in Merchant Center</p>
       {data.total === 0 ? (
         <Alert
           type="info"
@@ -117,19 +171,57 @@ function OnGoogle({ data }) {
               Google reviews a new store's products before showing them — up to 3 working days. They're in your account already: Merchant Center ▸ Products.
             </p>
           )}
-          {data.items.some((i) => i.issues.length) && (
-            <ul className="m-0 mt-2 pl-5 text-[12.5px] text-ink-muted">
-              {data.items
-                .filter((i) => i.issues.length)
-                .slice(0, 8)
-                .map((i) => (
-                  <li key={i.offerId}>
-                    <b className="font-medium text-ink">{i.title}</b>: {i.issues.map((x) => x.text).join("; ")}
-                  </li>
-                ))}
+          {issues.length > 0 && (
+            <ul className="m-0 mt-3 p-0 list-none flex flex-col gap-1.5">
+              {issues.map((x) => (
+                <li key={x.code || x.text} className="flex flex-wrap items-baseline gap-x-2 text-[12.5px]">
+                  <span className="font-medium text-ink">{x.text}</span>
+                  <span className="text-ink-muted tabular-nums">
+                    {x.products} of {data.total} product{data.total === 1 ? "" : "s"}
+                  </span>
+                  {x.local ? (
+                    <Tag className="m-0" color="default">In-store listings only — online listings aren't affected</Tag>
+                  ) : x.severity === "DISAPPROVED" ? (
+                    <Tag className="m-0" color="red">Stops listing</Tag>
+                  ) : (
+                    <Tag className="m-0" color="gold">Lowers reach</Tag>
+                  )}
+                  {x.detail && <span className="basis-full text-ink-muted">{x.detail}</span>}
+                </li>
+              ))}
             </ul>
           )}
+          {issues.some((x) => x.local) && (
+            <p className="m-0 mt-2 text-[12px] text-ink-muted">
+              “Missing local inventory data” comes from Google's free local listings (showing stock in a physical shop). If you only sell online, turn off Free local listings in Merchant Center ▸ Settings ▸ Add-ons.
+            </p>
+          )}
+          {items.length > 0 && (
+            <details className="mt-3" open={all} onToggle={(e) => setAll(e.currentTarget.open)}>
+              <summary className="cursor-pointer text-[12.5px] text-ink">Each product ({items.length})</summary>
+              <ul className="m-0 mt-2 pl-5 text-[12.5px] text-ink-muted flex flex-col gap-1">
+                {items.map((i) => (
+                  <li key={i.offerId}>
+                    <b className="font-medium text-ink">{i.title}</b>: {i.issues.map((x) => x.text).join(" · ")}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </>
+      )}
+      {data.others?.total > 0 && (
+        <Alert
+          className="mt-3"
+          type="info"
+          showIcon
+          message={`${data.others.total} more product${data.others.total === 1 ? "" : "s"} in this Merchant Center come from another feed`}
+          description={
+            <span className="text-[12.5px]">
+              Not from Oyklane — usually an old website or app feed{data.others.sample?.length ? ` (e.g. “${data.others.sample[0]}”)` : ""}. They duplicate your products and count against your account. Remove that feed in Merchant Center ▸ Settings ▸ Data sources (keep “Oyklane store”).
+            </span>
+          }
+        />
       )}
       <a href={data.url} target="_blank" rel="noopener noreferrer" className="text-[12.5px] inline-flex items-center gap-1 mt-2">
         See them in Merchant Center <ExternalLink size={11} aria-hidden="true" />
@@ -138,6 +230,7 @@ function OnGoogle({ data }) {
   );
 }
 
+/** Apps ▸ Google & YouTube: products on Google through Merchant Center. */
 export default function GoogleShoppingPage() {
   const { message } = App.useApp();
   const { confirmDialog } = useConfirmDialog();
@@ -198,7 +291,7 @@ export default function GoogleShoppingPage() {
   const lastRead = data.lastFetch;
   return (
     <div>
-      <PageHeader title="Google & YouTube" backHref="/admin/apps" subtitle="Your products on Google Shopping, Search, Images, YouTube and Maps — free listings, kept in sync by themselves." />
+      <PageHeader title="Google & YouTube" backHref="/admin/apps" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 flex flex-col gap-6">
@@ -260,6 +353,7 @@ export default function GoogleShoppingPage() {
                   </ul>
                 )}
               </div>
+              <AccountHealth issues={data.accountIssues} trust={data.trust} />
               <OnGoogle data={data.onGoogle} />
               <div className="mt-4 flex flex-wrap items-center gap-2 text-[13px]">
                 <Globe size={14} className="text-ink-muted" aria-hidden="true" />
