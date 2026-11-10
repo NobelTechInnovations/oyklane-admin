@@ -285,12 +285,30 @@ function Wizard({ open, onClose, templates, meta, onDone, draft }) {
 }
 
 function Report({ id, onClose }) {
+  const { message } = App.useApp();
   const [data, setData] = useState(null);
-  useEffect(() => {
+  const [busy, setBusy] = useState(false);
+  const load = useCallback(() => {
     if (!id) return;
-    setData(null);
     apiFetch(`/api/whatsapp/broadcasts/${id}`).then(setData).catch(() => setData({ error: true }));
   }, [id]);
+  useEffect(() => {
+    setData(null);
+    load();
+  }, [load]);
+  const retryable = (data?.problems || []).filter((p) => p.status === "failed" && /rate limit|throughput|130429|131056|80007|chose not to deliver|131049/i.test(String(p.error || ""))).length;
+  async function sendAgain() {
+    setBusy(true);
+    try {
+      const r = await apiFetch(`/api/whatsapp/broadcasts/${id}/retry-failed`, { method: "POST" });
+      message.success(`${r.requeued} message${r.requeued === 1 ? "" : "s"} will go out again within a few minutes, paced`);
+      load();
+    } catch (err) {
+      message.error(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
   const b = data?.broadcast;
   return (
     <Modal open={Boolean(id)} onCancel={onClose} footer={null} width={760} title={b?.name || "Broadcast"}>
@@ -310,6 +328,19 @@ function Report({ id, onClose }) {
             <Statistic title="Order value" value={money(b.revenue)} />
           </div>
           {b.status === "sending" && <Progress percent={pct(b.sent + b.failed, b.recipients)} />}
+          {retryable > 0 && (
+            <Alert
+              type="warning"
+              showIcon
+              message={`${retryable}${data.problems.length >= 50 ? "+" : ""} failed because too many messages went out at once`}
+              description="Meta refused them for speed, not for the customer. Send them again — they now go out a few a second."
+              action={
+                <Button size="small" type="primary" loading={busy} onClick={sendAgain}>
+                  Send again
+                </Button>
+              }
+            />
+          )}
           {data.byStatus?.held > 0 && (
             <Alert
               type="info"
