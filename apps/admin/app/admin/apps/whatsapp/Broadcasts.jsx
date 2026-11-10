@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Table, Button, Drawer, Steps, Form, Input, Select, InputNumber, Radio, DatePicker, App, Alert, Tag, Space, Statistic, Empty, Progress, Modal, Descriptions } from "antd";
+import { Table, Button, Drawer, Steps, Form, Input, Select, InputNumber, Radio, DatePicker, App, Alert, Tag, Space, Statistic, Empty, Progress, Modal, Descriptions, Checkbox } from "antd";
 import { Plus, Send, FlaskConical, Users } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { deliveryProblem } from "@/lib/whatsapp-errors";
@@ -39,8 +39,9 @@ function Wizard({ open, onClose, templates, meta, onDone, draft }) {
               days: draft.audience?.days,
               minOrders: draft.audience?.minOrders,
               customerIds: draft.audience?.customerIds || [],
+              emailBackup: draft.audience?.emailBackup !== false,
             }
-          : { name: `Broadcast ${new Date().toLocaleDateString()}`, segment: "consented", variables: [] }
+          : { name: `Broadcast ${new Date().toLocaleDateString()}`, segment: "consented", variables: [], emailBackup: true }
       );
       setStep(0);
       setPreview(null);
@@ -56,7 +57,7 @@ function Wizard({ open, onClose, templates, meta, onDone, draft }) {
     templateLanguage: tpl?.language,
     variables: (v.variables || []).slice(0, tpl?.bodyVariables || 0),
     headerMediaUrl: v.headerMediaUrl || undefined,
-    audience: { segment: v.segment, days: v.days, minOrders: v.minOrders, customerIds: v.segment === "selected" ? v.customerIds || [] : undefined },
+    audience: { segment: v.segment, days: v.days, minOrders: v.minOrders, customerIds: v.segment === "selected" ? v.customerIds || [] : undefined, emailBackup: Boolean(v.emailBackup) },
   });
 
   async function runPreview() {
@@ -183,6 +184,9 @@ function Wizard({ open, onClose, templates, meta, onDone, draft }) {
             <Form.Item name="minOrders" label="At least this many orders (optional)">
               <InputNumber min={0} max={100} />
             </Form.Item>
+            <Form.Item name="emailBackup" valuePropName="checked" className="mb-3" extra="For numbers that aren't on WhatsApp, and messages Meta still holds back after two more tries over the next two days. Only customers who agreed to emails get it.">
+              <Checkbox>If WhatsApp can&apos;t deliver, email them the same message</Checkbox>
+            </Form.Item>
             <Alert
               type="info"
               showIcon
@@ -306,6 +310,14 @@ function Report({ id, onClose }) {
             <Statistic title="Order value" value={money(b.revenue)} />
           </div>
           {b.status === "sending" && <Progress percent={pct(b.sent + b.failed, b.recipients)} />}
+          {data.byStatus?.held > 0 && (
+            <Alert
+              type="info"
+              showIcon
+              message={`${data.byStatus.held} held back by Meta — trying again`}
+              description="Meta limits how many offers one person gets from all businesses in a day. These go out again after 24 hours, then 48 — the same happens whichever WhatsApp provider sends them."
+            />
+          )}
           <p className="text-xs text-ink-muted m-0">
             Delivered, read and failed come from WhatsApp. Orders are your store&apos;s own orders from recipients within 7 days of their message — they may have bought for other reasons too.
           </p>
@@ -317,8 +329,8 @@ function Report({ id, onClose }) {
               dataSource={data.problems}
               columns={[
                 { title: "Customer", render: (_, r) => r.name || `+${r.phone}` },
-                { title: "", dataIndex: "status", render: (s) => <Tag color={s === "failed" ? "red" : "default"}>{s === "failed" ? "Not delivered" : "Left out"}</Tag> },
-                { title: "Why", render: (_, r) => r.error || r.skipReason },
+                { title: "", dataIndex: "status", render: (s, r) => (r.skipReason === "emailed" ? <Tag color="blue">Emailed instead</Tag> : <Tag color={s === "failed" ? "red" : "default"}>{s === "failed" ? "Not delivered" : "Left out"}</Tag>) },
+                { title: "Why", render: (_, r) => deliveryProblem(r.error || r.skipReason || "").text || r.error || r.skipReason },
               ]}
             />
           )}
