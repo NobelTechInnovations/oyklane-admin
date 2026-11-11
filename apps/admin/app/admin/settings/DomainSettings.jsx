@@ -67,6 +67,32 @@ function GoingLive({ stage }) {
   );
 }
 
+/** The three things that make a domain work, each ticked off as it's done. */
+function Checklist({ info }) {
+  const records = [...(info.records || []), ...(info.hosting?.verification || [])];
+  const dnsOk = records.length > 0 && records.every((r) => r.ok);
+  const rows = [
+    { ok: dnsOk, title: dnsOk ? "DNS records found" : "DNS records not detected yet", text: dnsOk ? "Your domain points to Oyklane." : "Add the records below at your domain provider — usually live within an hour." },
+    { ok: info.live, title: info.live ? "Domain is live" : "Domain is not live yet", text: info.live ? `Shoppers reach your store at ${info.domain}.` : "It goes live as soon as the records are found and the certificate is ready." },
+    { ok: info.live, pending: dnsOk && !info.live, title: info.live ? "Secure connection (HTTPS) ready" : dnsOk ? "Issuing the security certificate…" : "Security certificate (HTTPS)", text: info.live ? "Free certificate, renewed by itself." : "Starts once your DNS records are found." },
+  ];
+  return (
+    <ul className="m-0 p-0 list-none flex flex-col">
+      {rows.map((r) => (
+        <li key={r.title} className="flex items-start gap-3 py-3 border-t border-app-border first:border-t-0">
+          <span className={`mt-0.5 w-5 h-5 rounded-full grid place-items-center shrink-0 ${r.ok ? "bg-[#DCFCE7] text-[#15803D]" : r.pending ? "bg-[#FEF3C7] text-[#B45309]" : "bg-[#FEE2E2] text-[#B91C1C]"}`} aria-hidden="true">
+            {r.ok ? <CheckCircle2 size={14} /> : <Clock size={13} />}
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[13.5px] font-medium text-ink">{r.title}</span>
+            <span className="block text-[12.5px] text-ink-muted">{r.text}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function DomainSettings({ canEdit = true }) {
   const { message } = App.useApp();
   const { confirmDialog } = useConfirmDialog();
@@ -153,14 +179,14 @@ export function DomainSettings({ canEdit = true }) {
 
   if (!info) {
     return (
-      <Card size="small" className="max-w-2xl">
+      <Card size="small" className="max-w-[880px] w-full mx-auto">
         <Skeleton active paragraph={{ rows: 3 }} />
       </Card>
     );
   }
 
   return (
-    <div className="max-w-2xl flex flex-col gap-4">
+    <div className="max-w-[880px] w-full mx-auto flex flex-col gap-4">
       <Card size="small" title="Free Oyklane address">
         {!info.defaultAddress ? (
           <Alert type="warning" showIcon message="Store addresses aren't set up on this platform yet" description="The platform's root domain (STOREFRONT_ROOT_DOMAIN) isn't configured." />
@@ -261,10 +287,20 @@ export function DomainSettings({ canEdit = true }) {
           </>
         ) : (
           <div className="flex flex-col gap-5">
+            <div className={`rounded-xl px-4 py-5 flex flex-wrap items-center gap-4 ${info.live ? "bg-gradient-to-br from-[#F0FDF4] to-white" : "bg-gradient-to-br from-[#FFF7ED] to-white"}`}>
+              <span className={`w-12 h-12 rounded-full grid place-items-center shrink-0 shadow-sm ${info.live ? "bg-[#16A34A] text-white" : "bg-white text-[#C2410C] ring-1 ring-[#FED7AA]"}`} aria-hidden="true">
+                <Globe size={22} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <a href={`https://${info.domain}`} target="_blank" rel="noopener noreferrer" className="block text-[20px] font-semibold text-ink hover:underline truncate">
+                  {info.domain}
+                </a>
+                <span className="block text-[12.5px] text-ink-muted">{info.kind === "apex" ? `Main domain · www.${info.domain} works too` : "Subdomain"}</span>
+              </span>
+            </div>
+            <Checklist info={info} />
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <a href={`https://${info.domain}`} target="_blank" rel="noopener noreferrer" className="text-[15px] font-semibold text-ink hover:underline">
-                {info.domain}
-              </a>
+              <span className="text-[13px] font-semibold text-ink">Details</span>
               <div className="flex gap-2">
                 <Button size="small" icon={<RefreshCw size={13} aria-hidden="true" />} loading={busy === "check"} onClick={() => load(false)}>
                   Check again
