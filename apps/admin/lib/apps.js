@@ -13,6 +13,7 @@ export const APP_PANELS = {
   "instagram-feed": "/admin/apps/instagram",
   "google-reviews": "/admin/apps/google-reviews",
   "shoppable-videos": "/admin/apps/shoppable-videos",
+  bundles: "/admin/apps/bundles",
   "meta-ads": "/admin/apps/meta-ads",
   "google-ads": "/admin/apps/google-ads",
   whatsapp: "/admin/apps/whatsapp",
