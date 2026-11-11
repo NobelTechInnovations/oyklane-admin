@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Button, Select, Segmented, Spin, App, Modal } from "antd";
+import { Button, Select, Segmented, Spin, App, Modal, Tooltip } from "antd";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Undo2, Redo2, Monitor, Smartphone, Settings2, PanelTop, Lock, Users, Info } from "lucide-react";
+import { ArrowLeft, Undo2, Redo2, Monitor, Smartphone, Settings2, PanelTop, Lock, Users, Info, LayoutList, Blocks } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useEditorStore } from "./store";
 import { buildSectionCatalog, globalSectionsOf, defaultSettingsFor, newSectionKey, hydrateTemplateDefaults, materializeDefaultBlocks } from "./schema-utils";
@@ -12,7 +12,7 @@ import { SectionList } from "./SectionList";
 import { PreviewFrame } from "./PreviewFrame";
 import { SettingsPanel } from "./SettingsPanel";
 import { AddSectionModal } from "./AddSectionModal";
-import { ThemeSettingsDrawer } from "./ThemeSettingsDrawer";
+import { ThemeSettingsDrawer, ThemeSettingsPanel, AppEmbedsPanel } from "./ThemeSettingsDrawer";
 import { GlobalSectionsDrawer } from "./GlobalSectionsDrawer";
 import { templateOptions, templateLabel, pageTemplate, effectiveTemplate, layoutName, CreateTemplateModal, AssignTemplateModal, TemplateActions, NewTemplateButton } from "./TemplatePicker";
 
@@ -100,7 +100,11 @@ export function EditorView({ theme, platform, templates: initialTemplates, templ
   const [pages, setPages] = useState([]);
   const [device, setDevice] = useState("desktop");
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
+  const [settingsDrawerOpen, setSettingsDrawerOpenRaw] = useState(false);
+  // Left panel: sections, theme settings or app embeds. "Theme settings"
+  // anywhere opens that tab instead of a drawer.
+  const [panel, setPanel] = useState("sections");
+  const setSettingsDrawerOpen = (open) => (open ? setPanel("settings") : setSettingsDrawerOpenRaw(false));
   const [globalSectionsOpen, setGlobalSectionsOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [collections, setCollections] = useState([]);
@@ -444,8 +448,32 @@ export function EditorView({ theme, platform, templates: initialTemplates, templ
       </div>
 
       <div className="flex flex-1 min-h-0">
-        <div className="w-64 shrink-0 border-r border-app-border bg-app-surface">
-          {editable ? (
+        {/* Left rail: Sections · Theme settings · App embeds (like Shopify). */}
+        <nav className="w-12 shrink-0 border-r border-app-border bg-app-surface flex flex-col items-center gap-1 pt-2" aria-label="Editor panels">
+          {[
+            ["sections", LayoutList, "Sections"],
+            ["settings", Settings2, "Theme settings"],
+            ["apps", Blocks, "App embeds"],
+          ].map(([key, Icon, label]) => (
+            <Tooltip key={key} title={label} placement="right">
+              <button
+                type="button"
+                aria-label={label}
+                aria-pressed={panel === key}
+                onClick={() => setPanel(key)}
+                className={`w-9 h-9 rounded-lg grid place-items-center border-0 cursor-pointer ${panel === key ? "bg-[#E8F0FE] text-[#0b5cad]" : "bg-transparent text-ink-muted hover:bg-app-bg hover:text-ink"}`}
+              >
+                <Icon size={17} aria-hidden="true" />
+              </button>
+            </Tooltip>
+          ))}
+        </nav>
+        <div className="w-72 shrink-0 border-r border-app-border bg-app-surface">
+          {panel === "settings" ? (
+            <ThemeSettingsPanel products={products} collections={collections} menus={menus} schemaGroups={settingsSchemaGroups} />
+          ) : panel === "apps" ? (
+            <AppEmbedsPanel />
+          ) : editable ? (
             <SectionList
               catalog={catalog}
               onAddSection={() => setAddModalOpen(true)}
