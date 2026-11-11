@@ -389,8 +389,8 @@ export default function ProductsPage() {
                 ],
               }}
             >
-              <Button>
-                Import / export <ChevronDown size={14} aria-hidden="true" />
+              <Button icon={<ChevronDown size={14} aria-hidden="true" />} iconPosition="end">
+                Import / export
               </Button>
             </Dropdown>
             <Link href="/admin/products/new">

@@ -91,7 +91,7 @@ const NAV_ITEMS = [
     icon: <SiyaaMark size={16} />,
     label: (
       <Link href="/admin/assistant" className="inline-flex items-center gap-2">
-        Ask Siyaa <span className="rounded-full bg-[#FFF3E6] px-1.5 py-px text-[10px] font-semibold text-[#C2410C]">PRO</span>
+        Ask Siyaa <span className="rounded-[4px] bg-[#F3EEFF] px-1 text-[9px] font-semibold leading-[15px] tracking-[0.04em] text-[#6D3FD8]">PRO</span>
       </Link>
     ),
   },
@@ -288,13 +288,13 @@ export function SidebarNav() {
   return (
     <div className="flex flex-col h-full min-h-0">
       <Link href="/admin" className="h-14 flex items-center px-5 shrink-0" aria-label="Oyklane admin home">
-        <BrandMark size={24} label="Admin" tone="dark" />
+        <BrandMark size={24} />
       </Link>
-      <div className="flex-1 min-h-0 overflow-y-auto pb-3">
+      <div className="oy-side__scroll flex-1 min-h-0 overflow-y-auto pb-3">
         <Menu mode="inline" items={NAV_ITEMS} selectedKeys={selectedKeyFor(pathname, NAV_ITEMS)} defaultOpenKeys={openKeys} style={{ border: "none", paddingTop: 4, background: "transparent" }} />
         <PinnedApps pathname={pathname} />
       </div>
-      <div className="shrink-0 border-t border-app-border pt-1.5 pb-2">
+      <div className="oy-side__foot shrink-0 pt-1.5 pb-2">
         <Menu mode="inline" items={BOTTOM_ITEMS} selectedKeys={selectedKeyFor(pathname, BOTTOM_ITEMS)} style={{ border: "none", background: "transparent" }} />
       </div>
     </div>

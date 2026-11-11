@@ -8,6 +8,9 @@ import { Topbar } from "./Topbar";
 import { BillingBanner } from "./BillingBanner";
 import { HelpProvider } from "./help/HelpDrawer";
 
+// List pages that use the whole width, so every table column shows.
+const WIDE = [/^\/admin\/(products|orders|customers)$/, /^\/admin\/orders\/(drafts|abandoned)$/, /^\/admin\/products\/(inventory|collections)$/, /\/bulk-edit$/];
+
 /**
  * The admin frame: fixed sidebar on desktop; below `lg` the sidebar
  * becomes a drawer opened from the top bar's menu button, so a phone gets
@@ -36,7 +39,7 @@ export function AdminShell({ user, store, children }) {
           placement="left"
           width={272}
           closable={false}
-          styles={{ body: { padding: 0, background: "#1a1a1a" } }}
+          styles={{ body: { padding: 0 } }}
           className="lg:hidden"
           aria-label="Main menu"
         >
@@ -44,10 +47,10 @@ export function AdminShell({ user, store, children }) {
             <SidebarNav />
           </div>
         </Drawer>
-        <div className="oy-panel flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0">
           <Topbar user={user} store={store} onOpenNav={() => setNavOpen(true)} />
           {/* The AI Assistant is a full-width, full-height workspace. */}
-          <main className={pathname.startsWith("/admin/assistant") ? "flex-1 w-full min-w-0" : "oy-main flex-1 w-full mx-auto"}>
+          <main className={pathname.startsWith("/admin/assistant") ? "flex-1 w-full min-w-0" : `oy-main flex-1 w-full mx-auto${WIDE.some((r) => r.test(pathname)) ? " oy-main--wide" : ""}`}>
             <BillingBanner />
             {children}
           </main>

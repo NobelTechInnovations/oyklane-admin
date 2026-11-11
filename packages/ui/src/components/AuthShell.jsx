@@ -23,7 +23,7 @@ const PHOTOS = {
 export function AuthShell({ variant = "seller", title, subtitle, children, footer, homeHref, photo = "packing", note }) {
   const isPlatform = variant === "platform";
   const pic = PHOTOS[photo] || PHOTOS.packing;
-  const logo = <BrandMark size={28} label={isPlatform ? "Platform" : undefined} />;
+  const logo = <BrandMark size={28} />;
 
   return (
     <div className="oy-auth min-h-screen flex bg-white">

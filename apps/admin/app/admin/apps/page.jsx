@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, Input, Tag, Skeleton } from "antd";
+import { Button, Tag, Skeleton } from "antd";
 import { Search, Crown, Lock, Check, ArrowRight, Sparkles } from "lucide-react";
 import { PageHeader, EmptyState } from "@shopcycle/ui";
 import { useApps, appHref, detailsHref, APP_CATEGORIES, rupees, usageLabel } from "@/lib/apps";
@@ -179,36 +179,30 @@ function FeaturedFlow({ app }) {
   );
 }
 
+// The apps most stores get the most from, in order — the Apps page shows
+// the first six a store doesn't have yet; the rest are in the Oyklane Store.
+const TOP = ["whatsapp", "one-click-checkout", "product-reviews", "meta-ads", "google-shopping", "bundles", "phone-login", "google-ads", "shoppable-videos", "shiprocket", "flow", "instagram-feed", "google-reviews"];
+const MARKET = `${process.env.NEXT_PUBLIC_MARKET_ORIGIN || "https://market.oyklane.com"}/apps`;
+
 export default function AppsPage() {
   const { apps, loading } = useApps();
-  const [q, setQ] = useState("");
-  const [cat, setCat] = useState("all");
 
-  const categories = useMemo(() => {
-    const present = [...new Set((apps || []).map((a) => a.category))];
-    return present.sort((a, b) => Object.keys(APP_CATEGORIES).indexOf(a) - Object.keys(APP_CATEGORIES).indexOf(b));
-  }, [apps]);
-
-  const shown = useMemo(() => {
-    const words = q.trim().toLowerCase();
+  const installed = useMemo(() => (apps || []).filter((a) => a.installed).sort((a, b) => a.name.localeCompare(b.name)), [apps]);
+  const picks = useMemo(() => {
+    const rank = (a) => (TOP.indexOf(a.key) === -1 ? 999 : TOP.indexOf(a.key));
     return (apps || [])
-      .filter((a) => (cat === "all" ? true : cat === "installed" ? a.installed : a.category === cat))
-      .filter((a) => !words || `${a.name} ${a.description} ${a.category}`.toLowerCase().includes(words))
-      .sort((a, b) => Number(b.installed) - Number(a.installed) || a.name.localeCompare(b.name));
-  }, [apps, q, cat]);
+      .filter((a) => !a.installed)
+      .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
+      .slice(0, 6);
+  }, [apps]);
+  const more = Math.max(0, (apps || []).length - installed.length - picks.length);
 
-  const installedCount = (apps || []).filter((a) => a.installed).length;
-  const pill = (key, label, count) => (
-    <button
-      key={key}
-      type="button"
-      onClick={() => setCat(key)}
-      aria-pressed={cat === key}
-      className={`h-8 px-3 rounded-full text-[13px] border cursor-pointer transition-colors ${cat === key ? "bg-ink text-white border-ink" : "bg-app-surface text-ink-muted border-app-border hover:text-ink hover:border-[#D4D4DA]"}`}
-    >
-      {label}
-      {count !== undefined && <span className={`ml-1.5 ${cat === key ? "text-white/70" : "text-ink-subtle"}`}>{count}</span>}
-    </button>
+  const grid = (list) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      {list.map((app) => (
+        <AppCard key={app.id} app={app} />
+      ))}
+    </div>
   );
 
   return (
@@ -217,55 +211,67 @@ export default function AppsPage() {
         title="Apps"
         subtitle="Add features to your store. Installed apps are pinned in your sidebar."
         actions={
-          <a href={`${process.env.NEXT_PUBLIC_MARKET_ORIGIN || "https://market.oyklane.com"}/apps`} target="_blank" rel="noopener noreferrer">
-            <Button icon={<Sparkles size={15} aria-hidden="true" />}>More apps — Oyklane Store</Button>
+          <a href={MARKET} target="_blank" rel="noopener noreferrer">
+            <Button icon={<Sparkles size={15} aria-hidden="true" />}>Browse all apps</Button>
           </a>
         }
       />
       <FeaturedFlow app={(apps || []).find((a) => a.key === "flow")} />
 
-      <div className="flex flex-col md:flex-row md:items-center gap-3 mb-5">
-        <Input
-          allowClear
-          prefix={<Search size={15} className="text-ink-subtle" aria-hidden="true" />}
-          placeholder="Search apps"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          className="md:max-w-xs"
-          aria-label="Search apps"
-        />
-        <div className="flex gap-1.5 overflow-x-auto -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Filter apps">
-          {pill("all", "All")}
-          {pill("installed", "Installed", installedCount)}
-          {categories.map((c) => pill(c, APP_CATEGORIES[c] || c))}
-        </div>
-      </div>
-
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {[0, 1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="bg-app-surface border border-app-border rounded-[14px] p-5">
               <Skeleton avatar active paragraph={{ rows: 2 }} />
             </div>
           ))}
         </div>
-      ) : shown.length ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {shown.map((app) => (
-            <AppCard key={app.id} app={app} />
-          ))}
-        </div>
       ) : (
-        <EmptyState icon={<Search />} title="No apps match" description={cat === "installed" ? "You haven't installed any apps yet." : "Try another word or category."} />
-      )}
+        <>
+          {installed.length > 0 && (
+            <section className="mb-8" aria-labelledby="apps-installed">
+              <h2 id="apps-installed" className="m-0 mb-3 text-[15px] font-semibold text-ink">
+                Installed <span className="font-normal text-ink-subtle">{installed.length}</span>
+              </h2>
+              {grid(installed)}
+            </section>
+          )}
+          {picks.length > 0 && (
+            <section className="mb-8" aria-labelledby="apps-picks">
+              <h2 id="apps-picks" className="m-0 mb-3 text-[15px] font-semibold text-ink">
+                Most useful for your store
+              </h2>
+              {grid(picks)}
+            </section>
+          )}
+          {!installed.length && !picks.length && <EmptyState icon={<Search />} title="No apps yet" description="Browse the Oyklane Store to add features to your store." />}
 
-      <p className="text-[13px] text-ink-muted mt-8">
-        Missing something your store needs?{" "}
-        <Link href="/admin/support?new=feature" className="text-ink font-medium">
-          Tell us
-        </Link>{" "}
-        — new apps are on the way.
-      </p>
+          <a
+            href={MARKET}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[14px] border border-app-border bg-app-surface px-6 py-5 no-underline text-ink hover:border-[#C9C9D1] transition-colors"
+          >
+            <span>
+              <span className="block text-[15px] font-semibold">Every app is in the Oyklane Store</span>
+              <span className="block mt-1 text-[13.5px] text-ink-muted">
+                {more > 0 ? `${more} more app${more === 1 ? "" : "s"} — ` : ""}marketing, shipping, payments, automation and more. Install in one click.
+              </span>
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-[13.5px] font-semibold">
+              Open the Oyklane Store <ArrowRight size={15} aria-hidden="true" className="transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </a>
+
+          <p className="text-[13px] text-ink-muted mt-6">
+            Missing something your store needs?{" "}
+            <Link href="/admin/support?new=feature" className="text-ink font-medium">
+              Tell us
+            </Link>{" "}
+            — new apps are on the way.
+          </p>
+        </>
+      )}
     </div>
   );
 }

@@ -146,7 +146,7 @@ export function Topbar({ user, store, onOpenNav }) {
   ];
 
   return (
-    <header className="print:hidden h-14 border-b border-app-border bg-app-surface/85 backdrop-blur flex items-center justify-between gap-3 px-3 sm:px-6 sticky top-0 z-10">
+    <header className="oy-topbar print:hidden h-14 border-b border-app-border bg-app-surface/85 backdrop-blur flex items-center justify-between gap-3 px-3 sm:px-6 sticky top-0 z-10">
       {onOpenNav && (
         <button
           type="button"

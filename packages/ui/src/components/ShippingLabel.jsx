@@ -118,7 +118,7 @@ export function ShippingLabel({ data: d, layout = {}, Barcode = StripeBarcode, p
               {(L.showOyklaneLogo || L.showStoreName) && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <span className="k">Shipped through</span>
-                  {L.showOyklaneLogo && <BrandMark size={16} />}
+                  {L.showOyklaneLogo && <BrandMark size={16} official />}
                   {L.showStoreName && <span className="b clip" style={{ maxWidth: "1.2in" }}>{d.from?.name}</span>}
                 </div>
               )}

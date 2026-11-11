@@ -1,67 +1,136 @@
 /*
- * The admin's look: a dark navigation rail, the work area as one light
- * panel with rounded corners, quiet white cards, near-black primary
- * buttons and one page width everywhere — the calm, premium feel of the
- * best commerce admins. Only presentation; no page depends on it.
+ * The admin's look (everything under .oy-admin, so the super admin keeps
+ * its own): a white navigation column, a soft grey work canvas, white
+ * cards with hairline borders, near-black primary buttons, crisp inputs
+ * and calm tables. Presentation only — no page depends on it.
+ *
+ * Palette
+ *   canvas   #F3F3F5   cards / sidebar  #FFFFFF
+ *   hairline #E7E7EC   control border   #D9D9E0
+ *   ink      #101014   muted            #62626C   subtle #8A8A94
+ *   primary  #18181B   accent (links, focus, selection) #0078D4
  */
 
-.oy-admin { background: #1a1a1a; }
+.oy-admin {
+  --oy-canvas: #f3f3f5;
+  --oy-line: #e7e7ec;
+  --oy-line-soft: #efeff3;
+  --oy-control: #d9d9e0;
+  --oy-ink: #101014;
+  --oy-muted: #62626c;
+  --oy-subtle: #8a8a94;
+  --oy-hover: #f4f4f7;
+  background: var(--oy-canvas);
+  color: var(--oy-ink);
+  font-feature-settings: "cv11", "ss01";
+  letter-spacing: -0.006em;
+}
+.oy-admin ::selection { background: #cfe4fa; }
 
-/* ── Navigation rail ───────────────────────────────────────────── */
-.oy-side { background: #1a1a1a; color: #e3e3e3; border: 0; }
-.oy-side a { color: inherit; }
-.oy-side .text-ink, .oy-side .text-ink-muted, .oy-side .text-ink-subtle { color: #b5b5b5 !important; }
-.oy-side .border-app-border, .oy-side [class*="border-t"], .oy-side [class*="border-b"] { border-color: #2c2c2c !important; }
-.oy-side .bg-app-bg, .oy-side .bg-app-surface { background: #262626 !important; }
-.oy-side .ant-menu { color: #e3e3e3; background: transparent !important; }
-.oy-side .ant-menu-item, .oy-side .ant-menu-submenu-title { color: #d4d4d4 !important; border-radius: 8px !important; height: 34px !important; line-height: 34px !important; margin-block: 1px !important; }
-.oy-side .ant-menu-item .ant-menu-item-icon, .oy-side .ant-menu-submenu-title .ant-menu-item-icon { color: #a8a8a8; }
-.oy-side .ant-menu-item:hover, .oy-side .ant-menu-submenu-title:hover { background: #2a2a2a !important; color: #fff !important; }
-.oy-side .ant-menu-item-selected { background: #333 !important; color: #fff !important; font-weight: 600; }
-.oy-side .ant-menu-item-selected .ant-menu-item-icon { color: #fff; }
-.oy-side .ant-menu-sub.ant-menu-inline { background: transparent !important; }
-.oy-side .ant-menu-submenu-arrow { color: #8a8a8a !important; }
-.oy-side .ant-menu-submenu-selected > .ant-menu-submenu-title { color: #fff !important; }
-.oy-side [class*="hover:bg-"]:hover { background: #2a2a2a !important; color: #fff !important; }
+/* ── Scrollbars: thin, no track colour of their own ─────────────── */
+.oy-admin, .oy-admin * { scrollbar-width: thin; scrollbar-color: #d4d4db transparent; }
+.oy-admin ::-webkit-scrollbar { width: 10px; height: 10px; background: transparent; }
+.oy-admin ::-webkit-scrollbar-track, .oy-admin ::-webkit-scrollbar-corner { background: transparent; }
+.oy-admin ::-webkit-scrollbar-thumb { background: #d4d4db; border: 3px solid transparent; border-radius: 99px; background-clip: content-box; }
+.oy-admin ::-webkit-scrollbar-thumb:hover { background: #b6b6bf; border: 3px solid transparent; background-clip: content-box; }
+/* The navigation shows its scrollbar only while the pointer is on it. */
+.oy-side .oy-side__scroll { scrollbar-color: transparent transparent; }
+.oy-side .oy-side__scroll:hover { scrollbar-color: #d4d4db transparent; }
+.oy-side .oy-side__scroll::-webkit-scrollbar-thumb { background: transparent; }
+.oy-side .oy-side__scroll:hover::-webkit-scrollbar-thumb { background: #d4d4db; border: 3px solid transparent; background-clip: content-box; }
 
-/* ── The work area ─────────────────────────────────────────────── */
-.oy-panel { background: #f1f1f1; margin: 8px 8px 8px 0; border-radius: 16px; min-height: calc(100vh - 16px); overflow: clip; }
-@media (max-width: 1023px) { .oy-panel { margin: 0; border-radius: 0; min-height: 100vh; } }
-.oy-panel > header { background: rgba(241, 241, 241, 0.88) !important; border-bottom: 1px solid #e3e3e3 !important; }
-/* One width for every page, with room to breathe. */
-.oy-main { max-width: 1200px; padding: 20px 16px 48px; }
-@media (min-width: 640px) { .oy-main { padding: 24px 28px 56px; } }
-@media (min-width: 1280px) { .oy-main { padding: 28px 32px 64px; } }
+/* ── Navigation column ─────────────────────────────────────────── */
+.oy-side { background: #fff; border-right: 1px solid var(--oy-line); }
+.oy-side .ant-menu { background: transparent !important; font-size: 13.5px; }
+.oy-side .ant-menu-inline, .oy-side .ant-menu-vertical { border-inline-end: 0 !important; }
+.oy-side .ant-menu-item, .oy-side .ant-menu-submenu-title {
+  height: 34px !important; line-height: 34px !important; margin: 1px 8px !important; width: calc(100% - 16px) !important;
+  padding-inline-start: 12px !important; border-radius: 8px !important; color: #3a3a42 !important; font-weight: 500;
+}
+.oy-side .ant-menu-item .ant-menu-item-icon, .oy-side .ant-menu-submenu-title .ant-menu-item-icon { color: #7a7a84; transition: color .15s; }
+.oy-side .ant-menu-item:hover, .oy-side .ant-menu-submenu-title:hover { background: var(--oy-hover) !important; color: var(--oy-ink) !important; }
+.oy-side .ant-menu-item:hover .ant-menu-item-icon, .oy-side .ant-menu-submenu-title:hover .ant-menu-item-icon { color: var(--oy-ink); }
+.oy-side .ant-menu-item-selected { background: #ececf1 !important; color: var(--oy-ink) !important; font-weight: 600; }
+.oy-side .ant-menu-item-selected .ant-menu-item-icon { color: var(--oy-ink); }
+.oy-side .ant-menu-item-selected::after { display: none; }
+.oy-side .ant-menu-submenu-selected > .ant-menu-submenu-title { color: var(--oy-ink) !important; font-weight: 600; }
+.oy-side .ant-menu-submenu-selected > .ant-menu-submenu-title .ant-menu-item-icon { color: var(--oy-ink); }
+.oy-side .ant-menu-sub.ant-menu-inline { background: transparent !important; position: relative; }
+/* Sub-items hang off a fine guide line under their group. */
+.oy-side .ant-menu-sub.ant-menu-inline::before { content: ""; position: absolute; left: 27px; top: 4px; bottom: 4px; width: 1px; background: var(--oy-line); }
+.oy-side .ant-menu-sub .ant-menu-item { padding-inline-start: 36px !important; height: 32px !important; line-height: 32px !important; font-size: 13px; }
+.oy-side .ant-menu-sub .ant-menu-item .ant-menu-item-icon { display: none; }
+.oy-side .ant-menu-sub .ant-menu-item .ant-menu-title-content { margin-inline-start: 0 !important; }
+.oy-side .ant-menu-submenu-arrow { color: #a0a0a8 !important; }
+.oy-side__foot { border-top: 1px solid var(--oy-line-soft); }
+
+/* ── Work area ─────────────────────────────────────────────────── */
+.oy-admin .oy-topbar { background: rgba(255, 255, 255, 0.82) !important; border-bottom: 1px solid var(--oy-line) !important; -webkit-backdrop-filter: saturate(1.6) blur(14px); backdrop-filter: saturate(1.6) blur(14px); }
+.oy-main { max-width: 1180px; padding: 20px 16px 56px; }
+@media (min-width: 640px) { .oy-main { padding: 28px 28px 64px; } }
+@media (min-width: 1280px) { .oy-main { padding: 32px 40px 72px; } }
+/* Lists (products, orders, customers): the whole width, so every column fits. */
+.oy-main.oy-main--wide { max-width: none; }
+@media (min-width: 1280px) { .oy-main.oy-main--wide { padding-inline: 28px; } }
 
 /* Page titles */
-.oy-main h1 { font-size: 20px !important; font-weight: 650 !important; letter-spacing: -0.015em; }
+.oy-main h1 { font-size: 22px !important; line-height: 1.2 !important; font-weight: 650 !important; letter-spacing: -0.022em !important; color: var(--oy-ink); }
 
 /* ── Cards ─────────────────────────────────────────────────────── */
-.oy-admin .ant-card { border: 0 !important; border-radius: 12px !important; box-shadow: 0 0 0 1px rgba(26, 26, 26, 0.06), 0 1px 0 0 rgba(26, 26, 26, 0.07) !important; }
-.oy-admin .ant-card .ant-card-head { min-height: 44px; border-bottom: 1px solid #ececec; }
-.oy-admin .ant-card .ant-card-head-title { font-size: 13.5px; font-weight: 650; }
-.oy-main .shadow-card, .oy-main .rounded-\[14px\].border, .oy-main .rounded-\[12px\].border { box-shadow: 0 0 0 1px rgba(26, 26, 26, 0.06), 0 1px 0 0 rgba(26, 26, 26, 0.07); border-color: transparent !important; }
+.oy-admin .ant-card { border: 1px solid var(--oy-line) !important; border-radius: 14px !important; box-shadow: 0 1px 2px rgba(16, 16, 24, 0.04) !important; }
+.oy-admin .ant-card .ant-card-head { min-height: 50px; padding-inline: 20px; border-bottom: 1px solid var(--oy-line-soft); }
+.oy-admin .ant-card .ant-card-head-title { font-size: 14.5px; font-weight: 600; letter-spacing: -0.012em; }
+.oy-admin .ant-card-small > .ant-card-head { min-height: 44px; padding-inline: 16px; }
+.oy-admin .ant-card-small > .ant-card-head .ant-card-head-title { font-size: 13.5px; }
+.oy-main .shadow-card { box-shadow: 0 1px 2px rgba(16, 16, 24, 0.04) !important; }
 
 /* ── Tables ────────────────────────────────────────────────────── */
-.oy-admin .ant-table-wrapper .ant-table { border-radius: 12px; }
-.oy-admin .ant-table-thead > tr > th { background: #f7f7f7 !important; color: #616161 !important; font-weight: 550 !important; font-size: 12.5px; }
-.oy-admin .ant-table-tbody > tr:hover > td { background: #fafafa !important; }
+.oy-admin .ant-table { font-variant-numeric: tabular-nums; }
+.oy-admin .ant-table-wrapper .ant-table-thead > tr > th { background: #fafafb !important; color: #6a6a74 !important; font-weight: 550 !important; font-size: 12.5px; letter-spacing: 0; border-bottom: 1px solid var(--oy-line) !important; white-space: nowrap; }
+.oy-admin .ant-table-wrapper .ant-table-tbody > tr > td { border-bottom-color: var(--oy-line-soft) !important; padding-block: 12px; }
+.oy-admin .ant-table-wrapper .ant-table-tbody > tr.ant-table-row:hover > td { background: #f8f8fa !important; }
+.oy-admin .ant-table-wrapper .ant-table-tbody > tr.ant-table-row-selected > td { background: #f1f6fd !important; }
+.oy-admin .ant-table-wrapper .ant-table-tbody > tr.ant-table-row-selected:hover > td { background: #eaf2fc !important; }
+.oy-admin .ant-pagination .ant-pagination-item { border-radius: 8px; }
+.oy-admin .ant-pagination .ant-pagination-item-active { border-color: var(--oy-ink); }
+.oy-admin .ant-pagination .ant-pagination-item-active a { color: var(--oy-ink); }
 
 /* ── Buttons ───────────────────────────────────────────────────── */
-.oy-admin .ant-btn { border-radius: 8px; font-weight: 550; }
-.oy-admin .ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-background-ghost):not([disabled]) {
-  background: linear-gradient(180deg, #3a3a3a 0%, #1a1a1a 100%) !important;
-  box-shadow: inset 0 -1px 0 1px #000, inset 0 0 0 1px #303030, inset 0 1px 0 1px rgba(255, 255, 255, 0.18) !important;
-  border: 0 !important;
+.oy-admin .ant-btn { border-radius: 9px; font-weight: 550; font-size: 13.5px; letter-spacing: -0.005em; transition: background .15s, box-shadow .15s, border-color .15s, color .15s; }
+.oy-admin .ant-btn.ant-btn-sm { border-radius: 7px; font-size: 12.5px; }
+.oy-admin .ant-btn.ant-btn-lg { border-radius: 11px; font-size: 15px; }
+.oy-admin .ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-background-ghost):not(:disabled) {
+  background: linear-gradient(180deg, #2f2f35 0%, #18181b 100%) !important; color: #fff !important; border: 0 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 0 0 1px #0d0d10, 0 1px 2px rgba(0, 0, 0, 0.2) !important;
 }
-.oy-admin .ant-btn-primary:not(.ant-btn-dangerous):not([disabled]):hover { background: linear-gradient(180deg, #474747 0%, #262626 100%) !important; }
-.oy-admin .ant-btn-default:not(.ant-btn-dangerous) { box-shadow: inset 0 -1px 0 0 #b5b5b5, inset 0 0 0 1px rgba(0, 0, 0, 0.1) !important; border: 0 !important; background: #fff; }
-.oy-admin .ant-btn-default:not(.ant-btn-dangerous):hover { background: #fafafa !important; color: #1a1a1a !important; }
+.oy-admin .ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-background-ghost):not(:disabled):hover { background: linear-gradient(180deg, #3b3b42 0%, #232328 100%) !important; }
+.oy-admin .ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-background-ghost):not(:disabled):active { background: #111114 !important; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px #0d0d10 !important; }
+.oy-admin .ant-btn-primary:disabled { background: #e6e6ea !important; color: #9b9ba4 !important; border: 0 !important; box-shadow: none !important; }
+.oy-admin .ant-btn-default:not(.ant-btn-dangerous):not(:disabled) { background: #fff; border: 1px solid var(--oy-control) !important; color: var(--oy-ink); box-shadow: 0 1px 0 rgba(16, 16, 24, 0.05) !important; }
+.oy-admin .ant-btn-default:not(.ant-btn-dangerous):not(:disabled):hover { background: #f8f8fa !important; border-color: #c4c4cd !important; color: var(--oy-ink) !important; }
+.oy-admin .ant-btn-default:not(.ant-btn-dangerous):not(:disabled):active { background: #f0f0f3 !important; box-shadow: inset 0 1px 1px rgba(16, 16, 24, 0.06) !important; }
+.oy-admin .ant-btn-text:not(:disabled):hover { background: #f1f1f4 !important; }
+.oy-admin .ant-btn .lucide { flex: none; }
 
 /* ── Inputs ────────────────────────────────────────────────────── */
-.oy-admin .ant-input, .oy-admin .ant-input-affix-wrapper, .oy-admin .ant-select-selector, .oy-admin .ant-input-number, .oy-admin .ant-picker { border-radius: 8px !important; border-color: #8a8a8a33 !important; }
-.oy-admin .ant-input:hover, .oy-admin .ant-input-affix-wrapper:hover, .oy-admin .ant-select:hover .ant-select-selector { border-color: #8a8a8a !important; }
+.oy-admin .ant-input, .oy-admin .ant-input-affix-wrapper, .oy-admin .ant-select:not(.ant-select-customize-input) .ant-select-selector, .oy-admin .ant-input-number, .oy-admin .ant-picker {
+  border-radius: 9px !important; border-color: var(--oy-control) !important; box-shadow: 0 1px 0 rgba(16, 16, 24, 0.03);
+}
+.oy-admin .ant-input-affix-wrapper > .ant-input { box-shadow: none; border-radius: 0 !important; }
+.oy-admin .ant-input:hover, .oy-admin .ant-input-affix-wrapper:hover, .oy-admin .ant-input-number:hover, .oy-admin .ant-picker:hover, .oy-admin .ant-select:not(.ant-select-disabled):hover .ant-select-selector { border-color: #b4b4be !important; }
+.oy-admin .ant-input:focus, .oy-admin .ant-input-focused, .oy-admin .ant-input-affix-wrapper-focused, .oy-admin .ant-input-number-focused, .oy-admin .ant-picker-focused, .oy-admin .ant-select-focused .ant-select-selector {
+  border-color: #0078d4 !important; box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.14) !important;
+}
+.oy-admin .ant-input-affix-wrapper-focused > .ant-input { box-shadow: none !important; }
+.oy-admin .ant-form-item .ant-form-item-label > label { color: #2b2b31; font-size: 13.5px; }
 
-/* Tags and segmented controls */
-.oy-admin .ant-tag { border-radius: 8px; }
-.oy-admin .ant-segmented { border-radius: 10px; background: #e3e3e3; }
+/* ── Small pieces ──────────────────────────────────────────────── */
+.oy-admin .ant-tag { border-radius: 6px; font-weight: 500; }
+.oy-admin .ant-segmented { border-radius: 10px; background: #ebebef; padding: 3px; }
+.oy-admin .ant-segmented .ant-segmented-item { border-radius: 7px; }
+.oy-admin .ant-segmented .ant-segmented-item-selected { box-shadow: 0 1px 2px rgba(16, 16, 24, 0.1), 0 0 0 1px rgba(16, 16, 24, 0.04); }
+.oy-admin .ant-tabs-nav::before { border-bottom-color: var(--oy-line) !important; }
+.oy-admin .ant-tabs-tab { font-weight: 500; }
+.oy-admin .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn { color: var(--oy-ink) !important; font-weight: 600; }
+.oy-admin .ant-tabs-ink-bar { background: var(--oy-ink) !important; }
+.oy-admin .ant-alert { border-radius: 12px; }

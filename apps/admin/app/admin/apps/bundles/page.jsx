@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { App, Button, Card, Empty, Form, Input, InputNumber, Modal, Radio, Select, Skeleton, Switch, Table, Tag } from "antd";
-import { Gift, Plus, Paintbrush } from "lucide-react";
+import { Gift, Plus, ExternalLink, Copy } from "lucide-react";
 import { PageHeader, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { storefrontUrlFor } from "@/lib/storefront";
 import { AppNotInstalled } from "@/components/apps/AppPanelParts";
 import { ImageUploadField } from "@/components/ImageUploadField";
 
@@ -100,6 +101,13 @@ export default function BundlesPage() {
   const [rows, setRows] = useState(null);
   const [missing, setMissing] = useState(false);
   const [modal, setModal] = useState({ open: false, bundle: null });
+  const [store, setStore] = useState(null);
+  useEffect(() => {
+    apiFetch("/api/store")
+      .then((r) => setStore(r.store))
+      .catch(() => {});
+  }, []);
+  const pageUrl = (code) => (store ? `${storefrontUrlFor(store)}/bundles/${code}` : "");
 
   const load = useCallback(async () => {
     try {
@@ -141,6 +149,24 @@ export default function BundlesPage() {
               { title: "Used", dataIndex: "used" },
               { title: "", render: (_, r) => (r.active ? <Tag color="green">On</Tag> : <Tag>Off</Tag>) },
               {
+                title: "Page",
+                render: (_, r) =>
+                  store && (
+                    <span className="inline-flex gap-1 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <Button size="small" icon={<ExternalLink size={13} aria-hidden="true" />} href={pageUrl(r.code)} target="_blank" rel="noopener noreferrer">
+                        View
+                      </Button>
+                      <Button
+                        size="small"
+                        type="text"
+                        icon={<Copy size={13} aria-hidden="true" />}
+                        aria-label="Copy page link"
+                        onClick={() => navigator.clipboard?.writeText(pageUrl(r.code)).then(() => message.success("Link copied"))}
+                      />
+                    </span>
+                  ),
+              },
+              {
                 title: "",
                 align: "right",
                 render: (_, r) => (
@@ -162,12 +188,15 @@ export default function BundlesPage() {
             ]}
           />
         </Card>
-        <Card size="small" title="Put the box builder on your store">
+        <Card size="small" title="How shoppers buy a bundle">
           <p className="m-0 text-[13px] text-ink-muted">
-            Online Store ▸ Customize ▸ <b>Add section</b> ▸ Apps ▸ <b>Bundle builder</b> — on the home page or any page. Paste a bundle&apos;s code in its settings to show that one. The bundle price also applies in the cart when shoppers add the items any other way.
+            Every bundle has its own page. Shoppers pick the items, and once the box is full they buy it in one click at the bundle price. The box is checked out on its own — nothing else in their cart is ordered with it, and their cart is waiting for them after.
           </p>
-          <Link href="/admin/online-store/themes">
-            <Button size="small" className="mt-3" icon={<Paintbrush size={13} aria-hidden="true" />}>Open Customize</Button>
+          <p className="mb-0 mt-2 text-[13px] text-ink-muted">
+            Link to it from your menu (Content ▸ Navigation), a banner or a WhatsApp message.{store && <> All bundles: <a href={`${storefrontUrlFor(store)}/bundles`} target="_blank" rel="noopener noreferrer">/bundles</a></>}
+          </p>
+          <Link href="/admin/content/navigation">
+            <Button size="small" className="mt-3">Add to menu</Button>
           </Link>
         </Card>
       </div>
