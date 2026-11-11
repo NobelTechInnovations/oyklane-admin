@@ -1,0 +1,67 @@
+/*
+ * The admin's look: a dark navigation rail, the work area as one light
+ * panel with rounded corners, quiet white cards, near-black primary
+ * buttons and one page width everywhere — the calm, premium feel of the
+ * best commerce admins. Only presentation; no page depends on it.
+ */
+
+.oy-admin { background: #1a1a1a; }
+
+/* ── Navigation rail ───────────────────────────────────────────── */
+.oy-side { background: #1a1a1a; color: #e3e3e3; border: 0; }
+.oy-side a { color: inherit; }
+.oy-side .text-ink, .oy-side .text-ink-muted, .oy-side .text-ink-subtle { color: #b5b5b5 !important; }
+.oy-side .border-app-border, .oy-side [class*="border-t"], .oy-side [class*="border-b"] { border-color: #2c2c2c !important; }
+.oy-side .bg-app-bg, .oy-side .bg-app-surface { background: #262626 !important; }
+.oy-side .ant-menu { color: #e3e3e3; background: transparent !important; }
+.oy-side .ant-menu-item, .oy-side .ant-menu-submenu-title { color: #d4d4d4 !important; border-radius: 8px !important; height: 34px !important; line-height: 34px !important; margin-block: 1px !important; }
+.oy-side .ant-menu-item .ant-menu-item-icon, .oy-side .ant-menu-submenu-title .ant-menu-item-icon { color: #a8a8a8; }
+.oy-side .ant-menu-item:hover, .oy-side .ant-menu-submenu-title:hover { background: #2a2a2a !important; color: #fff !important; }
+.oy-side .ant-menu-item-selected { background: #333 !important; color: #fff !important; font-weight: 600; }
+.oy-side .ant-menu-item-selected .ant-menu-item-icon { color: #fff; }
+.oy-side .ant-menu-sub.ant-menu-inline { background: transparent !important; }
+.oy-side .ant-menu-submenu-arrow { color: #8a8a8a !important; }
+.oy-side .ant-menu-submenu-selected > .ant-menu-submenu-title { color: #fff !important; }
+.oy-side [class*="hover:bg-"]:hover { background: #2a2a2a !important; color: #fff !important; }
+
+/* ── The work area ─────────────────────────────────────────────── */
+.oy-panel { background: #f1f1f1; margin: 8px 8px 8px 0; border-radius: 16px; min-height: calc(100vh - 16px); overflow: clip; }
+@media (max-width: 1023px) { .oy-panel { margin: 0; border-radius: 0; min-height: 100vh; } }
+.oy-panel > header { background: rgba(241, 241, 241, 0.88) !important; border-bottom: 1px solid #e3e3e3 !important; }
+/* One width for every page, with room to breathe. */
+.oy-main { max-width: 1200px; padding: 20px 16px 48px; }
+@media (min-width: 640px) { .oy-main { padding: 24px 28px 56px; } }
+@media (min-width: 1280px) { .oy-main { padding: 28px 32px 64px; } }
+
+/* Page titles */
+.oy-main h1 { font-size: 20px !important; font-weight: 650 !important; letter-spacing: -0.015em; }
+
+/* ── Cards ─────────────────────────────────────────────────────── */
+.oy-admin .ant-card { border: 0 !important; border-radius: 12px !important; box-shadow: 0 0 0 1px rgba(26, 26, 26, 0.06), 0 1px 0 0 rgba(26, 26, 26, 0.07) !important; }
+.oy-admin .ant-card .ant-card-head { min-height: 44px; border-bottom: 1px solid #ececec; }
+.oy-admin .ant-card .ant-card-head-title { font-size: 13.5px; font-weight: 650; }
+.oy-main .shadow-card, .oy-main .rounded-\[14px\].border, .oy-main .rounded-\[12px\].border { box-shadow: 0 0 0 1px rgba(26, 26, 26, 0.06), 0 1px 0 0 rgba(26, 26, 26, 0.07); border-color: transparent !important; }
+
+/* ── Tables ────────────────────────────────────────────────────── */
+.oy-admin .ant-table-wrapper .ant-table { border-radius: 12px; }
+.oy-admin .ant-table-thead > tr > th { background: #f7f7f7 !important; color: #616161 !important; font-weight: 550 !important; font-size: 12.5px; }
+.oy-admin .ant-table-tbody > tr:hover > td { background: #fafafa !important; }
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+.oy-admin .ant-btn { border-radius: 8px; font-weight: 550; }
+.oy-admin .ant-btn-primary:not(.ant-btn-dangerous):not(.ant-btn-background-ghost):not([disabled]) {
+  background: linear-gradient(180deg, #3a3a3a 0%, #1a1a1a 100%) !important;
+  box-shadow: inset 0 -1px 0 1px #000, inset 0 0 0 1px #303030, inset 0 1px 0 1px rgba(255, 255, 255, 0.18) !important;
+  border: 0 !important;
+}
+.oy-admin .ant-btn-primary:not(.ant-btn-dangerous):not([disabled]):hover { background: linear-gradient(180deg, #474747 0%, #262626 100%) !important; }
+.oy-admin .ant-btn-default:not(.ant-btn-dangerous) { box-shadow: inset 0 -1px 0 0 #b5b5b5, inset 0 0 0 1px rgba(0, 0, 0, 0.1) !important; border: 0 !important; background: #fff; }
+.oy-admin .ant-btn-default:not(.ant-btn-dangerous):hover { background: #fafafa !important; color: #1a1a1a !important; }
+
+/* ── Inputs ────────────────────────────────────────────────────── */
+.oy-admin .ant-input, .oy-admin .ant-input-affix-wrapper, .oy-admin .ant-select-selector, .oy-admin .ant-input-number, .oy-admin .ant-picker { border-radius: 8px !important; border-color: #8a8a8a33 !important; }
+.oy-admin .ant-input:hover, .oy-admin .ant-input-affix-wrapper:hover, .oy-admin .ant-select:hover .ant-select-selector { border-color: #8a8a8a !important; }
+
+/* Tags and segmented controls */
+.oy-admin .ant-tag { border-radius: 8px; }
+.oy-admin .ant-segmented { border-radius: 10px; background: #e3e3e3; }

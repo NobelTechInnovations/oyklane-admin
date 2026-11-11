@@ -288,7 +288,7 @@ export function SidebarNav() {
   return (
     <div className="flex flex-col h-full min-h-0">
       <Link href="/admin" className="h-14 flex items-center px-5 shrink-0" aria-label="Oyklane admin home">
-        <BrandMark size={24} label="Admin" />
+        <BrandMark size={24} label="Admin" tone="dark" />
       </Link>
       <div className="flex-1 min-h-0 overflow-y-auto pb-3">
         <Menu mode="inline" items={NAV_ITEMS} selectedKeys={selectedKeyFor(pathname, NAV_ITEMS)} defaultOpenKeys={openKeys} style={{ border: "none", paddingTop: 4, background: "transparent" }} />
@@ -304,7 +304,7 @@ export function SidebarNav() {
 /** Desktop sidebar — hidden below `lg`, where the drawer takes over. */
 export function Sidebar() {
   return (
-    <aside className="print:hidden hidden lg:flex w-60 shrink-0 border-r border-app-border bg-app-surface h-screen sticky top-0 flex-col">
+    <aside className="oy-side print:hidden hidden lg:flex w-60 shrink-0 h-screen sticky top-0 flex-col">
       <SidebarNav />
     </aside>
   );

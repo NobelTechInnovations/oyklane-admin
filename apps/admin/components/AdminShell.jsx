@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Drawer } from "antd";
+import { ConfigProvider, Drawer } from "antd";
 import { Sidebar, SidebarNav } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { BillingBanner } from "./BillingBanner";
@@ -25,7 +25,10 @@ export function AdminShell({ user, store, children }) {
 
   return (
     <HelpProvider user={user}>
-      <div className="flex min-h-screen bg-app-bg">
+      {/* Primary buttons in near-black, like premium commerce admins; links and
+          focus stay Oyklane blue. */}
+      <ConfigProvider theme={{ components: { Button: { colorPrimary: "#1A1A1A", colorPrimaryHover: "#303030", colorPrimaryActive: "#000000", primaryShadow: "none" } } }}>
+      <div className="oy-admin flex min-h-screen">
         <Sidebar />
         <Drawer
           open={navOpen}
@@ -33,21 +36,24 @@ export function AdminShell({ user, store, children }) {
           placement="left"
           width={272}
           closable={false}
-          styles={{ body: { padding: 0 } }}
+          styles={{ body: { padding: 0, background: "#1a1a1a" } }}
           className="lg:hidden"
           aria-label="Main menu"
         >
-          <SidebarNav />
+          <div className="oy-side h-full">
+            <SidebarNav />
+          </div>
         </Drawer>
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="oy-panel flex-1 flex flex-col min-w-0">
           <Topbar user={user} store={store} onOpenNav={() => setNavOpen(true)} />
           {/* The AI Assistant is a full-width, full-height workspace. */}
-          <main className={pathname.startsWith("/admin/assistant") ? "flex-1 w-full min-w-0" : "flex-1 p-4 sm:p-6 max-w-6xl w-full mx-auto"}>
+          <main className={pathname.startsWith("/admin/assistant") ? "flex-1 w-full min-w-0" : "oy-main flex-1 w-full mx-auto"}>
             <BillingBanner />
             {children}
           </main>
         </div>
       </div>
+      </ConfigProvider>
     </HelpProvider>
   );
 }
