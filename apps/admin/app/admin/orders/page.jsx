@@ -3,7 +3,7 @@
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Table, Button, App } from "antd";
+import { Table, Button, App, Tooltip } from "antd";
 import { Plus, ShoppingCart, Search, Download } from "lucide-react";
 import { PageHeader, StatusBadge, EmptyState, ListCard, SearchInput } from "@shopcycle/ui";
 import { formatCurrency } from "@shopcycle/utils";
@@ -37,7 +37,7 @@ const ORDER_COLUMNS = [
   { key: "customer", label: "Customer" },
   { key: "phone", label: "Phone", default: false },
   { key: "shipTo", label: "Ship to", default: false },
-  { key: "items", label: "Items", default: false },
+  { key: "items", label: "Items" },
   { key: "payment", label: "Payment" },
   { key: "method", label: "Payment method", default: false },
   { key: "fulfillment", label: "Fulfillment" },
@@ -126,7 +126,34 @@ export default function OrdersPage({ searchParams }) {
     },
     { choice: "phone", title: "Phone", width: 140, render: (_, row) => <span className="tabular-nums">{row.phone || row.customer?.phone || "—"}</span> },
     { choice: "shipTo", title: "Ship to", width: 180, render: (_, row) => <span className="text-[13px]">{[row.shippingCity, row.shippingProvince].filter(Boolean).join(", ") || "—"}</span> },
-    { choice: "items", title: "Items", width: 80, align: "right", render: (_, row) => <span className="tabular-nums">{row._count?.items ?? "—"}</span> },
+    {
+      choice: "items",
+      title: "Items",
+      width: 110,
+      render: (_, row) => {
+        const units = (row.items || []).reduce((t, i) => t + (i.quantity || 0), 0);
+        if (!row.items?.length) return dash;
+        return (
+          <Tooltip
+            placement="bottomLeft"
+            title={
+              <ul className="m-0 list-none p-0 text-[12.5px] leading-relaxed">
+                {row.items.map((i, k) => (
+                  <li key={k}>
+                    {i.quantity} × {i.title}
+                  </li>
+                ))}
+                {row._count?.items > row.items.length && <li>+{row._count.items - row.items.length} more</li>}
+              </ul>
+            }
+          >
+            <span className="cursor-default whitespace-nowrap underline decoration-dotted underline-offset-4" onClick={(e) => e.stopPropagation()}>
+              {units} item{units === 1 ? "" : "s"}
+            </span>
+          </Tooltip>
+        );
+      },
+    },
     { choice: "payment", title: "Payment", responsive: ["md"], dataIndex: "paymentStatus", width: 130, render: (s) => <StatusBadge status={s} /> },
     { choice: "method", title: "Payment method", width: 150, render: (_, row) => <span className="text-[13px]">{METHOD[row.paymentMethod] || row.paymentMethod || "—"}</span> },
     { choice: "fulfillment", title: "Fulfillment", responsive: ["sm"], dataIndex: "fulfillmentStatus", width: 140, render: (s) => <StatusBadge status={s} /> },

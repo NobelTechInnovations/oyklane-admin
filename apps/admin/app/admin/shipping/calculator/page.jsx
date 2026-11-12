@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Alert, App, Button, Card, Form, Input, InputNumber, Segmented, Table, Tag } from "antd";
+import { Alert, App, Button, Card, Form, Input, InputNumber, Segmented, Table, Tag, Tooltip } from "antd";
 import { Calculator } from "lucide-react";
 import { PageHeader } from "@shopcycle/ui";
+import { PriceParts } from "@/components/shipping/PriceParts";
 import { apiFetch } from "@/lib/api";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
@@ -39,7 +40,7 @@ export default function RateCalculatorPage() {
   const reason = error?.details?.reason;
   return (
     <div>
-      <PageHeader title="Rate calculator" subtitle="What each courier charges for a parcel between two pincodes — before you book. Prices are before GST." actions={<Link href="/admin/shipping/rates"><Button>Rate chart</Button></Link>} />
+      <PageHeader title="Rate calculator" subtitle="What each courier charges for a parcel between two pincodes — before you book. Prices include the fuel surcharge and GST, the same as when you book." actions={<Link href="/admin/shipping/rates"><Button>Rate chart</Button></Link>} />
       {(reason === "no_pickup" || reason === "pickup_pending") && (
         <Alert type="info" showIcon className="!mb-4" message={error.message} action={reason === "no_pickup" ? <Link href="/admin/settings/shipping">Add pickup address</Link> : null} />
       )}
@@ -103,7 +104,19 @@ export default function RateCalculatorPage() {
               { title: "Courier", dataIndex: "name", render: (v, r, i) => <span className="font-medium">{v}{i === 0 && <Tag color="green" className="!ml-2">Cheapest</Tag>}</span> },
               { title: "Zone", dataIndex: "zone", render: (z) => z || "—" },
               { title: "Delivers in", key: "eta", render: (_, r) => (r.etaDays ? `~${r.etaDays} day${Number(r.etaDays) === 1 ? "" : "s"}` : r.eta || "—") },
-              { title: "Price", dataIndex: "price", align: "right", render: (v) => <b className="tabular-nums">{inr(v)}</b> },
+              {
+                title: "Price",
+                dataIndex: "price",
+                align: "right",
+                render: (v, row) =>
+                  row.breakdown ? (
+                    <Tooltip title={<PriceParts b={row.breakdown} className="min-w-[220px] [&_*]:!text-white" />} color="#18181b">
+                      <b className="tabular-nums underline decoration-dotted underline-offset-4">{inr(v)}</b>
+                    </Tooltip>
+                  ) : (
+                    <b className="tabular-nums">{inr(v)}</b>
+                  ),
+              },
             ]}
           />
         </Card>

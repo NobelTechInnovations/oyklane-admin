@@ -7,6 +7,7 @@ import { Download, FileText, MoreHorizontal, PackageCheck, Printer, Truck, Walle
 import { apiFetch } from "@/lib/api";
 import { NdrDialog } from "@/components/shipping/NdrDialog";
 import { AddMoneyDialog } from "@/components/shipping/ShippingWallet";
+import { PriceParts } from "@/components/shipping/PriceParts";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 export const SHIP_STATUS = {
@@ -150,8 +151,12 @@ export function ShipWithOyklane({ order, open, onClose, onBooked }) {
                         {c.zone ? ` · zone ${c.zone}` : ""}
                       </span>
                     </span>
-                    <span className="text-[15px] font-semibold tabular-nums text-ink">{inr(c.price)}</span>
+                    <span className="text-right">
+                      <span className="block text-[15px] font-semibold tabular-nums text-ink">{inr(c.price)}</span>
+                      {c.breakdown && <span className="block text-[11px] text-ink-muted">incl. fuel surcharge &amp; GST</span>}
+                    </span>
                   </span>
+                  {choice === c.courierId && c.breakdown && <PriceParts b={c.breakdown} className="mt-2 max-w-[340px]" />}
                 </Radio>
               ))}
             </Radio.Group>
@@ -223,7 +228,7 @@ export function OyklaneShipments({ orderId, onChange }) {
                 <PackageCheck size={14} aria-hidden="true" /> Oyklane Shipping · {s.courier || "Courier"} <Tag color={color} className="!m-0">{label}</Tag>
               </p>
               <p className="m-0 text-[12px] text-ink-muted">
-                AWB {s.awb} · {inr(s.freight)} shipping{s.paymentType === "COD" ? ` · COD ${inr(s.codAmount)}` : ""}
+                AWB {s.awb} · {inr(s.freight)} shipping + GST{s.paymentType === "COD" ? ` · COD ${inr(s.codAmount)}` : ""}
                 {s.partnerStatus ? ` · ${s.partnerStatus}` : ""}
               </p>
             </div>
