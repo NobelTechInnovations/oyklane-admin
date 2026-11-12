@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { App, Button, Card, Empty, Form, Input, InputNumber, Modal, Radio, Select, Skeleton, Switch, Table, Tag } from "antd";
+import { App, Button, Card, Checkbox, Empty, Form, Input, InputNumber, Modal, Radio, Select, Skeleton, Switch, Table, Tag } from "antd";
 import { Gift, Plus, ExternalLink, Copy } from "lucide-react";
 import { PageHeader, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
@@ -18,6 +18,8 @@ function BundleModal({ open, bundle, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [products, setProducts] = useState([]);
   const [collections, setCollections] = useState([]);
+  // Product id → the options ticked for the box (missing: all of them).
+  const [picked, setPicked] = useState({});
   const v = Form.useWatch([], form) || {};
 
   useEffect(() => {
@@ -25,13 +27,31 @@ function BundleModal({ open, bundle, onClose, onSaved }) {
     apiFetch("/api/products?pageSize=100").then((d) => setProducts(d.products || [])).catch(() => {});
     apiFetch("/api/collections?pageSize=100").then((d) => setCollections(d.collections || [])).catch(() => {});
     form.resetFields();
-    form.setFieldsValue(bundle ? { ...bundle, endsAt: bundle.endsAt ? String(bundle.endsAt).slice(0, 10) : "" } : { size: 5, price: 549, appliesTo: "products", targetIds: [], active: true, title: "Buy any 5 for ₹549" });
+    form.setFieldsValue(bundle ? { ...bundle, endsAt: bundle.endsAt ? String(bundle.endsAt).slice(0, 10) : "" } : { size: 5, price: 549, appliesTo: "products", targetIds: [], active: true, split: true, title: "Buy any 5 for ₹549" });
+    setPicked({});
   }, [open, bundle, form]);
+  // An existing bundle's ticked options, once the products have loaded.
+  useEffect(() => {
+    if (!open || !bundle?.variantIds?.length || !products.length) return;
+    const only = new Set(bundle.variantIds);
+    const next = {};
+    for (const p of products) if (bundle.targetIds.includes(p.id) && (p.variants || []).length > 1) next[p.id] = p.variants.filter((x) => only.has(x.id)).map((x) => x.id);
+    setPicked(next);
+  }, [open, bundle, products]);
+
+  const chosen = v.appliesTo === "products" ? products.filter((p) => (v.targetIds || []).includes(p.id)) : [];
+  const withOptions = chosen.filter((p) => (p.variants || []).length > 1);
+  const ticked = (p) => picked[p.id] ?? p.variants.map((x) => x.id);
 
   async function save(values) {
     setSaving(true);
     try {
-      const body = { ...values, endsAt: values.endsAt ? new Date(`${values.endsAt}T23:59:59+05:30`).toISOString() : null };
+      const empty = withOptions.find((p) => !ticked(p).length);
+      if (empty) throw new Error(`Tick at least one option of ${empty.title}`);
+      // Every option ticked everywhere: no limit (new options join by themselves).
+      const limited = withOptions.some((p) => ticked(p).length < p.variants.length);
+      const variantIds = limited ? chosen.flatMap((p) => ((p.variants || []).length > 1 ? ticked(p) : (p.variants || []).map((x) => x.id))) : [];
+      const body = { ...values, variantIds, split: values.split !== false, endsAt: values.endsAt ? new Date(`${values.endsAt}T23:59:59+05:30`).toISOString() : null };
       await apiFetch(bundle ? `/api/bundles/${bundle.id}` : "/api/bundles", { method: bundle ? "PATCH" : "POST", body });
       message.success("Bundle saved");
       onSaved();
@@ -75,6 +95,27 @@ function BundleModal({ open, bundle, onClose, onSaved }) {
             )}
           />
         </Form.Item>
+        {withOptions.length > 0 && (
+          <Form.Item label="Which options can go in the box" extra="Untick what shouldn't be in this bundle — say, keep only the 100 g packs.">
+            <div className="flex max-h-64 flex-col gap-3 overflow-auto rounded-[10px] border border-app-border p-3">
+              {withOptions.map((p) => (
+                <div key={p.id}>
+                  <div className="mb-1 text-[13px] font-medium text-ink">{p.title}</div>
+                  <Checkbox.Group
+                    value={ticked(p)}
+                    onChange={(vals) => setPicked((m) => ({ ...m, [p.id]: vals }))}
+                    options={p.variants.map((x) => ({ value: x.id, label: `${x.title} · ${inr(x.price)}` }))}
+                  />
+                </div>
+              ))}
+            </div>
+          </Form.Item>
+        )}
+        {withOptions.length > 0 && (
+          <Form.Item name="split" valuePropName="checked" className="-mt-2">
+            <Checkbox>Show each ticked option as its own item on the bundle page</Checkbox>
+          </Form.Item>
+        )}
         <Form.Item name="description" label="Line under the heading (optional)">
           <Input.TextArea rows={2} maxLength={400} />
         </Form.Item>
