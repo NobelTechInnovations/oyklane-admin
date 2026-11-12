@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Switch, Button, Drawer, Input, Alert, App, Tag, Radio } from "antd";
+import { Card, Switch, Button, Drawer, Input, Alert, App, Tag, Radio, Modal } from "antd";
 import { Banknote, ExternalLink, ShieldCheck, Trash2 } from "lucide-react";
 import { StatusBadge, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
@@ -269,11 +269,17 @@ export function PaymentSettings({ initial, currency, canEdit }) {
     window.history.replaceState(null, "", window.location.pathname);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** "Connect with PayU": PayU's own page to log in or sign up, then back. */
-  async function connectPayu() {
+  /** "Connect with PayU": asks whether they already have a PayU account,
+   * then PayU's own login (or sign-up) page, and back here. */
+  const [payuAsk, setPayuAsk] = useState(false);
+  function connectPayu() {
+    setPayuAsk(true);
+  }
+  async function goPayu(existing) {
+    setPayuAsk(false);
     setBusy("payu");
     try {
-      const { url } = await apiFetch("/api/payments/payu/connect");
+      const { url } = await apiFetch(`/api/payments/payu/connect${existing ? "?existing=1" : ""}`);
       window.location.href = url;
     } catch (err) {
       message.error(err.message);
@@ -395,6 +401,21 @@ export function PaymentSettings({ initial, currency, canEdit }) {
       </Card>
 
       <SetupDrawer provider={editing} open={Boolean(editing)} onClose={() => setEditing(null)} onSaved={setData} canEdit={canEdit} />
+
+      <Modal open={payuAsk} onCancel={() => setPayuAsk(false)} title="Connect with PayU" footer={null} width={460} destroyOnHidden>
+        <p className="mt-0 text-[13.5px] text-ink-muted">Do you already have a PayU (or PayUmoney) merchant account?</p>
+        <div className="flex flex-col gap-2">
+          <Button type="primary" size="large" block onClick={() => goPayu(true)}>
+            Yes — log in to PayU
+          </Button>
+          <Button size="large" block onClick={() => goPayu(false)}>
+            No — create a PayU account
+          </Button>
+        </div>
+        <p className="mb-0 mt-3 text-[12.5px] text-ink-muted">
+          You&apos;ll log in on PayU&apos;s own page, allow Oyklane, and come back here. If PayU keeps returning you to its login after the OTP, open this page in a private window and try again.
+        </p>
+      </Modal>
     </div>
   );
 }

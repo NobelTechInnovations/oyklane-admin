@@ -129,7 +129,7 @@ export function ShippingWalletPanel({ onBalance }) {
         </div>
         <p className={`m-0 mt-3 text-[12.5px] ${low ? "text-[#B45309]" : "text-ink-muted"}`}>
           {low ? "Your balance is low — add money so couriers can be booked without a hitch. " : ""}
-          Each courier you book is paid from here. Cancel before pickup and the amount comes back at once.
+          Every rupee you add goes into the wallet as it is. Each courier you book takes its price, GST included, from here. Cancel before pickup and that amount comes back at once.
         </p>
       </Card>
       <Card size="small" title="Wallet activity" styles={{ body: { padding: 0 } }}>

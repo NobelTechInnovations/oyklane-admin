@@ -316,7 +316,7 @@ function Report({ id, onClose }) {
         <p className="text-sm text-ink-muted">Loading…</p>
       ) : (
         <div className="flex flex-col gap-4">
-          {b.error && <Alert type={b.status === "failed" ? "error" : "warning"} showIcon message={deliveryProblem(b.error).text} className="[overflow-wrap:anywhere]" />}
+          {b.error && <Alert type={b.status === "failed" ? "error" : "warning"} showIcon message={deliveryProblem(b.error, { shared: data?.sender === "oyklane" }).text} className="[overflow-wrap:anywhere]" />}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Statistic title="Sent" value={b.sent} suffix={`/ ${b.recipients}`} />
             <Statistic title="Delivered" value={b.delivered} suffix={<span className="text-xs">{pct(b.delivered, b.sent)}%</span>} />
@@ -361,7 +361,7 @@ function Report({ id, onClose }) {
               columns={[
                 { title: "Customer", render: (_, r) => r.name || `+${r.phone}` },
                 { title: "", dataIndex: "status", render: (s, r) => (r.skipReason === "emailed" ? <Tag color="blue">Emailed instead</Tag> : <Tag color={s === "failed" ? "red" : "default"}>{s === "failed" ? "Not delivered" : "Left out"}</Tag>) },
-                { title: "Why", render: (_, r) => deliveryProblem(r.error || r.skipReason || "").text || r.error || r.skipReason },
+                { title: "Why", render: (_, r) => deliveryProblem(r.error || r.skipReason || "", { shared: data?.sender === "oyklane" }).text || r.error || r.skipReason },
               ]}
             />
           )}

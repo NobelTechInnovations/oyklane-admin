@@ -97,7 +97,7 @@ export default function ShippingRatesPage() {
     <div>
       <PageHeader
         title="Rate chart"
-        subtitle={card ? `From ${card.city ? `${card.city} ` : ""}${card.pincode} · forward (FWD) prices include the ${card.pricing?.fuelPercent ?? 7.5}% fuel surcharge and ${card.pricing?.gstPercent ?? 18}% GST — what you pay when you book · COD and return (RTO) charges as they are · updated ${new Date(card.at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}` : "Each courier's rates from your pickup pincode to every zone."}
+        subtitle={card ? `From ${card.city ? `${card.city} ` : ""}${card.pincode} · forward (FWD) prices include ${card.pricing?.gstPercent ?? 18}% GST — what you pay when you book · COD and return (RTO) charges as they are · updated ${new Date(card.at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}` : "Each courier's rates from your pickup pincode to every zone."}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Link href="/admin/shipping/calculator">

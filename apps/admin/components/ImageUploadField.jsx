@@ -70,7 +70,9 @@ export function ImageUploadField({ value, onChange, hint = "Square images look b
         open={library}
         onClose={() => setLibrary(false)}
         onSelect={(urls) => {
-          if (urls?.[0]) onChange?.(urls[0]);
+          // Single pick: the library hands back one URL (a string), not a list.
+          const url = Array.isArray(urls) ? urls[0] : urls;
+          if (url) onChange?.(url);
           setLibrary(false);
         }}
       />

@@ -14,7 +14,7 @@ const kg = (g) => `${(Number(g || 0) / 1000).toFixed(2)} kg`;
 /**
  * Shipping ▸ Rate calculator: what each courier charges between two
  * pincodes for a parcel — a delivery (prepaid or cash on delivery) or a
- * return — before booking anything. Prices are what you pay, before GST.
+ * return — before booking anything. Prices are what you pay, GST included.
  */
 export default function RateCalculatorPage() {
   const { message } = App.useApp();
@@ -40,7 +40,7 @@ export default function RateCalculatorPage() {
   const reason = error?.details?.reason;
   return (
     <div>
-      <PageHeader title="Rate calculator" subtitle="What each courier charges for a parcel between two pincodes — before you book. Prices include the fuel surcharge and GST, the same as when you book." actions={<Link href="/admin/shipping/rates"><Button>Rate chart</Button></Link>} />
+      <PageHeader title="Rate calculator" subtitle="What each courier charges for a parcel between two pincodes — before you book. Prices include GST, the same as when you book." actions={<Link href="/admin/shipping/rates"><Button>Rate chart</Button></Link>} />
       {(reason === "no_pickup" || reason === "pickup_pending") && (
         <Alert type="info" showIcon className="!mb-4" message={error.message} action={reason === "no_pickup" ? <Link href="/admin/settings/shipping">Add pickup address</Link> : null} />
       )}

@@ -11,6 +11,7 @@ import { useAppActions } from "@/components/apps/useAppActions";
 import { AppSettingsFields } from "@/components/apps/AppSettingsForm";
 import { AppTile } from "@/components/apps/AppTile";
 import { OneClickSettings } from "@/app/admin/apps/OneClickSettings";
+import { OneClickPreview, PhoneLoginPreview } from "@/components/apps/AppPreview";
 
 // What each app does, in a few lines — shown on its page.
 const HIGHLIGHTS = {
@@ -58,6 +59,8 @@ export default function AppDetailsPage({ params }) {
   const { install, uninstall } = useAppActions();
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const [oneClick, setOneClick] = useState(null);
+  const formValues = Form.useWatch([], form);
   const app = (apps || []).find((a) => a.key === key);
   const hasSettings = app && ((app.settingsSchema || []).length > 0 || app.key === "facebook-pixel");
 
@@ -149,7 +152,7 @@ export default function AppDetailsPage({ params }) {
 
           {app.installed && app.key === "one-click-checkout" && (
             <Panel title="Settings">
-              <OneClickSettings app={app} onSave={save} saving={saving} />
+              <OneClickSettings app={app} onSave={save} saving={saving} onPreview={setOneClick} />
             </Panel>
           )}
 
@@ -166,7 +169,17 @@ export default function AppDetailsPage({ params }) {
           )}
         </div>
 
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 lg:sticky lg:top-4">
+          {app.key === "phone-login" && !(app.locked && !app.installed) && (
+            <Panel title="Live preview">
+              <PhoneLoginPreview values={{ ...(app.settings || {}), ...(formValues || {}) }} />
+            </Panel>
+          )}
+          {app.key === "one-click-checkout" && app.installed && (
+            <Panel title="Live preview">
+              <OneClickPreview values={oneClick || {}} />
+            </Panel>
+          )}
           <Panel title="Pricing">
             {app.usagePrice ? (
               <>

@@ -153,7 +153,7 @@ export function ShipWithOyklane({ order, open, onClose, onBooked }) {
                     </span>
                     <span className="text-right">
                       <span className="block text-[15px] font-semibold tabular-nums text-ink">{inr(c.price)}</span>
-                      {c.breakdown && <span className="block text-[11px] text-ink-muted">incl. fuel surcharge &amp; GST</span>}
+                      {c.breakdown && <span className="block text-[11px] text-ink-muted">incl. GST</span>}
                     </span>
                   </span>
                   {choice === c.courierId && c.breakdown && <PriceParts b={c.breakdown} className="mt-2 max-w-[340px]" />}

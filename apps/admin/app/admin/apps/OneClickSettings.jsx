@@ -8,7 +8,7 @@ const hexOf = (c) => (typeof c === "string" ? c : c?.toHexString?.() || "");
 
 /** One-Click Checkout's settings: how the popup and cart look, and the
  * "You may also like" products in the cart. Saved as the app's settings. */
-export function OneClickSettings({ app, onSave, saving }) {
+export function OneClickSettings({ app, onSave, saving, onPreview }) {
   const [form] = Form.useForm();
   const [products, setProducts] = useState([]);
   const [collections, setCollections] = useState([]);
@@ -17,6 +17,11 @@ export function OneClickSettings({ app, onSave, saving }) {
   const source = Form.useWatch("crossSellSource", form);
   const partial = Form.useWatch("partial", form);
   const partialType = Form.useWatch("partialType", form);
+  // Every value as it changes, for the live preview beside the form.
+  const all = Form.useWatch([], form);
+  useEffect(() => {
+    if (all) onPreview?.(all);
+  }, [all]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     apiFetch("/api/products?pageSize=100&status=active").then((d) => setProducts(d.products || [])).catch(() => {});
