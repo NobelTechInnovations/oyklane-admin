@@ -96,7 +96,7 @@ function BundleModal({ open, bundle, onClose, onSaved }) {
           />
         </Form.Item>
         {withOptions.length > 0 && (
-          <Form.Item label="Which options can go in the box" extra="Untick what shouldn't be in this bundle — say, keep only the 100 g packs.">
+          <Form.Item label="Which options can go in the box" extra="Untick what shouldn't be in this bundle — say, keep only the 100 g packs. A sold-out option shows greyed out on the bundle page until it's back in stock.">
             <div className="flex max-h-64 flex-col gap-3 overflow-auto rounded-[10px] border border-app-border p-3">
               {withOptions.map((p) => (
                 <div key={p.id}>
@@ -104,7 +104,7 @@ function BundleModal({ open, bundle, onClose, onSaved }) {
                   <Checkbox.Group
                     value={ticked(p)}
                     onChange={(vals) => setPicked((m) => ({ ...m, [p.id]: vals }))}
-                    options={p.variants.map((x) => ({ value: x.id, label: `${x.title} · ${inr(x.price)}` }))}
+                    options={p.variants.map((x) => ({ value: x.id, label: `${x.title} · ${inr(x.price)}${Number(x.inventoryQuantity) <= 0 ? " · sold out" : ""}` }))}
                   />
                 </div>
               ))}

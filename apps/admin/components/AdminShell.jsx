@@ -8,8 +8,9 @@ import { Topbar } from "./Topbar";
 import { BillingBanner } from "./BillingBanner";
 import { HelpProvider } from "./help/HelpDrawer";
 
-// List pages that use the whole width, so every table column shows.
-const WIDE = [/^\/admin\/(products|orders|customers)$/, /^\/admin\/orders\/(drafts|abandoned)$/, /^\/admin\/products\/(inventory|collections)$/, /\/bulk-edit$/];
+// These areas use the whole width, every page in them, so tables show
+// all their columns.
+const WIDE = [/^\/admin\/(orders|products|collections|customers|discounts|analytics|content|shipping|gift-cards|inventory)(\/|$)/];
 
 /**
  * The admin frame: fixed sidebar on desktop; below `lg` the sidebar

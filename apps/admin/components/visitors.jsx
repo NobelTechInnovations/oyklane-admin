@@ -5,7 +5,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { isPhoneOnlyEmail } from "@/lib/customers";
 import { Tag, Tooltip } from "antd";
-import { Monitor, Smartphone, Tablet, Phone, MessageCircle, Mail, ChevronDown, ChevronUp, ShoppingBag, ShoppingCart, CreditCard, Package, LayoutGrid, Home, Search, User, FileText } from "lucide-react";
+import { Monitor, Smartphone, Tablet, Phone, MessageCircle, Mail, ChevronDown, ChevronUp, ShoppingBag, ShoppingCart, CreditCard, Package, LayoutGrid, Home, Search, User, FileText, MapPin } from "lucide-react";
 
 export const DEVICE_ICON = {
   desktop: Monitor,
@@ -137,6 +137,12 @@ export function VisitRow({ visit, showCustomer = true }) {
               {when(visit.firstSeenAt)} · {minutes} min · {visit.views.length} page{visit.views.length === 1 ? "" : "s"}
               {visit.source ? ` · from ${visit.source}` : ""}
             </p>
+            {placeOf(visit) && (
+              <p className="m-0 mt-0.5 inline-flex items-center gap-1 text-[12.5px] text-ink">
+                <MapPin size={12} className="text-ink-subtle" aria-hidden="true" />
+                {placeOf(visit)}
+              </p>
+            )}
             {visit.productsViewed.length > 0 && (
               <p className="m-0 mt-1 text-[12.5px] text-ink">
                 <ShoppingBag size={12} className="inline -mt-0.5 mr-1 text-ink-subtle" aria-hidden="true" />
@@ -166,10 +172,36 @@ export function VisitRow({ visit, showCustomer = true }) {
   );
 }
 
-export function CountryTag({ country }) {
+// India's state codes (ISO 3166-2:IN) as the edge sends them.
+const IN_STATES = { AN: "Andaman & Nicobar", AP: "Andhra Pradesh", AR: "Arunachal Pradesh", AS: "Assam", BR: "Bihar", CH: "Chandigarh", CT: "Chhattisgarh", CG: "Chhattisgarh", DH: "Dadra & Nagar Haveli and Daman & Diu", DN: "Dadra & Nagar Haveli", DD: "Daman & Diu", DL: "Delhi", GA: "Goa", GJ: "Gujarat", HR: "Haryana", HP: "Himachal Pradesh", JK: "Jammu & Kashmir", JH: "Jharkhand", KA: "Karnataka", KL: "Kerala", LA: "Ladakh", LD: "Lakshadweep", MP: "Madhya Pradesh", MH: "Maharashtra", MN: "Manipur", ML: "Meghalaya", MZ: "Mizoram", NL: "Nagaland", OR: "Odisha", OD: "Odisha", PY: "Puducherry", PB: "Punjab", RJ: "Rajasthan", SK: "Sikkim", TN: "Tamil Nadu", TG: "Telangana", TS: "Telangana", TR: "Tripura", UP: "Uttar Pradesh", UT: "Uttarakhand", UK: "Uttarakhand", WB: "West Bengal" };
+let regionNames = null;
+function countryLabel(code) {
+  try {
+    regionNames = regionNames || new Intl.DisplayNames(["en"], { type: "region" });
+    return regionNames.of(code) || code;
+  } catch {
+    return code;
+  }
+}
+
+/** "Pune, Maharashtra" (India) or "Dubai, United Arab Emirates" — what the visit's edge headers told us. */
+export function placeOf(v) {
+  if (!v) return "";
+  const india = !v.country || v.country === "IN";
+  const state = v.region ? (india ? IN_STATES[v.region] || v.region : v.region) : "";
+  const parts = [v.city, india ? state : ""].filter(Boolean);
+  if (!india && v.country) parts.push(countryLabel(v.country));
+  return [...new Set(parts)].join(", ");
+}
+
+export function CountryTag({ country, city, region }) {
+  const place = placeOf({ country, city, region });
   return (
-    <Tooltip title="Country">
-      <Tag className="m-0">{country || "Unknown"}</Tag>
+    <Tooltip title={country ? countryLabel(country) : "Location"}>
+      <Tag className="m-0 inline-flex items-center gap-1">
+        <MapPin size={11} aria-hidden="true" />
+        {place || (country ? countryLabel(country) : "Unknown")}
+      </Tag>
     </Tooltip>
   );
 }

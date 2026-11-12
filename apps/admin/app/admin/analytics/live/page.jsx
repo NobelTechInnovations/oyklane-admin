@@ -44,7 +44,7 @@ function LiveRow({ v }) {
       </div>
       <div className="flex flex-col items-end gap-1.5">
         <div className="flex items-center gap-2">
-          <CountryTag country={v.country} />
+          <CountryTag country={v.country} city={v.city} region={v.region} />
           <span className="text-xs text-ink-muted w-16 text-right">{timeAgo(v.updatedAt)}</span>
         </div>
         {known && <ContactButtons phone={v.phone} email={v.email} customerId={v.customerId} compact />}

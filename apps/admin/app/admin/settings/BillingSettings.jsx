@@ -12,6 +12,7 @@ import { inr, STATUS, METHODS, KIND_LABEL, PURPOSE_LABEL, formatDay, daysLeft, c
 import { SettingsSectionHeader } from "./SettingsNav";
 import { PromoCodeBox } from "./PromoCodeBox";
 import { BillingModeNotice } from "@/components/BillingModeNotice";
+import { StorageMeter } from "@/components/StorageMeter";
 
 function Stat({ label, value, sub }) {
   return (
@@ -249,6 +250,8 @@ export function BillingSettings() {
           </p>
         )}
       </Card>
+
+      <StorageMeter />
 
       <PromoCodeBox active={b.promoCode} canManage={canManage} onApplied={load} />
 

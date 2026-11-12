@@ -10,6 +10,22 @@ import { PageHeader, EmptyState, ListCard, SearchInput } from "@shopcycle/ui";
 import { formatCurrency } from "@shopcycle/utils";
 import { apiFetch, apiDownload } from "@/lib/api";
 import { initials } from "@/lib/storefront";
+import { useColumnChoice } from "@/components/ColumnPicker";
+
+// Columns the seller can turn on or off ("Columns", remembered per browser).
+const CUSTOMER_COLUMNS = [
+  { key: "phone", label: "Phone", default: false },
+  { key: "email", label: "Email", default: false },
+  { key: "location", label: "Location" },
+  { key: "orders", label: "Orders" },
+  { key: "spent", label: "Amount spent" },
+  { key: "consent", label: "Agreed to offers", default: false },
+  { key: "tags", label: "Tags", default: false },
+  { key: "verified", label: "Phone verified", default: false },
+  { key: "lastSignIn", label: "Last signed in", default: false },
+  { key: "joined", label: "Customer since", default: false },
+];
+const shortDate = (iso) => (iso ? new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—");
 
 export default function CustomersPage() {
   const router = useRouter();
@@ -57,7 +73,8 @@ export default function CustomersPage() {
     }
   }
 
-  const columns = [
+  const { picker, pick } = useColumnChoice("oy:customers:columns", CUSTOMER_COLUMNS);
+  const columns = pick([
     {
       title: "Customer",
       dataIndex: "name",
@@ -79,7 +96,10 @@ export default function CustomersPage() {
         </div>
       ),
     },
+    { choice: "phone", title: "Phone", width: 140, render: (_, row) => <span className="tabular-nums">{row.phone || "—"}</span> },
+    { choice: "email", title: "Email", width: 220, render: (_, row) => (isPhoneOnlyEmail(row.email) ? "—" : row.email) },
     {
+      choice: "location",
       title: "Location",
       responsive: ["md"],
       width: 180,
@@ -88,6 +108,7 @@ export default function CustomersPage() {
       ),
     },
     {
+      choice: "orders",
       title: "Orders",
       responsive: ["sm"],
       dataIndex: "orderCount",
@@ -96,12 +117,23 @@ export default function CustomersPage() {
       render: (n) => <span className="tabular-nums">{n}</span>,
     },
     {
+      choice: "spent",
       title: "Amount spent",
       width: 150,
       align: "right",
       render: (_, row) => <span className="font-medium tabular-nums">{formatCurrency(row.totalSpent)}</span>,
     },
-  ];
+    {
+      choice: "consent",
+      title: "Agreed to offers",
+      width: 170,
+      render: (_, row) => <span className="text-[13px]">{[row.acceptsWhatsappMarketing && "WhatsApp", row.acceptsEmailMarketing && "Email", row.acceptsSmsMarketing && "SMS"].filter(Boolean).join(", ") || "—"}</span>,
+    },
+    { choice: "tags", title: "Tags", width: 180, render: (_, row) => <span className="text-[13px]">{row.tags || "—"}</span> },
+    { choice: "verified", title: "Phone verified", width: 130, render: (_, row) => (row.phoneVerifiedAt ? "Yes" : "—") },
+    { choice: "lastSignIn", title: "Last signed in", width: 140, render: (_, row) => <span className="text-[13px]">{shortDate(row.lastSignInAt)}</span> },
+    { choice: "joined", title: "Customer since", width: 140, render: (_, row) => <span className="text-[13px]">{shortDate(row.createdAt)}</span> },
+  ]);
 
   return (
     <div>
@@ -125,13 +157,16 @@ export default function CustomersPage() {
 
       <ListCard
         toolbar={
-          <SearchInput
-            placeholder="Search name or email"
-            onSearch={(v) => {
-              setPage(1);
-              setQ(v);
-            }}
-          />
+          <div className="flex w-full flex-wrap items-center gap-2">
+            <SearchInput
+              placeholder="Search name, email or phone"
+              onSearch={(v) => {
+                setPage(1);
+                setQ(v);
+              }}
+            />
+            <span className="ml-auto">{picker}</span>
+          </div>
         }
       >
         {selected.length > 0 && (

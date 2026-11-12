@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Upload, App, Skeleton } from "antd";
 import { UploadCloud, Trash2, Link2, ImagePlus } from "lucide-react";
+import { StorageMeter } from "@/components/StorageMeter";
 import { PageHeader, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { IMAGE_ACCEPT, uploadImage } from "@/lib/uploads";
@@ -85,6 +86,7 @@ export default function ContentFilesPage() {
         }
       />
 
+      <StorageMeter refreshKey={files.length} className="mb-4" />
       <Upload.Dragger {...uploadProps} className="!block mb-5 [&_.ant-upload-drag]:!rounded-[14px] [&_.ant-upload-drag]:!bg-app-surface">
         <div className="flex flex-col items-center gap-2 py-4">
           <span className="w-11 h-11 rounded-xl bg-app-bg border border-app-border text-ink-muted flex items-center justify-center">

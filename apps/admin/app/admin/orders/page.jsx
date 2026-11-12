@@ -8,6 +8,7 @@ import { Plus, ShoppingCart, Search, Download } from "lucide-react";
 import { PageHeader, StatusBadge, EmptyState, ListCard, SearchInput } from "@shopcycle/ui";
 import { formatCurrency } from "@shopcycle/utils";
 import { apiFetch, apiDownload } from "@/lib/api";
+import { useColumnChoice } from "@/components/ColumnPicker";
 
 const TABS = [
   { key: "all", label: "All" },
@@ -29,6 +30,23 @@ function orderDate(iso) {
   const sameYear = d.getFullYear() === now.getFullYear();
   return `${d.toLocaleDateString(undefined, { day: "numeric", month: "short", ...(sameYear ? {} : { year: "numeric" }) })}, ${time}`;
 }
+
+// Columns the seller can turn on or off ("Columns", remembered per browser).
+const ORDER_COLUMNS = [
+  { key: "date", label: "Date" },
+  { key: "customer", label: "Customer" },
+  { key: "phone", label: "Phone", default: false },
+  { key: "shipTo", label: "Ship to", default: false },
+  { key: "items", label: "Items", default: false },
+  { key: "payment", label: "Payment" },
+  { key: "method", label: "Payment method", default: false },
+  { key: "fulfillment", label: "Fulfillment" },
+  { key: "discount", label: "Discount code", default: false },
+  { key: "channel", label: "Checkout", default: false },
+  { key: "invoice", label: "Invoice no.", default: false },
+  { key: "total", label: "Total" },
+];
+const METHOD = { cod: "Cash on delivery", razorpay: "Razorpay", upi: "UPI", manual: "Manual", gift_card: "Gift card", partial_cod: "Part COD" };
 
 export default function OrdersPage({ searchParams }) {
   // /admin/orders?status=unfulfilled — the Home page's to-do links.
@@ -72,7 +90,9 @@ export default function OrdersPage({ searchParams }) {
     load();
   }, [load]);
 
-  const columns = [
+  const { picker, pick } = useColumnChoice("oy:orders:columns", ORDER_COLUMNS);
+  const dash = <span className="text-ink-subtle">—</span>;
+  const columns = pick([
     {
       title: "Order",
       dataIndex: "orderNumber",
@@ -84,6 +104,7 @@ export default function OrdersPage({ searchParams }) {
       ),
     },
     {
+      choice: "date",
       title: "Date",
       responsive: ["lg"],
       dataIndex: "createdAt",
@@ -91,6 +112,7 @@ export default function OrdersPage({ searchParams }) {
       render: (d) => <span className="text-[13px] text-ink-muted">{orderDate(d)}</span>,
     },
     {
+      choice: "customer",
       title: "Customer",
       render: (_, row) =>
         row.customer ? (
@@ -102,16 +124,24 @@ export default function OrdersPage({ searchParams }) {
           <span className="text-ink-muted">Guest</span>
         ),
     },
-    { title: "Payment", responsive: ["md"], dataIndex: "paymentStatus", width: 130, render: (s) => <StatusBadge status={s} /> },
-    { title: "Fulfillment", responsive: ["sm"], dataIndex: "fulfillmentStatus", width: 140, render: (s) => <StatusBadge status={s} /> },
+    { choice: "phone", title: "Phone", width: 140, render: (_, row) => <span className="tabular-nums">{row.phone || row.customer?.phone || "—"}</span> },
+    { choice: "shipTo", title: "Ship to", width: 180, render: (_, row) => <span className="text-[13px]">{[row.shippingCity, row.shippingProvince].filter(Boolean).join(", ") || "—"}</span> },
+    { choice: "items", title: "Items", width: 80, align: "right", render: (_, row) => <span className="tabular-nums">{row._count?.items ?? "—"}</span> },
+    { choice: "payment", title: "Payment", responsive: ["md"], dataIndex: "paymentStatus", width: 130, render: (s) => <StatusBadge status={s} /> },
+    { choice: "method", title: "Payment method", width: 150, render: (_, row) => <span className="text-[13px]">{METHOD[row.paymentMethod] || row.paymentMethod || "—"}</span> },
+    { choice: "fulfillment", title: "Fulfillment", responsive: ["sm"], dataIndex: "fulfillmentStatus", width: 140, render: (s) => <StatusBadge status={s} /> },
+    { choice: "discount", title: "Discount code", width: 140, render: (_, row) => (row.discountCode ? <span className="font-mono text-[12.5px]">{row.discountCode}</span> : dash) },
+    { choice: "channel", title: "Checkout", width: 120, render: (_, row) => <span className="text-[13px]">{row.oneClickCheckout ? "One-Click" : "Standard"}</span> },
+    { choice: "invoice", title: "Invoice no.", width: 140, render: (_, row) => row.invoiceNumber || dash },
     {
+      choice: "total",
       title: "Total",
       dataIndex: "total",
       width: 130,
       align: "right",
       render: (v) => <span className="font-medium tabular-nums">{formatCurrency(v)}</span>,
     },
-  ];
+  ]);
 
   const filtered = Boolean(q) || status !== "all";
 
@@ -142,13 +172,16 @@ export default function OrdersPage({ searchParams }) {
           setStatus(key);
         }}
         toolbar={
-          <SearchInput
-            placeholder="Order # or customer"
-            onSearch={(v) => {
-              setPage(1);
-              setQ(v);
-            }}
-          />
+          <div className="flex w-full flex-wrap items-center gap-2">
+            <SearchInput
+              placeholder="Order # or customer"
+              onSearch={(v) => {
+                setPage(1);
+                setQ(v);
+              }}
+            />
+            <span className="ml-auto">{picker}</span>
+          </div>
         }
       >
         <Table
