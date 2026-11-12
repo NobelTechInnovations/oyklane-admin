@@ -13,7 +13,7 @@ const templateSuffixField = z
 
 const installThemeSchema = z.object({
   // Keep in step with MASTER_THEMES (apps/api/src/modules/themes/service.js).
-  handle: z.enum(["classic", "modern", "atelier", "zari", "haveli", "lumiere", "fresh", "fizz", "carry", "solo", "varq", "aanch", "amber", "noor", "mithas", "velours"]),
+  handle: z.enum(["classic", "modern", "atelier", "zari", "haveli", "lumiere", "fresh", "fizz", "carry", "solo", "varq", "aanch", "amber", "noor", "mithas", "velours", "volt", "ankur", "stride", "pothi", "mitti"]),
 });
 
 const updateThemeSettingsSchema = z.object({
