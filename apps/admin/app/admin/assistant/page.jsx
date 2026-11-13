@@ -7,6 +7,7 @@ import { Plus, ArrowUp, Trash2, PanelRight, Users, ShoppingCart, Gift, MessageCi
 import { apiFetch } from "@/lib/api";
 import SiyaaMark from "@/components/SiyaaMark";
 import { ActionCard, AutopilotPanel, BuyerRow, EmptyList, MessagesPanel, ProductsCard, RulesPanel, SettingsCard, STAGE } from "./parts";
+import { useUrlState } from "@/lib/useUrlState";
 
 const PROMPTS = [
   [Users, "Which buyers are most interested in my products?", "Ranked by what they did this month"],
@@ -154,7 +155,7 @@ export default function AssistantPage() {
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
   const [panel, setPanel] = useState(false);
-  const [tab, setTab] = useState("buyers");
+  const [tab, setTab] = useUrlState("tab", "buyers");
   const scroller = useRef(null);
 
   const loadOverview = useCallback(() => {

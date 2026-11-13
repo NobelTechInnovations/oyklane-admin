@@ -12,6 +12,7 @@ import { AppSettingsFields } from "@/components/apps/AppSettingsForm";
 import { AppTile } from "@/components/apps/AppTile";
 import { OneClickSettings } from "@/app/admin/apps/OneClickSettings";
 import { OneClickPreview, PhoneLoginPreview } from "@/components/apps/AppPreview";
+import { PixelEvents } from "@/components/apps/PixelEvents";
 
 // What each app does, in a few lines — shown on its page.
 const HIGHLIGHTS = {
@@ -147,6 +148,12 @@ export default function AppDetailsPage({ params }) {
                   </div>
                 </Form>
               )}
+            </Panel>
+          )}
+
+          {app.installed && app.key === "facebook-pixel" && (
+            <Panel title="Events">
+              <PixelEvents />
             </Panel>
           )}
 

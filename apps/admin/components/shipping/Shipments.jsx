@@ -8,6 +8,7 @@ import { PageHeader } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { NdrDialog } from "@/components/shipping/NdrDialog";
 import { SHIP_STATUS } from "@/app/admin/orders/[id]/OyklaneShipping";
+import { useUrlState } from "@/lib/useUrlState";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 const day = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—");
@@ -26,7 +27,7 @@ const TABS = [
  * (failed deliveries), labels and the manifest for the courier's pickup. */
 export function Shipments({ initialTab = "all", title = "Shipments", subtitle = "Oyklane Shipping parcels: pickup, tracking, failed deliveries and returns." }) {
   const { message } = App.useApp();
-  const [tab, setTab] = useState(initialTab);
+  const [tab, setTab] = useUrlState("list", initialTab);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [data, setData] = useState(null);

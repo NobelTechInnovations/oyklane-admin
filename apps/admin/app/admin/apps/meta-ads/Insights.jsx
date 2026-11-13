@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Card, Statistic, Alert, Button, Tag, Table, App, Skeleton, Tabs, Tooltip, Empty } from "antd";
+import { Card, Statistic, Alert, Button, Tag, Table, App, Skeleton, Tooltip, Empty } from "antd";
 import { Sparkles, RefreshCw, ThumbsUp, Info } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { RangePicker, rangeQuery, inr, num, pct, x2 } from "./ads-ui";
+import { UrlTabs } from "@/components/UrlTabs";
 
 const CONF = { high: ["green", "High confidence"], medium: ["gold", "Medium confidence"], low: ["default", "Low confidence — early data"] };
 
@@ -156,7 +157,8 @@ export default function Insights({ range, setRange, canEdit }) {
             <p className="text-xs text-ink-muted mt-3 mb-0">Nothing changes until you approve it. Want this automatic? Set limits in Automation.</p>
           </Card>
 
-          <Tabs
+          <UrlTabs
+            param="view"
             items={[
               { key: "campaigns", label: "Campaigns", children: <Table size="small" rowKey="id" dataSource={data.campaigns} columns={[...cols, { title: "Store orders", align: "right", render: (_, r) => (r.store?.orders ? `${r.store.orders} · ${inr(r.store.revenue)}` : "—") }]} scroll={{ x: 820 }} pagination={{ pageSize: 10, hideOnSinglePage: true }} /> },
               { key: "adsets", label: "Ad sets (audiences)", children: <Table size="small" rowKey="id" dataSource={data.adSets} columns={[...cols, { title: "Frequency", align: "right", dataIndex: "frequency", render: (v) => (v ? v.toFixed(1) : "—") }]} scroll={{ x: 820 }} pagination={{ pageSize: 10, hideOnSinglePage: true }} /> },

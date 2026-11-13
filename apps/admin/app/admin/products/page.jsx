@@ -9,6 +9,7 @@ import { PageHeader, StatusBadge, EmptyState, ListCard, Thumb, SearchInput, Dele
 import { formatCurrency } from "@shopcycle/utils";
 import { apiFetch, apiDownload } from "@/lib/api";
 import { ProductImportModal } from "@/components/ProductImportModal";
+import { useUrlState } from "@/lib/useUrlState";
 
 const TABS = [
   { key: "all", label: "All" },
@@ -94,7 +95,7 @@ export default function ProductsPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-  const [tab, setTab] = useState("all");
+  const [tab, setTab] = useUrlState("tab", "all");
   const [page, setPage] = useState(1);
   const [importOpen, setImportOpen] = useState(false);
   const [selected, setSelected] = useState([]);

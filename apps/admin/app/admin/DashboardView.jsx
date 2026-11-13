@@ -28,6 +28,7 @@ import { trackOnce } from "@/lib/track";
 import { storefrontUrlFor, storefrontLabelFor } from "@/lib/storefront";
 import { VerifyEmailBanner } from "@/components/VerifyEmailBanner";
 import { AreaChart, BarList, Delta, formatValue } from "@/components/charts";
+import { useUrlState } from "@/lib/useUrlState";
 
 function orderDate(value) {
   const d = new Date(value);
@@ -318,7 +319,7 @@ function SetupGuide({ setup }) {
 export function DashboardView({ data, user }) {
   const router = useRouter();
   const { todo, recentOrders, storeStatus, setup, store, greetingName, firstOrder } = data;
-  const [range, setRange] = useState("7d");
+  const [range, setRange] = useUrlState("range", "7d");
   // The store's first order, reported once — only while it's recent, so
   // stores that sold before tracking existed don't count as new.
   useEffect(() => {

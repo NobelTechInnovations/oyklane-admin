@@ -10,6 +10,7 @@ import { formatCurrency } from "@shopcycle/utils";
 import { apiFetch } from "@/lib/api";
 import { IssueGiftCardModal } from "./IssueGiftCardModal";
 import { cardState, CARD_STATE_BADGE, dateLabel } from "./gift-card-state";
+import { useUrlState } from "@/lib/useUrlState";
 
 export default function GiftCardsPage() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function GiftCardsPage() {
   const [outstanding, setOutstanding] = useState(0);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useUrlState("status", "all");
   const [q, setQ] = useState("");
   const [issuing, setIssuing] = useState(false);
   const pageSize = 25;

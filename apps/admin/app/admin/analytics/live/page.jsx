@@ -7,6 +7,7 @@ import { Radio, History, UserRound } from "lucide-react";
 import { PageHeader, EmptyState } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { DEVICE_ICON, timeAgo, ContactButtons, VisitRow, CountryTag } from "@/components/visitors";
+import { useUrlState } from "@/lib/useUrlState";
 
 const POLL_MS = 5000;
 
@@ -98,8 +99,8 @@ function LiveNow({ onCount }) {
 }
 
 function VisitorHistory() {
-  const [range, setRange] = useState("7d");
-  const [who, setWho] = useState("signed_in");
+  const [range, setRange] = useUrlState("range", "7d");
+  const [who, setWho] = useUrlState("who", "signed_in");
   const [page, setPage] = useState(1);
   const [data, setData] = useState(null);
 
@@ -178,7 +179,7 @@ function VisitorHistory() {
 
 export default function LiveViewPage() {
   const [count, setCount] = useState(0);
-  const [tab, setTab] = useState("live");
+  const [tab, setTab] = useUrlState("tab", "live");
 
   return (
     <div>

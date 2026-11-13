@@ -389,7 +389,7 @@ export default function GoogleShoppingPage() {
             <ul className="m-0 pl-4 text-[12.5px] text-ink-muted flex flex-col gap-1.5">
               <li>Free listings cost nothing; Shopping ads are optional and billed by Google.</li>
               <li>Hide a product from Google on its page (Sales channels), and pick its Google category there for better matches.</li>
-              <li>Rented products aren't listed — Google needs a single price.</li>
+              <li>Rented products are listed at their daily rent — the price their page shows.</li>
             </ul>
           </Card>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Button, Modal, Input, Select, Switch, App, Tabs, Tooltip, Alert } from "antd";
+import { Card, Button, Modal, Input, Select, Switch, App, Tooltip, Alert } from "antd";
 import {
   Type,
   AlignLeft,
@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { EmptyState, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { UrlTabs } from "@/components/UrlTabs";
 
 const TYPE_ICON = {
   text: Type,
@@ -317,7 +318,7 @@ export function CustomDataSettings({ types, initial, canEdit }) {
   return (
     <div className="max-w-3xl flex flex-col gap-4">
       {!canEdit && <Alert type="info" showIcon message="Only the store owner or an admin can add or change fields. You can still fill them in on each product." />}
-      <Tabs
+      <UrlTabs
         items={[
           { key: "product", label: `Products (${product.length})`, children: <DefinitionList ownerType="product" types={types} defs={product} setDefs={setProduct} canEdit={canEdit} /> },
           { key: "collection", label: `Collections (${collection.length})`, children: <DefinitionList ownerType="collection" types={types} defs={collection} setDefs={setCollection} canEdit={canEdit} /> },

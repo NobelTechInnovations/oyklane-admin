@@ -5,6 +5,7 @@ import { Card, Segmented, Table } from "antd";
 import { PageHeader } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { AreaChart, BarList, StatTile, formatValue } from "@/components/charts";
+import { useUrlState } from "@/lib/useUrlState";
 
 const RANGE_OPTIONS = [
   { label: "Today", value: "today" },
@@ -29,7 +30,7 @@ const productColumns = [
 ];
 
 export default function ReportsPage() {
-  const [range, setRange] = useState("30d");
+  const [range, setRange] = useUrlState("range", "30d");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

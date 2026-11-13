@@ -6,6 +6,7 @@ import { Button, Card, Input, Segmented, Table, Tag, Modal, Radio, Switch, App, 
 import { Star, Upload as UploadIcon, Settings2, MessageSquareReply, Trash2, Eye, EyeOff, Check, Download, ArrowLeft } from "lucide-react";
 import { PageHeader, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { useUrlState } from "@/lib/useUrlState";
 
 function Stars({ value, size = 13 }) {
   return (
@@ -198,7 +199,7 @@ export function ReviewsPanel() {
   const { confirmDialog } = useConfirmDialog();
   const [data, setData] = useState(null);
   const [notInstalled, setNotInstalled] = useState(false);
-  const [status, setStatus] = useState("pending");
+  const [status, setStatus] = useUrlState("status", "pending");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState([]);

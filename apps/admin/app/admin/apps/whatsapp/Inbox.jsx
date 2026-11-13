@@ -7,6 +7,7 @@ import { Search, Paperclip, Sparkles, Send, ArrowLeft, StickyNote, UserRound, Cl
 import { apiFetch, API_URL } from "@/lib/api";
 import { deliveryProblem } from "@/lib/whatsapp-errors";
 import { Ticks, WaPreview, relTime, money } from "./wa-ui";
+import { useUrlState } from "@/lib/useUrlState";
 
 const FILTERS = [
   { value: "open", label: "Open" },
@@ -568,7 +569,7 @@ function Bubble({ m }) {
 
 export default function Inbox() {
   const { message } = App.useApp();
-  const [filter, setFilter] = useState("open");
+  const [filter, setFilter] = useUrlState("filter", "open");
   const [q, setQ] = useState("");
   const [list, setList] = useState(null);
   // How many conversations are shown; grows by 40 as the list scrolls.

@@ -6,6 +6,7 @@ import { Alert, App, Button, Card, Select, Skeleton, Tabs } from "antd";
 import { RefreshCw } from "lucide-react";
 import { PageHeader } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { useUrlState } from "@/lib/useUrlState";
 
 const money = (n) => (n == null ? "—" : Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const pct = (n) => (n == null ? "—" : `${Number(n).toFixed(2)}`);
@@ -66,7 +67,7 @@ export default function ShippingRatesPage() {
   const { message } = App.useApp();
   const [card, setCard] = useState(null);
   const [error, setError] = useState(null);
-  const [service, setService] = useState("surface");
+  const [service, setService] = useUrlState("mode", "surface", ["surface", "air"]);
   const [picked, setPicked] = useState(null);
   const [busy, setBusy] = useState(false);
 

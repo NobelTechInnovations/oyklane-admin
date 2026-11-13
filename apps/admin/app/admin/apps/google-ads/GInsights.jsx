@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Card, Statistic, Alert, Button, Tag, Table, App, Skeleton, Tabs, Empty, Space } from "antd";
+import { Card, Statistic, Alert, Button, Tag, Table, App, Skeleton, Empty, Space } from "antd";
 import { Sparkles, RefreshCw, ThumbsUp, X } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { RangePicker, rangeQuery, inr, num, pct, x2 } from "../meta-ads/ads-ui";
+import { UrlTabs } from "@/components/UrlTabs";
 
 const CONF = { high: ["green", "High confidence"], medium: ["gold", "Medium confidence"], low: ["default", "Low confidence — early data"] };
 
@@ -154,7 +155,8 @@ export default function GInsights({ range, setRange, canEdit }) {
               <p className="text-xs text-ink-muted mt-2 mb-0">Google&apos;s estimates. Some suggestions mainly increase spend — apply the ones that fit your goals.</p>
             </Card>
           )}
-          <Tabs
+          <UrlTabs
+            param="view"
             items={[
               { key: "c", label: "Campaigns", children: <Table size="small" rowKey="id" dataSource={data.campaigns} scroll={{ x: 760 }} pagination={{ pageSize: 10, hideOnSinglePage: true }} columns={[{ title: "Campaign", dataIndex: "name" }, { title: "Type", dataIndex: "typeLabel" }, { title: "Spent", align: "right", render: (_, r) => inr(r.results.spend) }, { title: "Purchases", align: "right", render: (_, r) => num(r.results.purchases) }, { title: "Cost / purchase", align: "right", render: (_, r) => inr(r.results.cpa) }, { title: "Click rate", align: "right", render: (_, r) => pct(r.results.ctr) }, { title: "Store orders", align: "right", render: (_, r) => (r.store.orders ? `${r.store.orders} · ${inr(r.store.revenue)}` : "—") }]} /> },
               { key: "t", label: "Search terms", children: <Table size="small" rowKey={(r) => `${r.campaignId}:${r.term}`} dataSource={data.terms} pagination={{ pageSize: 15, hideOnSinglePage: true }} columns={[{ title: "Search", dataIndex: "term" }, { title: "Campaign", dataIndex: "campaignName" }, { title: "Spent", align: "right", dataIndex: "spend", render: (v) => inr(v) }, { title: "Clicks", align: "right", dataIndex: "clicks" }, { title: "Purchases", align: "right", dataIndex: "purchases", render: (v) => v || "—" }]} /> },

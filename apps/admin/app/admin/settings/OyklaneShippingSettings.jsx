@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import { payuReturn } from "@/lib/billing";
 import { AddMoneyDialog, ShippingWalletPanel } from "@/components/shipping/ShippingWallet";
 import { PackagesCard } from "./PackagesCard";
+import { useUrlState } from "@/lib/useUrlState";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 const day = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—");
@@ -18,16 +19,7 @@ const STATES = [
 const TAB_KEYS = ["couriers", "pickups", "wallet", "parcels", "cod", "checkout"];
 
 function useTab() {
-  const [tab, setTab] = useState("couriers");
-  useEffect(() => {
-    const h = window.location.hash.slice(1);
-    if (TAB_KEYS.includes(h)) setTab(h);
-  }, []);
-  const change = (k) => {
-    setTab(k);
-    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${k}`);
-  };
-  return [tab, change];
+  return useUrlState("tab", "couriers", TAB_KEYS);
 }
 
 const PickupTag = ({ status }) => (status === "approved" ? <Tag color="green" className="!m-0">Approved</Tag> : status ? <Tag color="gold" className="!m-0">Waiting for approval</Tag> : null);

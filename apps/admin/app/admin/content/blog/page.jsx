@@ -7,6 +7,7 @@ import { Table, Button, Segmented } from "antd";
 import { Plus, Newspaper } from "lucide-react";
 import { PageHeader, StatusBadge, EmptyState, ListCard, SearchInput, DeleteIconButton, Thumb, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { useUrlState } from "@/lib/useUrlState";
 
 const dateLabel = (iso) => (iso ? new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—");
 
@@ -22,7 +23,7 @@ export default function BlogPostsPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useUrlState("status", "all");
   const [q, setQ] = useState("");
   const pageSize = 20;
 
