@@ -14,6 +14,7 @@ export const APP_PANELS = {
   "google-reviews": "/admin/apps/google-reviews",
   "shoppable-videos": "/admin/apps/shoppable-videos",
   bundles: "/admin/apps/bundles",
+  "deal-share": "/admin/apps/deal-share",
   "meta-ads": "/admin/apps/meta-ads",
   "google-ads": "/admin/apps/google-ads",
   whatsapp: "/admin/apps/whatsapp",
