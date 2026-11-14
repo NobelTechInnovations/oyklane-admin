@@ -1,46 +1,30 @@
 "use client";
 
-import { useId } from "react";
-
 /** The seller badge seal — same drawing as the storefront's (api
- * trust/badge.js): a rosette in the tier's colours, a star (a gem for
- * Diamond) and one dot per level. */
+ * trust/badge.js): a flat rosette in the badge's colour with a star (a gem
+ * for Diamond). */
 const TONES = {
-  basic: ["#e2e8f0", "#64748b", "#ffffff"],
-  standard: ["#99f6e4", "#0f766e", "#ffffff"],
-  silver: ["#f8fafc", "#94a3b8", "#334155"],
-  gold: ["#fef3c7", "#b45309", "#ffffff"],
-  platinum: ["#e0e7ff", "#3730a3", "#ffffff"],
-  diamond: ["#cffafe", "#0e7490", "#ffffff"],
+  basic: ["#8a94a6", "#ffffff"],
+  standard: ["#0f766e", "#ffffff"],
+  silver: ["#a3acb9", "#ffffff"],
+  gold: ["#c08a2b", "#ffffff"],
+  platinum: ["#56657f", "#ffffff"],
+  diamond: ["#1b8aa3", "#ffffff"],
 };
-const ORDER = ["basic", "standard", "silver", "gold", "platinum", "diamond"];
 const EDGE = Array.from({ length: 24 }, (_, i) => {
   const a = (i * 15 - 90) * (Math.PI / 180);
   const r = i % 2 ? 44 : 50;
   return `${(50 + r * Math.cos(a)).toFixed(1)},${(50 + r * Math.sin(a)).toFixed(1)}`;
 }).join(" ");
-const STAR = "50,30 55.9,43.1 70,44.5 59.4,54 62.4,68 50,60.8 37.6,68 40.6,54 30,44.5 44.1,43.1";
-const GEM = "38,36 62,36 70,46 50,70 30,46";
+const STAR = "50,27 56.5,41.5 72,43 60.3,53.5 63.6,69 50,61 36.4,69 39.7,53.5 28,43 43.5,41.5";
+const GEM = "36,38 64,38 72,48 50,72 28,48";
 
 export function TrustSeal({ tier = "basic", size = 40, muted = false, className = "" }) {
-  const id = useId().replace(/:/g, "");
-  const [a, b, ink] = TONES[tier] || TONES.basic;
-  const level = Math.max(1, ORDER.indexOf(tier) + 1);
+  const [fill, ink] = TONES[tier] || TONES.basic;
   return (
     <svg className={className} width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" focusable="false" style={muted ? { filter: "grayscale(1)", opacity: 0.45 } : undefined}>
-      <defs>
-        <linearGradient id={`g${id}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor={a} />
-          <stop offset="1" stopColor={b} />
-        </linearGradient>
-      </defs>
-      <polygon points={EDGE} fill={`url(#g${id})`} />
-      <circle cx="50" cy="50" r="35" fill="none" stroke={ink} strokeOpacity=".55" strokeWidth="2" />
+      <polygon points={EDGE} fill={fill} />
       <polygon points={tier === "diamond" ? GEM : STAR} fill={ink} />
-      {tier === "diamond" && <path d="M30 46h40M42 36l8 34 8-34" stroke={b} strokeWidth="2" fill="none" opacity=".6" />}
-      {Array.from({ length: level }, (_, i) => (
-        <circle key={i} cx={50 + (i - (level - 1) / 2) * 7} cy="80" r="2.3" fill={ink} opacity=".9" />
-      ))}
     </svg>
   );
 }

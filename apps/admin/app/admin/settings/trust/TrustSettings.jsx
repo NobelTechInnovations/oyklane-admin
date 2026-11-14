@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, App, Button, Card, Input, Progress, Skeleton, Tag } from "antd";
+import { Alert, App, Button, Card, Input, Progress, Skeleton, Switch, Tag } from "antd";
 import { Check, Mail, Phone, FileCheck2, RefreshCw, X } from "lucide-react";
 import { TrustSeal, VerifiedTick } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
@@ -100,6 +100,28 @@ export function TrustSettings() {
         )}
       </Card>
 
+      <Card size="small" title="Where buyers see your badge" styles={{ body: { padding: 20 } }}>
+        <p className="mt-0 text-[13px] text-ink-muted">Buyers see only your badge and “Verified”, never your score. It's small and quiet so it doesn't distract from your products.</p>
+        <div className="flex flex-col gap-3">
+          <ShowRow title="Under your store's footer" note="Always on, on every page." checked disabled />
+          <ShowRow
+            title="Product pages"
+            note="Under the Add to cart button."
+            checked={d.display.showOnProduct}
+            loading={busy === "showOnProduct"}
+            onChange={(v) => run("showOnProduct", () => apiFetch("/api/trust/display", { method: "PATCH", body: { showOnProduct: v } }), v ? "Shown on product pages" : "Hidden on product pages")}
+          />
+          <ShowRow
+            title="Checkout pop-up"
+            note="Under “Payments are encrypted and secure”."
+            checked={d.display.showInCheckout}
+            loading={busy === "showInCheckout"}
+            onChange={(v) => run("showInCheckout", () => apiFetch("/api/trust/display", { method: "PATCH", body: { showInCheckout: v } }), v ? "Shown in checkout" : "Hidden in checkout")}
+          />
+        </div>
+        <p className="mb-0 mt-3 text-[12px] text-ink-muted">Changes show on your store within 10 minutes.</p>
+      </Card>
+
       <Card size="small" title="How your score is made" styles={{ body: { padding: 20 } }}>
         <ul className="m-0 flex list-none flex-col gap-4 p-0">
           {d.parts.map((p) => (
@@ -162,6 +184,18 @@ export function TrustSettings() {
         </ul>
       </Card>
     </div>
+  );
+}
+
+function ShowRow({ title, note, checked, disabled, loading, onChange }) {
+  return (
+    <label className="flex items-center justify-between gap-4">
+      <span>
+        <span className="block text-[13.5px] font-medium text-ink">{title}</span>
+        <span className="block text-[12.5px] text-ink-muted">{note}</span>
+      </span>
+      <Switch checked={checked} disabled={disabled} loading={loading} onChange={onChange} />
+    </label>
   );
 }
 
@@ -243,6 +277,7 @@ function GstStep({ v, busy, run }) {
       {v.gstStatus === "rejected" && <Alert type="error" showIcon icon={<X size={14} />} message="Oyklane couldn't verify your GST details" description={v.gstNote} />}
       <Input value={f.gstin} onChange={(e) => setF({ ...f, gstin: e.target.value.toUpperCase() })} placeholder="GSTIN, e.g. 27AAPFU0939F1ZV" maxLength={15} spellCheck={false} aria-label="GSTIN" />
       <Input value={f.legalName} onChange={(e) => setF({ ...f, legalName: e.target.value })} placeholder="Legal name on the certificate" aria-label="Legal name" />
+      <p className="m-0 text-[12px] text-ink-muted">Own more than one store? Use the same GSTIN — once Oyklane checks it on one store, your other stores are verified straight away.</p>
       <ImageUploadField value={f.docUrl} onChange={(url) => setF({ ...f, docUrl: url || "" })} hint="A clear photo or screenshot of your GST registration certificate (REG-06). Only Oyklane sees it." />
       <div className="flex gap-2">
         <Button type="primary" loading={busy === "gst"} disabled={f.gstin.length !== 15 || !f.legalName || !f.docUrl} onClick={async () => (await run("gst", () => apiFetch("/api/trust/gst", { method: "POST", body: f }), "Sent to Oyklane for checking")) && setEdit(false)}>
