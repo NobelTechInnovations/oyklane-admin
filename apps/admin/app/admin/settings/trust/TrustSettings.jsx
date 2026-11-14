@@ -60,7 +60,7 @@ export function TrustSettings() {
           <TrustSeal tier={d.tier.key} size={84} />
           <div className="min-w-[220px] flex-1">
             <p className="m-0 text-[13px] text-ink-muted">Your badge</p>
-            <h3 className="m-0 text-[22px] font-semibold text-ink">{d.tier.label} seller</h3>
+            <h3 className="m-0 text-[22px] font-semibold text-ink">{d.tier.label}</h3>
             <p className="m-0 mt-1 flex flex-wrap items-center gap-2 text-[13px] text-ink-muted">
               {v.verified ? (
                 <span className="inline-flex items-center gap-1 font-medium text-[#1e3a8a]">
@@ -146,7 +146,7 @@ export function TrustSettings() {
 
       <Card size="small" title="Become a verified seller" styles={{ body: { padding: 20 } }}>
         <p className="mt-0 text-[13px] text-ink-muted">
-          Verified sellers show a blue tick next to their badge, so buyers know a real, registered business is behind the store. Gold and higher badges need it.
+          Verified sellers show a blue tick next to their badge, so buyers know a real, registered business is behind the store. Trusted Seller and higher badges need it.
         </p>
         <div className="flex flex-col divide-y divide-app-border">
           <Step icon={Mail} title="Owner's email" done={v.email}>

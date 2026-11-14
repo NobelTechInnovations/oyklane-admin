@@ -2,7 +2,7 @@
 
 /** The seller badge — same drawing as the storefront's (api
  * trust/badge.js): a flat shield in the badge's colour with a thin inner
- * line and a star (a gem for Diamond). */
+ * line and a star (a gem for Elite). */
 const TONES = {
   basic: "#8a94a6",
   standard: "#0f766e",
