@@ -6,6 +6,7 @@ import { App, Alert, Button, Card, ColorPicker, Empty, Form, Input, Modal, Progr
 import { ArrowDown, ArrowUp, Eye, EyeOff, Film, MousePointerClick, Pencil, Plus, ShoppingCart, Trash2, Upload, Paintbrush } from "lucide-react";
 import { PageHeader, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { sendWithFallback } from "@/lib/uploads";
 import { AppNotInstalled } from "@/components/apps/AppPanelParts";
 import { ImageUploadField } from "@/components/ImageUploadField";
 
@@ -43,31 +44,11 @@ function ProductSelect({ products, value, onChange }) {
   );
 }
 
-/** Sends the file straight to the media CDN with a signature from the API. */
-async function uploadVideo(file, onProgress) {
-  const signed = await apiFetch("/api/shoppable-videos/upload/sign", { method: "POST", body: {} });
-  if (!signed.storage) throw new Error("Video uploads aren't available yet — paste a video link instead.");
-  if (file.size > signed.maxBytes) throw new Error(`Videos can be up to ${mb(signed.maxBytes)}.`);
-  const form = new FormData();
-  for (const [k, v] of Object.entries(signed.fields)) form.append(k, v);
-  if (signed.storage === "imagekit") form.append("fileName", file.name || "video.mp4");
-  form.append(signed.fileField, file);
-  const data = await new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", signed.uploadUrl);
-    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(Math.round((e.loaded / e.total) * 100));
-    xhr.onload = () => {
-      let json = null;
-      try {
-        json = JSON.parse(xhr.responseText);
-      } catch {}
-      if (xhr.status >= 200 && xhr.status < 300) resolve(json);
-      else reject(new Error(json?.message || json?.error?.message || "Upload failed. Please try again."));
-    };
-    xhr.onerror = () => reject(new Error("Upload failed. Check your connection and try again."));
-    xhr.send(form);
-  });
-  return signed.storage === "imagekit" ? data.fileId : data.public_id;
+/** Sends the file straight to the media storage with a signature from the
+ * API (and to the backup storage if the main one refuses it). */
+async function uploadVideo(file, onProgress, maxBytes) {
+  if (maxBytes && file.size > maxBytes) throw new Error(`Videos can be up to ${mb(maxBytes)}.`);
+  return sendWithFallback("/api/shoppable-videos/upload/sign", file, "video.mp4", onProgress);
 }
 
 function VideoModal({ open, video, products, upload, onClose, onSaved }) {
@@ -99,7 +80,9 @@ function VideoModal({ open, video, products, upload, onClose, onSaved }) {
         if (mode === "upload") {
           if (!file) throw new Error("Choose a video file.");
           setProgress(0);
-          body.providerFileId = await uploadVideo(file, setProgress);
+          const sent = await uploadVideo(file, setProgress, upload.maxBytes);
+          body.providerFileId = sent.providerFileId;
+          body.storage = sent.storage;
         } else body.videoUrl = values.videoUrl;
         await apiFetch("/api/shoppable-videos", { method: "POST", body });
       }
