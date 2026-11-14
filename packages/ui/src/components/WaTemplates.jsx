@@ -344,7 +344,12 @@ function Builder({ api, open, onClose, editing, initial, onSaved }) {
   );
 }
 
-export function WaTemplates({ apiFetch, apiUrl, base = "/api/whatsapp", canEdit, managedNotice = null, starters = STARTERS, emptyText = "No templates yet. Start from a ready-made one — order updates, shipping, reminders." }) {
+// Card i when only `rows` rows show: the grid is 1 / 2 / 3 columns wide.
+const peekClass = (i, rows) => (!rows || i < rows ? "flex" : i < rows * 2 ? "hidden sm:flex" : i < rows * 3 ? "hidden xl:flex" : "hidden");
+
+/** rows + onMore: show only that many rows of cards (by the grid's column
+ * count at each width) and a "View all" button that calls onMore. */
+export function WaTemplates({ apiFetch, apiUrl, base = "/api/whatsapp", canEdit, managedNotice = null, starters = STARTERS, emptyText = "No templates yet. Start from a ready-made one — order updates, shipping, reminders.", rows: peekRows = 0, onMore }) {
   const { message } = App.useApp();
   const api = useMemo(() => ({ fetch: apiFetch, url: apiUrl, base }), [apiFetch, apiUrl, base]);
   const [rows, setRows] = useState(null);
@@ -412,8 +417,8 @@ export function WaTemplates({ apiFetch, apiUrl, base = "/api/whatsapp", canEdit,
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={emptyText} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {shown.map((t) => (
-            <article key={t.id} className="flex flex-col rounded-2xl border border-app-border bg-app-surface overflow-hidden">
+          {shown.map((t, i) => (
+            <article key={t.id} className={`${peekClass(i, peekRows)} flex-col rounded-2xl border border-app-border bg-app-surface overflow-hidden`}>
               <header className="flex items-start justify-between gap-2 px-4 pt-3.5 pb-3">
                 <div className="min-w-0">
                   <h3 className="m-0 text-[14px] font-semibold text-ink truncate" title={t.name}>
@@ -462,6 +467,11 @@ export function WaTemplates({ apiFetch, apiUrl, base = "/api/whatsapp", canEdit,
               )}
             </article>
           ))}
+        </div>
+      )}
+      {peekRows > 0 && onMore && shown.length > peekRows && (
+        <div className={`justify-center ${shown.length > peekRows * 3 ? "flex" : shown.length > peekRows * 2 ? "flex xl:hidden" : "flex sm:hidden"}`}>
+          <Button onClick={onMore}>View all templates ({shown.length})</Button>
         </div>
       )}
       <Builder
