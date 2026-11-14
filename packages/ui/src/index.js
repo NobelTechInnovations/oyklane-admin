@@ -15,3 +15,4 @@ export { SearchInput, DeleteIconButton } from "./components/ListControls";
 export { SaveBar, useUnsavedChangesWarning } from "./components/SaveBar";
 export { Markdown } from "./components/Markdown";
 export { WaTemplates, WaPreview, TemplateStatus } from "./components/WaTemplates";
+export { TrustSeal, VerifiedTick } from "./components/TrustSeal";
