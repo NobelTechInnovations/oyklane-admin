@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, App, Button, Card, Input, Progress, Skeleton, Switch, Tag } from "antd";
-import { Check, Mail, Phone, FileCheck2, RefreshCw, X } from "lucide-react";
+import { Alert, App, Button, Card, Input, Progress, Skeleton, Switch, Tag, Upload } from "antd";
+import { Check, Mail, Phone, FileCheck2, FileUp, RefreshCw, X } from "lucide-react";
 import { TrustSeal, VerifiedTick } from "@shopcycle/ui";
-import { apiFetch } from "@/lib/api";
-import { ImageUploadField } from "@/components/ImageUploadField";
+import { apiFetch, apiUpload } from "@/lib/api";
 import { SettingsSectionHeader } from "../SettingsNav";
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "");
@@ -29,7 +28,7 @@ export function TrustSettings() {
     try {
       const r = await fn();
       if (r?.tier) setD(r);
-      if (ok) message.success(ok);
+      if (ok) message.success(typeof ok === "function" ? ok(r) : ok);
       return r;
     } catch (err) {
       message.error(err.message);
@@ -240,7 +239,7 @@ function PhoneStep({ v, busy, run }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Input className="!w-[190px]" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" inputMode="tel" aria-label="Phone number" />
-      <Button loading={busy === "phone-send"} disabled={!phone} onClick={async () => (await run("phone-send", () => apiFetch("/api/trust/phone/send", { method: "POST", body: { phone } }), "Code sent on WhatsApp (or SMS)")) && setSent(true)}>
+      <Button loading={busy === "phone-send"} disabled={!phone} onClick={async () => (await run("phone-send", () => apiFetch("/api/trust/phone/send", { method: "POST", body: { phone } }), (r) => (r?.channel === "sms" ? "Code sent by SMS" : r?.channel === "whatsapp" ? "Code sent on WhatsApp" : "Code sent on WhatsApp and SMS"))) && setSent(true)}>
         {sent ? "Send again" : "Send code"}
       </Button>
       {sent && (
@@ -277,14 +276,48 @@ function GstStep({ v, busy, run }) {
       {v.gstStatus === "rejected" && <Alert type="error" showIcon icon={<X size={14} />} message="Oyklane couldn't verify your GST details" description={v.gstNote} />}
       <Input value={f.gstin} onChange={(e) => setF({ ...f, gstin: e.target.value.toUpperCase() })} placeholder="GSTIN, e.g. 27AAPFU0939F1ZV" maxLength={15} spellCheck={false} aria-label="GSTIN" />
       <Input value={f.legalName} onChange={(e) => setF({ ...f, legalName: e.target.value })} placeholder="Legal name on the certificate" aria-label="Legal name" />
-      <p className="m-0 text-[12px] text-ink-muted">Own more than one store? Use the same GSTIN — once Oyklane checks it on one store, your other stores are verified straight away.</p>
-      <ImageUploadField value={f.docUrl} onChange={(url) => setF({ ...f, docUrl: url || "" })} hint="A clear photo or screenshot of your GST registration certificate (REG-06). Only Oyklane sees it." />
+      <p className="m-0 text-[12px] text-ink-muted">Own more than one store? Use the same GSTIN — once Oyklane checks it on one store, your other stores are verified straight away, without uploading the file again.</p>
+      <GstFile value={f.docUrl} onChange={(docUrl) => setF((x) => ({ ...x, docUrl }))} />
       <div className="flex gap-2">
-        <Button type="primary" loading={busy === "gst"} disabled={f.gstin.length !== 15 || !f.legalName || !f.docUrl} onClick={async () => (await run("gst", () => apiFetch("/api/trust/gst", { method: "POST", body: f }), "Sent to Oyklane for checking")) && setEdit(false)}>
+        <Button type="primary" loading={busy === "gst"} disabled={f.gstin.length !== 15 || !f.legalName} onClick={async () => (await run("gst", () => apiFetch("/api/trust/gst", { method: "POST", body: f }), (r) => (r?.verification?.gstStatus === "verified" ? "GST verified" : "Sent to Oyklane for checking"))) && setEdit(false)}>
           Send for checking
         </Button>
         {v.gstStatus !== "none" && v.gstStatus !== "rejected" && <Button onClick={() => setEdit(false)}>Cancel</Button>}
       </div>
     </div>
+  );
+}
+
+/** The GST certificate: a PDF or a photo, kept private (only Oyklane can
+ * open it — it doesn't go in the store's media library). */
+function GstFile({ value, onChange }) {
+  const { message } = App.useApp();
+  const [busy, setBusy] = useState(false);
+  const [name, setName] = useState(value ? "Certificate uploaded" : "");
+  return (
+    <Upload.Dragger
+      accept=".pdf,application/pdf,image/jpeg,image/png,image/webp"
+      multiple={false}
+      showUploadList={false}
+      disabled={busy}
+      customRequest={async ({ file, onSuccess, onError }) => {
+        setBusy(true);
+        try {
+          const r = await apiUpload("/api/trust/gst/doc", file);
+          setName(r.name);
+          onChange(r.docUrl);
+          onSuccess(r);
+        } catch (err) {
+          message.error(err.message);
+          onError(err);
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <p className="m-0 flex justify-center text-ink-muted">{name ? <FileCheck2 size={22} /> : <FileUp size={22} />}</p>
+      <p className="m-0 mt-2 text-[14px] text-ink">{busy ? "Uploading…" : name || "Drop your GST certificate here, or click to upload"}</p>
+      <p className="m-0 mt-1 text-[12px] text-ink-muted">{name ? "Click or drop another file to replace it." : "PDF, or a clear photo (JPG, PNG, WebP) of your GST registration certificate (REG-06). Up to 5MB. Only Oyklane sees it."}</p>
+    </Upload.Dragger>
   );
 }

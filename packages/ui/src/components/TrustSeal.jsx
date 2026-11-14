@@ -1,30 +1,28 @@
 "use client";
 
-/** The seller badge seal — same drawing as the storefront's (api
- * trust/badge.js): a flat rosette in the badge's colour with a star (a gem
- * for Diamond). */
+/** The seller badge — same drawing as the storefront's (api
+ * trust/badge.js): a flat shield in the badge's colour with a thin inner
+ * line and a star (a gem for Diamond). */
 const TONES = {
-  basic: ["#8a94a6", "#ffffff"],
-  standard: ["#0f766e", "#ffffff"],
-  silver: ["#a3acb9", "#ffffff"],
-  gold: ["#c08a2b", "#ffffff"],
-  platinum: ["#56657f", "#ffffff"],
-  diamond: ["#1b8aa3", "#ffffff"],
+  basic: "#8a94a6",
+  standard: "#0f766e",
+  silver: "#9aa4b2",
+  gold: "#c08a2b",
+  platinum: "#56657f",
+  diamond: "#1b8aa3",
 };
-const EDGE = Array.from({ length: 24 }, (_, i) => {
-  const a = (i * 15 - 90) * (Math.PI / 180);
-  const r = i % 2 ? 44 : 50;
-  return `${(50 + r * Math.cos(a)).toFixed(1)},${(50 + r * Math.sin(a)).toFixed(1)}`;
-}).join(" ");
-const STAR = "50,27 56.5,41.5 72,43 60.3,53.5 63.6,69 50,61 36.4,69 39.7,53.5 28,43 43.5,41.5";
-const GEM = "36,38 64,38 72,48 50,72 28,48";
+const SHIELD = "M50 5 L86 17 V46 C86 70 70 86 50 95 C30 86 14 70 14 46 V17 Z";
+const INNER = "M50 14 L78 23.5 V46 C78 64.5 66 77.5 50 85 C34 77.5 22 64.5 22 46 V23.5 Z";
+const STAR = "50,31 54.2,43.2 67.1,43.4 56.8,51.2 60.6,63.6 50,56.2 39.4,63.6 43.2,51.2 32.9,43.4 45.8,43.2";
+const GEM = "39.5,38 60.5,38 67,46 50,64 33,46";
 
 export function TrustSeal({ tier = "basic", size = 40, muted = false, className = "" }) {
-  const [fill, ink] = TONES[tier] || TONES.basic;
+  const fill = TONES[tier] || TONES.basic;
   return (
     <svg className={className} width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" focusable="false" style={muted ? { filter: "grayscale(1)", opacity: 0.45 } : undefined}>
-      <polygon points={EDGE} fill={fill} />
-      <polygon points={tier === "diamond" ? GEM : STAR} fill={ink} />
+      <path d={SHIELD} fill={fill} stroke={fill} strokeWidth="5" strokeLinejoin="round" />
+      <path d={INNER} fill="none" stroke="#fff" strokeOpacity="0.45" strokeWidth="2.5" strokeLinejoin="round" />
+      <polygon points={tier === "diamond" ? GEM : STAR} fill="#fff" />
     </svg>
   );
 }
