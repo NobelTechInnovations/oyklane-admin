@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, App, Button, Drawer, Empty, Form, Input, InputNumber, Segmented, Select, Skeleton, Switch, Table, Tag } from "antd";
+import { Alert, App, Button, Drawer, Empty, Form, Input, InputNumber, Radio, Segmented, Select, Skeleton, Switch, Table, Tag } from "antd";
 import { BarChart3, Copy, Plus, Trash2 } from "lucide-react";
 import { PageHeader, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
@@ -29,6 +29,7 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [products, setProducts] = useState([]);
+  const [collections, setCollections] = useState([]);
   const [saving, setSaving] = useState(false);
   const v = Form.useWatch([], form) || {};
 
@@ -37,17 +38,25 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
     apiFetch("/api/products?pageSize=100&status=active")
       .then((d) => setProducts(d.products || []))
       .catch(() => {});
+    if (!deal)
+      apiFetch("/api/collections?pageSize=100")
+        .then((d) => setCollections(d.collections || []))
+        .catch(() => {});
     form.resetFields();
     const week = new Date(Date.now() + 7 * 86400e3);
     form.setFieldsValue(
       deal
         ? { ...deal, perView: Number(deal.perView), perSale: Number(deal.perSale), joinBonus: Number(deal.joinBonus), capValue: Number(deal.capValue), minPrice: deal.minPrice == null ? null : Number(deal.minPrice), budget: deal.budget == null ? null : Number(deal.budget), tiers: Array.isArray(deal.tiers) ? deal.tiers : [], groupTiers: Array.isArray(deal.groupTiers) ? deal.groupTiers : [], startsAt: local(deal.startsAt), endsAt: local(deal.endsAt), live: deal.status === "live" }
-        : { perView: 2, perSale: 50, joinBonus: 0, capType: "percent", capValue: 30, minPrice: null, maxViews: 0, minViews: 0, stockLimit: 0, budget: null, tiers: [{ friends: 5, percent: 5 }, { friends: 20, percent: 15 }], groupTiers: [{ buyers: 10, percent: 5 }], pingSharer: true, guard: "standard", startsAt: local(new Date()), endsAt: local(week), live: true }
+        : { appliesTo: "products", targetIds: [], perView: 2, perSale: 50, joinBonus: 0, capType: "percent", capValue: 30, minPrice: null, maxViews: 0, minViews: 0, stockLimit: 0, budget: null, tiers: [{ friends: 5, percent: 5 }, { friends: 20, percent: 15 }], groupTiers: [{ buyers: 10, percent: 5 }], pingSharer: true, guard: "standard", startsAt: local(new Date()), endsAt: local(week), live: true }
     );
   }, [open, deal, form]);
 
-  const product = products.find((p) => p.id === v.productId);
-  const price = product ? Math.min(...(product.variants || []).map((x) => Number(x.price)).filter((n) => n > 0)) : null;
+  const lowOf = (p) => Math.min(...(p.variants || []).map((x) => Number(x.price)).filter((n) => n > 0));
+  // New deal: the cheapest of the products picked (limits are checked against it). Edit: its product.
+  const picked = deal ? products.filter((p) => p.id === v.productId) : v.appliesTo === "products" ? products.filter((p) => (v.targetIds || []).includes(p.id)) : [];
+  const product = picked.filter((p) => Number.isFinite(lowOf(p))).sort((a, b) => lowOf(a) - lowOf(b))[0];
+  const price = product ? lowOf(product) : null;
+  const many = !deal && (v.appliesTo === "collections" ? (v.targetIds || []).length > 0 : (v.targetIds || []).length > 1);
   const cap = price && Number.isFinite(price) ? capOf(v, price) : null;
   const friendsToCap = cap && Number(v.perView) > 0 ? Math.ceil(cap / Number(v.perView)) : null;
 
@@ -55,7 +64,7 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
     setSaving(true);
     try {
       const body = {
-        productId: values.productId,
+        ...(deal ? {} : values.appliesTo === "collections" ? { collectionIds: values.targetIds } : { productIds: values.targetIds }),
         title: values.title,
         startsAt: values.startsAt ? new Date(values.startsAt).toISOString() : undefined,
         endsAt: values.endsAt ? new Date(values.endsAt).toISOString() : undefined,
@@ -75,8 +84,18 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
         pingSharer: Boolean(values.pingSharer),
         guard: values.guard || "standard",
       };
-      await apiFetch(deal ? `/api/deal-share/${deal.id}` : "/api/deal-share", { method: deal ? "PATCH" : "POST", body });
-      message.success(deal ? "Deal saved" : "Deal created — it shows on the product page");
+      if (deal) {
+        await apiFetch(`/api/deal-share/${deal.id}`, { method: "PATCH", body });
+        message.success("Deal saved");
+      } else {
+        const r = await apiFetch("/api/deal-share/bulk", { method: "POST", body });
+        if (r.created) message.success(r.created === 1 ? "Deal created — it shows on the product page" : `${r.created} deals created — each shows on its product page`);
+        if (r.skipped?.length) {
+          const names = r.skipped.slice(0, 3).map((p) => p.title).join(", ");
+          message.warning(`${r.skipped.length} skipped — already on a deal at that time: ${names}${r.skipped.length > 3 ? ` and ${r.skipped.length - 3} more` : ""}`, 8);
+        }
+        if (!r.created) return;
+      }
       onSaved();
       onClose();
     } catch (err) {
@@ -100,9 +119,32 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
       }
     >
       <Form form={form} layout="vertical" requiredMark={false} onFinish={save}>
-        <Form.Item name="productId" label="Product" rules={[{ required: true, message: "Choose a product" }]}>
-          <Select showSearch optionFilterProp="label" placeholder="Search products" disabled={Boolean(deal)} options={products.map((p) => ({ value: p.id, label: p.title }))} />
-        </Form.Item>
+        {deal ? (
+          <Form.Item name="productId" label="Product">
+            <Select disabled options={products.map((p) => ({ value: p.id, label: p.title }))} />
+          </Form.Item>
+        ) : (
+          <>
+            <Form.Item name="appliesTo" label="Put this deal on">
+              <Radio.Group optionType="button" onChange={() => form.setFieldValue("targetIds", [])} options={[{ value: "products", label: "Products I choose" }, { value: "collections", label: "Products in collections" }]} />
+            </Form.Item>
+            <Form.Item
+              name="targetIds"
+              rules={[{ required: true, type: "array", min: 1, message: v.appliesTo === "collections" ? "Choose a collection" : "Choose at least one product" }]}
+              extra={v.appliesTo === "collections" ? "Every live product in these collections gets the deal." : "Choose one or many — each gets the same deal."}
+            >
+              <Select
+                mode="multiple"
+                allowClear
+                showSearch
+                maxTagCount="responsive"
+                optionFilterProp="label"
+                placeholder={v.appliesTo === "collections" ? "Choose collections" : "Search products"}
+                options={v.appliesTo === "collections" ? collections.map((c) => ({ value: c.id, label: c.title })) : products.map((p) => ({ value: p.id, label: p.title }))}
+              />
+            </Form.Item>
+          </>
+        )}
         <Form.Item name="title" label="Name shown to shoppers" extra="Empty shows “Share & save”.">
           <Input maxLength={80} placeholder="Share & save" />
         </Form.Item>
@@ -130,6 +172,7 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
         </div>
 
         <h3 className="m-0 mb-1 border-t border-app-border pt-4 text-[13px] font-semibold text-ink">Limits — so nothing goes free</h3>
+        {many && <p className="m-0 mb-3 text-[12.5px] text-ink-muted">Each product gets its own deal, so these limits (orders, budget, friends) count for each product separately.</p>}
         <div className="grid gap-x-4 sm:grid-cols-2">
           <Form.Item label="Most a shopper can save">
             <div className="flex gap-2">
@@ -202,7 +245,7 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
           <Form.Item name="guard" label="Fake-friend checks" extra={v.guard === "strict" ? "Also: never from the sharer's own Wi-Fi or network, one per network, and not from an account made in the last 10 minutes." : v.guard === "off" ? "Only: signed in, once per friend, never the sharer's own account." : "Never from the sharer's own phone; one per phone; at most two per Wi-Fi network a day; 60 an hour per link."}>
             <Select options={[{ value: "standard", label: "Standard (recommended)" }, { value: "strict", label: "Strict" }, { value: "off", label: "Off" }]} />
           </Form.Item>
-          <Form.Item name="pingSharer" label="WhatsApp the sharer when a friend opens their link" valuePropName="checked" extra="At most once every 6 hours per shopper. Needs the “Deal Share” WhatsApp template approved.">
+          <Form.Item name="pingSharer" label="WhatsApp the sharer when a friend opens their link" valuePropName="checked" extra="At most once every 6 hours per shopper. Needs the “DostDeal” WhatsApp template approved.">
             <Switch />
           </Form.Item>
         </div>
@@ -211,7 +254,7 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
           <Alert
             type="info"
             showIcon
-            message={`On the cheapest pack (${inr(price)}), a shopper can use at most ${cap} points — they pay at least ${inr(price - cap)}.`}
+            message={`${picked.length > 1 ? `On ${product.title}, the cheapest you picked` : "On the cheapest pack"} (${inr(price)}), a shopper can use at most ${cap} points — they pay at least ${inr(price - cap)}.`}
             description={friendsToCap ? `That's about ${friendsToCap} friends opening their link${Number(v.perSale) > 0 ? `, fewer if friends buy (${v.perSale} points each)` : ""}. Bigger packs allow more, in the same proportion.` : null}
           />
         )}
@@ -295,7 +338,7 @@ function Report({ id, onClose }) {
   );
 }
 
-/** Apps ▸ Deal Share: share-to-save deals and how they're doing. */
+/** Apps ▸ DostDeal (key "deal-share"): share-to-save deals and how they're doing. */
 export default function DealSharePage() {
   const { message } = App.useApp();
   const { confirmDialog } = useConfirmDialog();
@@ -304,6 +347,8 @@ export default function DealSharePage() {
   const [drawer, setDrawer] = useState({ open: false, deal: null });
   const [report, setReport] = useState(null);
   const [store, setStore] = useState(null);
+  const [picked, setPicked] = useState([]);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     apiFetch("/api/store")
@@ -324,8 +369,31 @@ export default function DealSharePage() {
 
   const productUrl = useMemo(() => (slug) => (store ? `${storefrontUrlFor(store)}/products/${slug}` : ""), [store]);
 
-  if (missing) return <AppNotInstalled appKey="deal-share" title="Deal Share" description="Shoppers share your product with friends and save on it — reach without ad spend." />;
+  if (missing) return <AppNotInstalled appKey="deal-share" title="DostDeal" description="Shoppers share your product with friends and save on it — reach without ad spend." />;
   if (!rows) return <Skeleton active />;
+
+  // The deals ticked in the table: turn them on or off, or delete them, in one go.
+  async function bulk(action) {
+    const n = picked.length;
+    if (action === "delete") {
+      const ok = await confirmDialog({ title: `Delete ${n} deal${n === 1 ? "" : "s"}?`, content: "Shoppers' links and points for them are deleted too. Codes already made keep working until each deal's end time.", okText: "Delete", danger: true });
+      if (!ok) return;
+    }
+    setBusy(true);
+    let failed = 0;
+    for (let i = 0; i < n; i += 5) {
+      const res = await Promise.allSettled(
+        picked.slice(i, i + 5).map((id) => (action === "delete" ? apiFetch(`/api/deal-share/${id}`, { method: "DELETE" }) : apiFetch(`/api/deal-share/${id}`, { method: "PATCH", body: { status: action === "on" ? "live" : "paused" } })))
+      );
+      failed += res.filter((r) => r.status === "rejected").length;
+    }
+    setBusy(false);
+    setPicked([]);
+    const done = n - failed;
+    if (done) message.success(`${done} deal${done === 1 ? "" : "s"} ${action === "delete" ? "deleted" : action === "on" ? "turned on" : "turned off"}`);
+    if (failed) message.error(`${failed} couldn't be changed. Try again.`);
+    load();
+  }
 
   async function remove(d) {
     const ok = await confirmDialog({ title: "Delete this deal?", content: "Shoppers' links and points for it are deleted too. Codes already made keep working until the deal's end time.", okText: "Delete", danger: true });
@@ -342,7 +410,7 @@ export default function DealSharePage() {
   return (
     <div>
       <PageHeader
-        title="Deal Share"
+        title="DostDeal"
         subtitle="Shoppers share a product's link; each friend who opens it signed in, and each order it brings, earns them points off it — up to your limit, until the deal ends."
         actions={
           <Button type="primary" icon={<Plus size={14} aria-hidden="true" />} onClick={() => setDrawer({ open: true, deal: null })}>
@@ -352,15 +420,26 @@ export default function DealSharePage() {
       />
       {rows.length === 0 ? (
         <div className="rounded-[14px] border border-app-border bg-app-surface p-10">
-          <Empty description="No deals yet. Pick a product, set the reward and a limit, and it shows a “Share & save” box on that product's page.">
+          <Empty description="No deals yet. Pick products or a collection, set the reward and a limit, and a “Share & save” box shows on each product's page.">
             <Button type="primary" onClick={() => setDrawer({ open: true, deal: null })}>
               Create your first deal
             </Button>
           </Empty>
         </div>
       ) : (
+        <>
+        {picked.length > 0 && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-[10px] border border-app-border bg-app-surface px-3 py-2">
+            <span className="mr-1 text-[13px] font-medium text-ink">{picked.length} selected</span>
+            <Button size="small" loading={busy} onClick={() => bulk("on")}>Turn on</Button>
+            <Button size="small" loading={busy} onClick={() => bulk("off")}>Turn off</Button>
+            <Button size="small" danger loading={busy} onClick={() => bulk("delete")}>Delete</Button>
+            <Button size="small" type="text" onClick={() => setPicked([])}>Clear</Button>
+          </div>
+        )}
         <Table
           rowKey="id"
+          rowSelection={{ selectedRowKeys: picked, onChange: (keys) => setPicked(keys) }}
           dataSource={rows}
           pagination={false}
           scroll={{ x: "max-content" }}
@@ -404,6 +483,7 @@ export default function DealSharePage() {
             },
           ]}
         />
+        </>
       )}
       <DealDrawer open={drawer.open} deal={drawer.deal} onClose={() => setDrawer({ open: false, deal: null })} onSaved={load} />
       <Report id={report} onClose={() => setReport(null)} />
