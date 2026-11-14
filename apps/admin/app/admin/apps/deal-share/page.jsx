@@ -245,7 +245,7 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
           <Form.Item name="guard" label="Fake-friend checks" extra={v.guard === "strict" ? "Also: never from the sharer's own Wi-Fi or network, one per network, and not from an account made in the last 10 minutes." : v.guard === "off" ? "Only: signed in, once per friend, never the sharer's own account." : "Never from the sharer's own phone; one per phone; at most two per Wi-Fi network a day; 60 an hour per link."}>
             <Select options={[{ value: "standard", label: "Standard (recommended)" }, { value: "strict", label: "Strict" }, { value: "off", label: "Off" }]} />
           </Form.Item>
-          <Form.Item name="pingSharer" label="WhatsApp the sharer when a friend opens their link" valuePropName="checked" extra="At most once every 6 hours per shopper. Needs the “ShareLoop” WhatsApp template approved.">
+          <Form.Item name="pingSharer" label="WhatsApp the sharer when a friend opens their link" valuePropName="checked" extra="At most once every 6 hours per shopper. Needs the “ZapDeal” WhatsApp template approved.">
             <Switch />
           </Form.Item>
         </div>
@@ -338,7 +338,7 @@ function Report({ id, onClose }) {
   );
 }
 
-/** Apps ▸ ShareLoop (key "deal-share"): share-to-save deals and how they're doing. */
+/** Apps ▸ ZapDeal (key "deal-share"): share-to-save deals and how they're doing. */
 export default function DealSharePage() {
   const { message } = App.useApp();
   const { confirmDialog } = useConfirmDialog();
@@ -369,7 +369,7 @@ export default function DealSharePage() {
 
   const productUrl = useMemo(() => (slug) => (store ? `${storefrontUrlFor(store)}/products/${slug}` : ""), [store]);
 
-  if (missing) return <AppNotInstalled appKey="deal-share" title="ShareLoop" description="Shoppers share your product with friends and save on it — reach without ad spend." />;
+  if (missing) return <AppNotInstalled appKey="deal-share" title="ZapDeal" description="Shoppers share your product with friends and save on it — reach without ad spend." />;
   if (!rows) return <Skeleton active />;
 
   // The deals ticked in the table: turn them on or off, or delete them, in one go.
@@ -410,7 +410,7 @@ export default function DealSharePage() {
   return (
     <div>
       <PageHeader
-        title="ShareLoop"
+        title="ZapDeal"
         subtitle="Shoppers share a product's link; each friend who opens it signed in, and each order it brings, earns them points off it — up to your limit, until the deal ends."
         actions={
           <Button type="primary" icon={<Plus size={14} aria-hidden="true" />} onClick={() => setDrawer({ open: true, deal: null })}>
