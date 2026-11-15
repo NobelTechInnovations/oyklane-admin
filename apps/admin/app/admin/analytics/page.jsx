@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Card, Segmented, Skeleton } from "antd";
+import { Card, Input, Modal, Segmented, Skeleton } from "antd";
 import { PageHeader } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { AreaChart, BarList, StatTile, formatValue } from "@/components/charts";
@@ -29,6 +29,41 @@ function countryName(code) {
 
 /** A chart card with a "Table" toggle — every chart's numbers are readable
  * without the chart. */
+const SHOW = 6;
+
+/** A breakdown card that keeps one height: the top few, and "View all"
+ * opens the full list (with a search) in a window. */
+function BreakdownCard({ title, items, labelKey, valueKey, kind, renderLabel, empty }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const list = items || [];
+  const text = (i) => String(renderLabel ? renderLabel(i) : i[labelKey]).toLowerCase();
+  const shown = q ? list.filter((i) => text(i).includes(q.toLowerCase())) : list;
+  return (
+    <Card
+      size="small"
+      title={title}
+      className="h-full"
+      styles={{ body: { display: "flex", flexDirection: "column", minHeight: 300 } }}
+    >
+      <div className="flex-1">
+        <BarList items={list} labelKey={labelKey} valueKey={valueKey} kind={kind} renderLabel={renderLabel} empty={empty} limit={SHOW} />
+      </div>
+      {list.length > SHOW && (
+        <button type="button" onClick={() => setOpen(true)} className="mt-4 w-full cursor-pointer rounded-lg border border-app-border bg-app-surface py-2 text-[13px] font-medium text-ink-muted transition-colors hover:bg-app-bg hover:text-ink">
+          View all {list.length}
+        </button>
+      )}
+      <Modal open={open} onCancel={() => { setOpen(false); setQ(""); }} footer={null} title={title} width={560} destroyOnHidden>
+        <Input.Search allowClear placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="!mb-4" />
+        <div className="max-h-[60vh] overflow-y-auto pr-1">
+          <BarList items={shown} labelKey={labelKey} valueKey={valueKey} kind={kind} renderLabel={renderLabel} empty="Nothing matches." />
+        </div>
+      </Modal>
+    </Card>
+  );
+}
+
 function ChartCard({ title, total, points, kind, label }) {
   const [table, setTable] = useState(false);
   return (
@@ -150,35 +185,20 @@ export default function AnalyticsOverviewPage() {
             <div className="xl:col-span-2">
               <ChartCard title="Total sales over time" total={t.sales} points={pick("sales")} kind="currency" label="Sales" />
             </div>
-            <Card size="small" title="Top products by sales">
-              <BarList items={data.topProducts} labelKey="title" valueKey="revenue" kind="currency" empty="No sales in this period yet." />
-            </Card>
+            <BreakdownCard title="Top products by sales" items={data.topProducts} labelKey="title" valueKey="revenue" kind="currency" empty="No sales in this period yet." />
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
             <div className="xl:col-span-2">
               <ChartCard title="Sessions over time" total={t.sessions} points={pick("sessions")} label="Sessions" />
             </div>
-            <Card size="small" title="Sessions by device">
-              <BarList items={data.byDevice} labelKey="device" renderLabel={(i) => DEVICE_LABEL[i.device] || i.device} empty="No visits in this period yet." />
-            </Card>
+            <BreakdownCard title="Sessions by device" items={data.byDevice} labelKey="device" renderLabel={(i) => DEVICE_LABEL[i.device] || i.device} empty="No visits in this period yet." />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Card size="small" title="Top landing pages">
-              <BarList items={data.topPaths} labelKey="path" empty="No visits in this period yet." />
-            </Card>
-            <Card size="small" title="Sessions by source">
-              <BarList
-                items={data.bySource}
-                labelKey="source"
-                renderLabel={(i) => `${i.source}${i.medium ? ` / ${i.medium}` : ""}`}
-                empty="No visits in this period yet."
-              />
-            </Card>
-            <Card size="small" title="Sessions by location">
-              <BarList items={data.byCountry} labelKey="country" renderLabel={(i) => countryName(i.country)} empty="No visits in this period yet." />
-            </Card>
+            <BreakdownCard title="Top landing pages" items={data.topPaths} labelKey="path" empty="No visits in this period yet." />
+            <BreakdownCard title="Sessions by source" items={data.bySource} labelKey="source" renderLabel={(i) => `${i.source}${i.medium ? ` / ${i.medium}` : ""}`} empty="No visits in this period yet." />
+            <BreakdownCard title="Sessions by location" items={data.byCountry} labelKey="country" renderLabel={(i) => countryName(i.country)} empty="No visits in this period yet." />
           </div>
         </div>
       )}

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Tag, Skeleton } from "antd";
-import { Search, Crown, Lock, Check, ArrowRight, Sparkles } from "lucide-react";
+import { Search, Crown, Lock, Check, ArrowRight, Sparkles, ArrowUpRight, Settings2, Download, Wrench } from "lucide-react";
 import { PageHeader, EmptyState } from "@shopcycle/ui";
 import { useApps, appHref, detailsHref, APP_CATEGORIES, rupees, usageLabel } from "@/lib/apps";
 import { useAppActions } from "@/components/apps/useAppActions";
@@ -77,6 +77,10 @@ function AppCard({ app }) {
             </span>
             <Button
               size="small"
+              type="primary"
+              ghost
+              icon={<ArrowUpRight size={14} aria-hidden="true" />}
+              iconPosition="end"
               onClick={async (e) => {
                 e.preventDefault();
                 // A developer's app (Oyklane Store) opens on its own site, signed for this store.
@@ -95,7 +99,7 @@ function AppCard({ app }) {
               Open
             </Button>
             {app.marketplace && app.settingsSchema?.length > 0 && (
-              <Button size="small" onClick={() => router.push(appHref(app))}>
+              <Button size="small" icon={<Settings2 size={14} aria-hidden="true" />} onClick={(e) => { e.preventDefault(); router.push(appHref(app)); }}>
                 Settings
               </Button>
             )}
@@ -112,7 +116,7 @@ function AppCard({ app }) {
             <span className="text-[12px] text-ink-subtle group-hover:text-ink inline-flex items-center gap-1 transition-colors">
               Details <ArrowRight size={12} aria-hidden="true" />
             </span>
-            <Button size="small" type="primary" loading={busy} onClick={onInstall}>
+            <Button size="small" type="primary" loading={busy} onClick={onInstall} icon={needsSetup ? <Wrench size={14} aria-hidden="true" /> : <Download size={14} aria-hidden="true" />}>
               {needsSetup ? "Set up" : "Install"}
             </Button>
           </>

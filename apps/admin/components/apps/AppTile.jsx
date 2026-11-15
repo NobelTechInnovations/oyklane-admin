@@ -1,6 +1,7 @@
 "use client";
 
 import { AppIcon } from "@shopcycle/ui";
+import { Boxes, Clapperboard, MousePointerClick, Network, Star, Zap } from "lucide-react";
 import { APP_BRANDS } from "./brand-logos";
 
 // Each category gets its own soft tint on the app's icon tile.
@@ -12,6 +13,16 @@ const TINT = {
   analytics: "from-[#E8F1FF] to-[#EDE8FF] text-[#1D4ED8]",
   utility: "from-[#F1F1F4] to-[#E9E9EE] text-ink",
   other: "from-[#F1F1F4] to-[#E9E9EE] text-ink",
+};
+
+// A clearer picture for apps whose catalogue icon is generic.
+const OWN_ICON = {
+  "deal-share": Zap,
+  "shoppable-videos": Clapperboard,
+  bundles: Boxes,
+  "xml-sitemap": Network,
+  "one-click-checkout": MousePointerClick,
+  "product-reviews": Star,
 };
 
 /** The brand's own mark, for apps that connect Google, Meta or WhatsApp. */
@@ -41,7 +52,10 @@ export function AppTile({ app, size = 44 }) {
       className={`shrink-0 rounded-[12px] bg-gradient-to-br ${TINT[app.category] || TINT.other} flex items-center justify-center border border-white shadow-[0_1px_2px_rgba(17,17,20,0.06)]`}
       style={{ width: size, height: size }}
     >
-      <AppIcon iconKey={app.iconKey} size={Math.round(size * 0.45)} />
+      {OWN_ICON[app.key] ? (() => {
+        const I = OWN_ICON[app.key];
+        return <I size={Math.round(size * 0.45)} strokeWidth={1.9} aria-hidden="true" />;
+      })() : <AppIcon iconKey={app.iconKey} size={Math.round(size * 0.45)} />}
     </span>
   );
 }

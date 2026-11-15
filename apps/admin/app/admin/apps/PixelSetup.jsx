@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Form, Input, Radio, Skeleton, Alert } from "antd";
+import { Form, Input, Radio, Skeleton, Alert, Button } from "antd";
+import { CheckCircle2, ChevronDown } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { SignInButton, AccountLine } from "@/components/accounts/AccountConnect";
 
@@ -11,13 +12,19 @@ const EVENTS = ["PageView", "ViewContent", "AddToCart", "InitiateCheckout", "Pur
  * The Facebook Pixel install form: pick one of the pixels on the store's
  * Facebook login (Settings ▸ Connected accounts — the one login every Meta
  * app shares; "Continue with Facebook" here if it isn't there yet), or type
- * the Pixel ID. Fills the form's `pixelId` field either way.
+ * the Pixel ID. Fills the form's `pixelId` field either way. Once a pixel
+ * is saved, the choices fold away behind "Change pixel", so no one swaps it
+ * by a stray click.
  */
-export function PixelSetup({ form }) {
+export function PixelSetup({ form, savedId = null }) {
   const [info, setInfo] = useState(null);
   const [pixels, setPixels] = useState(null);
   const [error, setError] = useState(null);
   const pixelId = Form.useWatch("pixelId", form);
+  // The pixel already saved: shown on its own until "Change pixel".
+  const [changing, setChanging] = useState(!savedId);
+  const savedPixel = pixels?.find((p) => p.id === savedId);
+  const lastSeen = (p) => (p.lastFired ? `last active ${new Date(p.lastFired).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : "no activity yet");
 
   useEffect(() => {
     apiFetch("/api/apps/facebook-pixel/connect")
@@ -32,8 +39,44 @@ export function PixelSetup({ form }) {
       .catch(() => setInfo({ configured: false }));
   }, []);
 
+  if (savedId && !changing) {
+    return (
+      <div className="flex flex-col gap-4">
+        {info?.connectedAs && <AccountLine kind="facebook" account={info.account} />}
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#B7E4C7] bg-[#F3FBF6] px-4 py-3">
+          <CheckCircle2 size={20} className="shrink-0 text-status-success" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <p className="m-0 text-[13.5px] font-semibold text-ink">{savedPixel?.name || "Pixel connected"}</p>
+            <p className="m-0 text-xs text-ink-muted">
+              {savedId}
+              {savedPixel ? ` · ${savedPixel.adAccount} · ${lastSeen(savedPixel)}` : ""}
+            </p>
+          </div>
+          <Button size="small" icon={<ChevronDown size={14} aria-hidden="true" />} iconPosition="end" onClick={() => setChanging(true)}>
+            Change pixel
+          </Button>
+        </div>
+        <Form.Item name="pixelId" hidden>
+          <Input />
+        </Form.Item>
+        <div className="rounded-lg bg-app-bg px-3 py-2.5">
+          <p className="m-0 text-xs font-medium text-ink">Tracked on every page, checkout included</p>
+          <p className="m-0 mt-1 text-xs text-ink-muted">{EVENTS.join(" · ")} — with product ids and order value, so Meta can optimise your ads for sales.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      {savedId && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2">
+          <p className="m-0 text-[13px] text-ink">Changing the pixel moves your store's tracking to the one you pick — after you save.</p>
+          <Button size="small" type="link" className="!px-0" onClick={() => { form.setFieldValue("pixelId", savedId); setChanging(false); }}>
+            Keep current pixel
+          </Button>
+        </div>
+      )}
       {!info ? (
         <Skeleton active paragraph={{ rows: 1 }} title={false} />
       ) : info.configured ? (
@@ -45,7 +88,7 @@ export function PixelSetup({ form }) {
             {pixels?.length === 0 && (
               <Alert type="info" showIcon message="No pixels found on your ad accounts" description="Create one in Meta Events Manager (Connect data sources ▸ Web), then come back — or type its ID below." />
             )}
-            {pixels?.length > 0 && (
+            {pixels?.length > 0 && changing && (
               <Radio.Group value={pixelId} onChange={(e) => form.setFieldValue("pixelId", e.target.value)} style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
                 {pixels.map((p) => (
                   <Radio
@@ -55,8 +98,7 @@ export function PixelSetup({ form }) {
                   >
                     <span className="block text-[13.5px] font-medium text-ink">{p.name}</span>
                     <span className="block text-xs text-ink-muted">
-                      {p.id} · {p.adAccount}
-                      {p.lastFired ? ` · last active ${new Date(p.lastFired).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : " · no activity yet"}
+                      {p.id} · {p.adAccount} · {lastSeen(p)}
                     </span>
                   </Radio>
                 ))}

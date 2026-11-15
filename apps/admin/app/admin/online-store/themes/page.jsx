@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Button, Card, Skeleton, Dropdown, App, Tooltip } from "antd";
-import { Palette, Code2, Eye, Sparkles, MoreHorizontal, Trash2, Lock, Copy } from "lucide-react";
+import { Button, Card, Skeleton, Dropdown, App } from "antd";
+import { Palette, Code2, Eye, Sparkles, MoreHorizontal, Trash2, Lock, Copy, ExternalLink } from "lucide-react";
 import { PageHeader, StatusBadge, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { LivePreview } from "@/components/themes/LivePreview";
 
 const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL || "http://localhost:3002";
 const MARKET_THEMES = `${process.env.NEXT_PUBLIC_MARKET_ORIGIN || "https://market.oyklane.com"}/themes`;
@@ -16,22 +17,7 @@ function previewUrl(store, themeId) {
   return `${base.replace(/\/$/, "")}/?themeId=${themeId}`;
 }
 
-/** A live, scaled-down render of the theme's home page. */
-function LivePreview({ src, title }) {
-  return (
-    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[10px] border border-app-border bg-app-bg">
-      <iframe
-        title={title}
-        src={src}
-        loading="lazy"
-        tabIndex={-1}
-        aria-hidden="true"
-        className="absolute left-0 top-0 origin-top-left pointer-events-none border-0"
-        style={{ width: "400%", height: "400%", transform: "scale(0.25)" }}
-      />
-    </div>
-  );
-}
+const hostOf = (u) => String(u || "").replace(/^https?:\/\//, "").replace(/\/.*$/, "");
 
 export default function ThemesPage() {
   const { message } = App.useApp();
@@ -176,40 +162,43 @@ export default function ThemesPage() {
       ))}
 
       {live && store && (
-        <Card className="mb-8" styles={{ body: { padding: 20 } }}>
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-6 items-center">
-            <LivePreview src={previewUrl(store, live.id)} title={`${live.name} preview`} />
-            <div className="flex flex-col gap-4">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-[20px] font-semibold text-ink m-0" style={{ letterSpacing: "-0.02em" }}>
-                    {live.name}
-                  </h2>
-                  <StatusBadge status="live" label="Live" />
-                  <span className="text-xs text-ink-muted">v{live.version}</span>
-                </div>
-                <p className="text-sm text-ink-muted mt-2 mb-0">{live.description}</p>
+        <Card className="mb-8 overflow-hidden" styles={{ body: { padding: 0 } }}>
+          <div className="bg-app-bg px-5 pb-8 pt-6 sm:px-10 sm:pt-8">
+            <LivePreview src={previewUrl(store, live.id)} title={`${live.name} preview`} url={hostOf(store.oyklaneUrl) || `${store.handle}.oyklane.com`} phone className="mx-auto max-w-[920px]" />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-app-border px-5 py-4">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="m-0 text-[17px] font-semibold text-ink" style={{ letterSpacing: "-0.01em" }}>
+                  {live.name}
+                </h2>
+                <StatusBadge status="live" label="Current theme" />
+                <span className="text-xs text-ink-muted tabular-nums">v{live.version}</span>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Link href={`/theme-editor/${live.id}`}>
-                  <Button type="primary" icon={<Palette size={15} aria-hidden="true" />}>
-                    Customize
-                  </Button>
-                </Link>
-                <a href={previewUrl(store, live.id)} target="_blank" rel="noopener noreferrer">
-                  <Button icon={<Eye size={15} aria-hidden="true" />}>View store</Button>
-                </a>
-                {!live.locked && (
-                  <Link href={`/theme-editor/${live.id}/code`}>
-                    <Button icon={<Code2 size={15} aria-hidden="true" />}>Edit code</Button>
-                  </Link>
-                )}
-                <Tooltip title="Make a copy to change safely — your live store stays as it is until you publish the copy">
-                  <Button icon={<Copy size={15} aria-hidden="true" />} loading={busy === `dup-${live.id}`} onClick={() => duplicate(live)}>
-                    Duplicate
-                  </Button>
-                </Tooltip>
-              </div>
+              {live.description && <p className="m-0 mt-1 max-w-[640px] truncate text-[13px] text-ink-muted">{live.description}</p>}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Dropdown
+                trigger={["click"]}
+                placement="bottomRight"
+                menu={{
+                  items: [
+                    { key: "view", icon: <ExternalLink size={14} />, label: <a href={previewUrl(store, live.id)} target="_blank" rel="noopener noreferrer">View store</a> },
+                    ...(live.locked ? [] : [{ key: "code", icon: <Code2 size={14} />, label: <Link href={`/theme-editor/${live.id}/code`}>Edit code</Link> }]),
+                    { key: "duplicate", icon: <Copy size={14} />, label: "Duplicate", onClick: () => duplicate(live) },
+                  ],
+                }}
+              >
+                <Button icon={<MoreHorizontal size={16} aria-hidden="true" />} loading={busy === `dup-${live.id}`} aria-label={`More actions for ${live.name}`} />
+              </Dropdown>
+              <a href={previewUrl(store, live.id)} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-block">
+                <Button icon={<Eye size={15} aria-hidden="true" />}>View store</Button>
+              </a>
+              <Link href={`/theme-editor/${live.id}`}>
+                <Button type="primary" icon={<Palette size={15} aria-hidden="true" />}>
+                  Customize
+                </Button>
+              </Link>
             </div>
           </div>
         </Card>
@@ -217,7 +206,10 @@ export default function ThemesPage() {
 
       {others.length > 0 && (
         <section className="mb-8">
-          <h2 className="text-xs font-semibold text-ink-muted uppercase tracking-[0.08em] mb-3">Installed, not published</h2>
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 className="m-0 text-[15px] font-semibold text-ink">Theme library</h2>
+            <span className="text-[13px] text-ink-muted">Installed, not published — only you can see these</span>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {others.map((theme) => (
               <Card key={theme.id} size="small" styles={{ body: { padding: 14 } }}>
@@ -243,18 +235,18 @@ export default function ThemesPage() {
                     <Button size="small" type="text" icon={<MoreHorizontal size={16} aria-hidden="true" />} aria-label={`More actions for ${theme.name}`} />
                   </Dropdown>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <Button size="small" type="primary" loading={busy === `publish-${theme.id}`} onClick={() => publish(theme)}>
-                    Publish
-                  </Button>
-                  <Link href={`/theme-editor/${theme.id}`}>
-                    <Button size="small">Customize</Button>
-                  </Link>
-                  <a href={previewUrl(store, theme.id)} target="_blank" rel="noopener noreferrer">
-                    <Button size="small" icon={<Eye size={14} aria-hidden="true" />}>
+                <div className="mt-3 flex items-center gap-2">
+                  <a href={previewUrl(store, theme.id)} target="_blank" rel="noopener noreferrer" className="mr-auto">
+                    <Button size="small" type="text" icon={<Eye size={14} aria-hidden="true" />}>
                       Preview
                     </Button>
                   </a>
+                  <Link href={`/theme-editor/${theme.id}`}>
+                    <Button size="small">Customize</Button>
+                  </Link>
+                  <Button size="small" type="primary" loading={busy === `publish-${theme.id}`} onClick={() => publish(theme)}>
+                    Publish
+                  </Button>
                 </div>
               </Card>
             ))}

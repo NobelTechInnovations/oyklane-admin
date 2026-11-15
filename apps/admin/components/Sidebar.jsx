@@ -17,7 +17,7 @@ import {
   FileText,
   File,
   Navigation as NavigationIcon,
-  Folder,
+  Images,
   Store,
   Palette,
   Settings,
@@ -160,7 +160,7 @@ const NAV_ITEMS = [
       { key: "/admin/content/pages", icon: <File size={14} aria-hidden="true" />, label: <Link href="/admin/content/pages">Pages</Link> },
       { key: "/admin/content/blog", icon: <Newspaper size={14} aria-hidden="true" />, label: <Link href="/admin/content/blog">Blog posts</Link> },
       { key: "/admin/content/navigation", icon: <NavigationIcon size={14} aria-hidden="true" />, label: <Link href="/admin/content/navigation">Navigation</Link> },
-      { key: "/admin/content/files", icon: <Folder size={14} aria-hidden="true" />, label: <Link href="/admin/content/files">Files</Link> },
+      { key: "/admin/content/files", icon: <Images size={14} aria-hidden="true" />, label: <Link href="/admin/content/files">Media</Link> },
     ],
   },
   {

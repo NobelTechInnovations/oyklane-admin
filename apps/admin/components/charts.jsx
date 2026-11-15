@@ -188,13 +188,14 @@ export function StatTile({ label, value, kind = "number", previous, spark, perio
 }
 
 /** "Top X" breakdown: label and value on one line, a thin bar under it. */
-export function BarList({ items, labelKey = "label", valueKey = "count", renderLabel, kind = "number", empty = "No data yet." }) {
+/** `limit` shows only the first N (the % still counts them all). */
+export function BarList({ items, labelKey = "label", valueKey = "count", renderLabel, kind = "number", empty = "No data yet.", limit }) {
   if (!items?.length) return <p className="text-sm text-ink-muted m-0 py-6 text-center">{empty}</p>;
   const max = Math.max(1, ...items.map((i) => Number(i[valueKey]) || 0));
   const total = items.reduce((s, i) => s + (Number(i[valueKey]) || 0), 0);
   return (
     <ul className="m-0 p-0 list-none flex flex-col gap-3">
-      {items.map((item, i) => {
+      {(limit ? items.slice(0, limit) : items).map((item, i) => {
         const v = Number(item[valueKey]) || 0;
         return (
           <li key={i}>

@@ -6,7 +6,7 @@ import { Search, UploadCloud, Check } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { IMAGE_ACCEPT, uploadImage } from "@/lib/uploads";
 
-/** Pick images already in Content ▸ Files (or upload new ones right here),
+/** Pick images already in Content ▸ Media (or upload new ones right here),
  * so one upload can be reused anywhere: theme sections, products, blog
  * covers, the SEO share image. `onSelect` gets the chosen URLs. */
 export function MediaLibraryModal({ open, onClose, onSelect, multiple = false, max = 10 }) {

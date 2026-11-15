@@ -1,5 +1,6 @@
 "use client";
 
+import { LivePreview } from "@/components/themes/LivePreview";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -385,22 +386,12 @@ export function DashboardView({ data, user }) {
         </div>
 
         <Card size="small" className="!shadow-card" styles={{ body: { padding: 0 } }}>
-          <div className="aspect-[16/9] bg-app-bg relative overflow-hidden rounded-t-[14px] border-b border-app-border">
-            {/* A stylized storefront thumbnail — a real screenshot would need
-                a headless renderer; this conveys "your live site" honestly. */}
-            <div className="absolute inset-4 rounded-md bg-app-surface shadow-card overflow-hidden">
-              <div className="h-5 border-b border-app-border flex items-center gap-1 px-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-ink-subtle/50" />
-                <span className="w-1.5 h-1.5 rounded-full bg-ink-subtle/50" />
-                <span className="w-1.5 h-1.5 rounded-full bg-ink-subtle/50" />
-              </div>
-              <div className="h-[46%] bg-brand-gradient opacity-80" />
-              <div className="grid grid-cols-3 gap-1.5 p-2">
-                <div className="h-6 rounded-sm bg-app-bg" />
-                <div className="h-6 rounded-sm bg-app-bg" />
-                <div className="h-6 rounded-sm bg-app-bg" />
-              </div>
-            </div>
+          <div className="rounded-t-[14px] border-b border-app-border bg-app-bg p-4">
+            {storeStatus.themeActive ? (
+              <LivePreview src={storefrontUrlFor(store)} title="Your store's home page" url={storefrontLabelFor(store)} />
+            ) : (
+              <div className="grid aspect-[16/10] place-items-center rounded-[10px] border border-dashed border-app-border text-[13px] text-ink-muted">No theme published yet</div>
+            )}
           </div>
           <div className="p-5">
             <div className="flex items-center justify-between gap-2">

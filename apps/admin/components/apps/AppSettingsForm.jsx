@@ -98,6 +98,6 @@ function SettingsField({ field }) {
 }
 
 export function AppSettingsFields({ app, form }) {
-  if (app.key === "facebook-pixel") return <PixelSetup key={app.id} form={form} />;
+  if (app.key === "facebook-pixel") return <PixelSetup key={`${app.id}:${app.settings?.pixelId || ""}`} form={form} savedId={app.settings?.pixelId || null} />;
   return (app.settingsSchema || []).map((field) => <SettingsField key={field.id} field={field} />);
 }

@@ -75,7 +75,7 @@ export default function ContentFilesPage() {
   return (
     <div>
       <PageHeader
-        title="Files"
+        title="Media"
         subtitle={loading ? " " : `${files.length} ${files.length === 1 ? "image" : "images"} · JPEG, PNG, WebP, or GIF up to 8 MB`}
         actions={
           <Upload {...uploadProps}>

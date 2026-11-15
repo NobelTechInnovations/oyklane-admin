@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Form, Input, Card, Alert, App, Switch, Button, Select } from "antd";
+import { useEffect, useState } from "react";
+import { Form, Input, Card, Alert, App, Switch, Button, Select, Tabs } from "antd";
+import { Search, ShoppingBag } from "lucide-react";
 import { PageHeader, SaveBar } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { ImageUploadField } from "@/components/ImageUploadField";
@@ -39,14 +40,41 @@ export function PreferencesForm({ store, seo, canEdit }) {
     }
   }
 
+  // The open tab lives in the URL (?tab=cart), so a link can open it.
+  const [tab, setTab] = useState("seo");
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t === "cart") setTab("cart");
+  }, []);
+  const pickTab = (t) => {
+    setTab(t);
+    const u = new URL(window.location.href);
+    if (t === "seo") u.searchParams.delete("tab");
+    else u.searchParams.set("tab", t);
+    window.history.replaceState(null, "", u);
+  };
+
   const shownTitle = title || store.name;
   const shownDescription = description || `Shop ${store.name} online.`;
 
   return (
     <div>
-      <PageHeader title="Preferences" subtitle="How your store shows up in search results, when its link is shared, and on the browser tab" />
+      <PageHeader title="Preferences" subtitle="How your store shows up in search and when its link is shared, and what the cart drawer shows shoppers" />
       {!canEdit && <Alert className="mb-4" type="info" showIcon message="Only the store owner or an admin can change these." />}
 
+      <Tabs
+        activeKey={tab}
+        onChange={pickTab}
+        className="[&_.ant-tabs-nav]:!mb-6"
+        items={[
+          { key: "seo", label: <span className="inline-flex items-center gap-2"><Search size={15} aria-hidden="true" />Search &amp; sharing</span> },
+          { key: "cart", label: <span className="inline-flex items-center gap-2"><ShoppingBag size={15} aria-hidden="true" />Cart drawer</span> },
+        ]}
+      />
+
+      {tab === "cart" ? (
+        <CartPreferences store={store} canEdit={canEdit} />
+      ) : (
       <Form
         form={form}
         layout="vertical"
@@ -126,7 +154,7 @@ export function PreferencesForm({ store, seo, canEdit }) {
 
         {canEdit && <SaveBar dirty={dirty} saving={saving} onDiscard={() => (form.resetFields(), setDirty(false))} />}
       </Form>
-      <CartPreferences store={store} canEdit={canEdit} />
+      )}
     </div>
   );
 }
@@ -159,36 +187,95 @@ function CartPreferences({ store, canEdit }) {
     }
   }
   return (
-    <Card size="small" title="Cart drawer" className="mt-6 lg:max-w-[66%]">
-      <div className="mb-4">
-        <p className="m-0 text-sm text-ink">Strip under the header</p>
-        <p className="m-0 mt-0.5 mb-2 text-xs text-ink-muted">A short line every shopper sees, like “Same day dispatch” or “Free gift over ₹1,499”. Leave empty to hide it.</p>
-        <div className="flex gap-2">
-          <Input value={strip} onChange={(e) => setStrip(e.target.value)} maxLength={80} placeholder="Same day dispatch" disabled={!canEdit} />
-          <Button onClick={() => save({ announcement: strip.trim() }, "strip", strip.trim() ? "Strip saved" : "Strip hidden")} loading={busy === "strip"} disabled={!canEdit}>
-            Save
-          </Button>
-        </div>
-      </div>
-      <div className="flex flex-col gap-3">
-        {CART_SWITCHES.map(([key, label, help]) => (
-          <div key={key} className="flex items-center justify-between gap-4">
-            <div>
-              <p className="m-0 text-sm text-ink">{label}</p>
-              <p className="m-0 mt-0.5 text-xs text-ink-muted">{help}</p>
-            </div>
-            <Switch
-              checked={on[key]}
-              loading={busy === key}
-              disabled={!canEdit}
-              aria-label={label}
-              onChange={async (v) => {
-                if (await save({ [key]: v }, key, `${label} ${v ? "shown" : "hidden"} in the cart`)) setOn((o) => ({ ...o, [key]: v }));
-              }}
-            />
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+      <div className="flex min-w-0 flex-col gap-6 lg:col-span-2">
+        <Card size="small" title="Strip under the header">
+          <p className="m-0 mb-3 text-sm text-ink-muted">A short line every shopper sees at the top of the cart, like “Same day dispatch” or “Free gift over ₹1,499”. Leave it empty to hide it.</p>
+          <div className="flex gap-2">
+            <Input value={strip} onChange={(e) => setStrip(e.target.value)} maxLength={80} showCount placeholder="Same day dispatch" disabled={!canEdit} />
+            <Button type="primary" onClick={() => save({ announcement: strip.trim() }, "strip", strip.trim() ? "Strip saved" : "Strip hidden")} loading={busy === "strip"} disabled={!canEdit || strip.trim() === (c.announcement || "")}>
+              Save
+            </Button>
           </div>
-        ))}
+        </Card>
+        <Card size="small" title="What the cart shows" extra={<span className="text-xs text-ink-muted">Changes save straight away</span>} styles={{ body: { padding: 0 } }}>
+          <ul className="m-0 list-none p-0">
+            {CART_SWITCHES.map(([key, label, help]) => (
+              <li key={key} className="flex items-center justify-between gap-6 border-b border-app-border px-4 py-3.5 last:border-b-0">
+                <div className="min-w-0">
+                  <p className="m-0 text-sm font-medium text-ink">{label}</p>
+                  <p className="m-0 mt-0.5 text-[13px] text-ink-muted">{help}</p>
+                </div>
+                <Switch
+                  checked={on[key]}
+                  loading={busy === key}
+                  disabled={!canEdit}
+                  aria-label={label}
+                  onChange={async (v) => {
+                    if (await save({ [key]: v }, key, `${label} ${v ? "shown" : "hidden"} in the cart`)) setOn((o) => ({ ...o, [key]: v }));
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
+        </Card>
       </div>
-    </Card>
+      <Card size="small" title="Preview" className="lg:sticky lg:top-24">
+        <CartSketch on={on} strip={strip.trim()} />
+        <p className="m-0 mt-3 text-xs text-ink-muted">A sketch of your cart drawer with these settings. Your theme's fonts and colours apply on the store.</p>
+      </Card>
+    </div>
+  );
+}
+
+/** A small drawing of the cart drawer that follows the switches. */
+function CartSketch({ on, strip }) {
+  const bar = "h-2 rounded bg-app-border";
+  return (
+    <div className="mx-auto w-full max-w-[280px] overflow-hidden rounded-xl border border-app-border bg-white text-[11px] text-ink shadow-card" aria-hidden="true">
+      <div className="flex items-center justify-between border-b border-app-border px-3 py-2.5 font-semibold">
+        Your cart <span className="text-ink-muted">✕</span>
+      </div>
+      {strip && <div className="truncate bg-[#111] px-3 py-1.5 text-center text-[10.5px] text-white">{strip}</div>}
+      {on.showOffers && (
+        <div className="border-b border-app-border px-3 py-2.5">
+          <p className="m-0 mb-1.5 text-[10.5px] text-ink-muted">Add ₹320 more for ₹100 off</p>
+          <div className="h-1.5 overflow-hidden rounded-full bg-app-bg">
+            <div className="h-full w-3/5 rounded-full bg-[#16a34a]" />
+          </div>
+        </div>
+      )}
+      {[0, 1].map((k) => (
+        <div key={k} className="flex gap-2.5 border-b border-app-border px-3 py-2.5">
+          <span className="h-10 w-10 shrink-0 rounded-md bg-app-bg" />
+          <span className="flex flex-1 flex-col gap-1.5 pt-0.5">
+            <span className={`${bar} w-3/4`} />
+            <span className="flex items-center gap-1.5">
+              <b className="font-semibold">₹499</b>
+              {on.showSavings && (
+                <>
+                  <s className="text-ink-subtle">₹699</s>
+                  <span className="text-[#16a34a]">29% off</span>
+                </>
+              )}
+            </span>
+          </span>
+        </div>
+      ))}
+      {on.showCoupon && (
+        <div className="flex items-center gap-2 border-b border-app-border px-3 py-2.5">
+          <span className="flex-1 rounded-md border border-app-border px-2 py-1.5 text-ink-subtle">Coupon code</span>
+          <span className="font-semibold text-accent">Apply</span>
+        </div>
+      )}
+      <div className="flex flex-col gap-2 px-3 py-3">
+        {on.showSavings && <p className="m-0 text-center text-[10.5px] text-[#16a34a]">₹400 saved so far</p>}
+        <div className="flex items-center justify-center gap-1.5 rounded-lg bg-[#111] py-2.5 font-semibold text-white">
+          Checkout · ₹998
+          {on.showPayIcons && <span className="ml-1 flex gap-0.5">{["#5f6368", "#5f259f", "#00baf2"].map((col) => <i key={col} className="h-3 w-3 rounded-full" style={{ background: col }} />)}</span>}
+        </div>
+        {on.viewCartButton && <div className="rounded-lg border border-app-border py-2 text-center font-medium">View cart</div>}
+      </div>
+    </div>
   );
 }
