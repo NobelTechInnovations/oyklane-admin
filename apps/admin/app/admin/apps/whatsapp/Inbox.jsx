@@ -809,7 +809,7 @@ export default function Inbox() {
                 <p className="m-0 font-semibold truncate">
                   {displayName(c)}
                   {c.viaPlatform && (
-                    <Tooltip title="This customer is chatting with the default number (it sent your updates). Your replies go from that number too.">
+                    <Tooltip title="This customer replied to Oyklane's number, which sent your order updates. That number only sends updates and login codes, so you can't chat from it.">
                       <Tag color="cyan" className="!ml-2 !text-[10px]">via default number</Tag>
                     </Tooltip>
                   )}
@@ -838,7 +838,11 @@ export default function Inbox() {
             </div>
             <div className="border-t border-app-border p-2 flex flex-col gap-1.5">
               {aiNote && <p className="text-xs text-violet-700 m-0">{aiNote}</p>}
-              {c.windowOpen ? (
+              {c.viaPlatform ? (
+                <p className="text-xs text-ink-muted m-0">
+                  {displayName(c)} replied to Oyklane&apos;s number, which only sends order updates and login codes. They got an automatic reply with your contact details. To chat on WhatsApp, connect your own number (Apps ▸ WhatsApp ▸ Use your own number).
+                </p>
+              ) : c.windowOpen ? (
                 <div className="flex gap-2 items-end">
                   <Upload showUploadList={false} customRequest={upload} accept="image/jpeg,image/png,video/mp4,application/pdf,audio/*">
                     <Button icon={<Paperclip size={15} aria-hidden="true" />} aria-label="Attach a file" />

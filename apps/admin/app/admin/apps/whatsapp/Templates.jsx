@@ -17,7 +17,7 @@ export default function Templates({ canEdit }) {
           type="info"
           showIcon
           message="Default templates"
-          description="Saved, approved templates on the default number — order updates, offers and sign-in codes, with your store's name in them. Use them in the Inbox and in broadcasts. Connect your own WhatsApp number to create your own."
+          description="Approved templates on Oyklane's number — order updates and sign-in codes, with your store's name in them. Offers, broadcasts and your own templates need your own WhatsApp number."
         />
       }
     />

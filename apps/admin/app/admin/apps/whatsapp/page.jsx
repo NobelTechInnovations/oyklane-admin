@@ -81,9 +81,12 @@ function SharedBar({ platform, onOwn }) {
           Per delivered message: updates {inr(rates.utility)} · offers {inr(rates.marketing)} · replies within 24 hours free
         </span>
       )}
-      <Button size="small" className="ml-auto" onClick={onOwn}>
+      <Button size="small" type="primary" className="ml-auto" onClick={onOwn}>
         Use your own number
       </Button>
+      <p className="m-0 basis-full text-[12.5px] text-ink-muted">
+        Oyklane&apos;s number is one way: it sends login codes and order updates only. To send offers and broadcasts, and to chat with customers, connect your own number.
+      </p>
     </div>
   );
 }
