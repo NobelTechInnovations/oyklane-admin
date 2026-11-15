@@ -124,22 +124,34 @@ export default function Insights({ range, setRange, canEdit }) {
               }
               extra={<Tag color={CONF[s.confidence]?.[0]}>{CONF[s.confidence]?.[1]}</Tag>}
             >
-              <p className="text-sm mt-0">{s.whatHappened}</p>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted m-0 mb-1">Worked best</p>
-                  <ul className="text-sm pl-4 m-0">{(s.best.length ? s.best : ["Not enough results to compare yet."]).map((x, i) => <li key={i}>{x}</li>)}</ul>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted m-0 mb-1">Possible reasons</p>
-                  <ul className="text-sm pl-4 m-0">{(s.why.length ? s.why : ["Nothing unusual found."]).map((x, i) => <li key={i}>{x}</li>)}</ul>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted m-0 mb-1">What to do next</p>
-                  <ul className="text-sm pl-4 m-0">{s.next.map((x, i) => <li key={i}>{x}</li>)}</ul>
-                </div>
+              <p className="m-0 mb-4 max-w-[90ch] text-[14.5px] leading-relaxed text-ink">{s.whatHappened}</p>
+              <div className="grid gap-3 lg:grid-cols-3">
+                {[
+                  { key: "best", title: "Worked best", tone: "border-[#B7E4C7] bg-[#F3FBF6]", dot: "bg-status-success", items: s.best.length ? s.best : ["Not enough results to compare yet."] },
+                  { key: "why", title: "Possible reasons", tone: "border-[#FDE68A] bg-[#FFFBEB]", dot: "bg-[#D97706]", items: s.why.length ? s.why : ["Nothing unusual found."] },
+                  { key: "next", title: "What to do next", tone: "border-[#BFDBFE] bg-[#EFF6FF]", dot: "bg-[#2563EB]", items: s.next },
+                ].map((b) => (
+                  <div key={b.key} className={`rounded-xl border p-4 ${b.tone}`}>
+                    <p className="m-0 mb-2 flex items-center gap-2 text-[13px] font-semibold text-ink">
+                      <span className={`h-2 w-2 rounded-full ${b.dot}`} aria-hidden="true" />
+                      {b.title}
+                    </p>
+                    <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                      {b.items.map((x, i) => (
+                        <li key={i} className="text-[13.5px] leading-snug text-ink">
+                          {x}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
-              {s.caveats?.length > 0 && <Alert className="mt-3" type="info" showIcon message="Keep in mind" description={<ul className="m-0 pl-4">{s.caveats.map((x, i) => <li key={i}>{x}</li>)}</ul>} />}
+              {s.caveats?.length > 0 && (
+                <details className="mt-3 rounded-xl border border-app-border bg-app-bg px-4 py-3">
+                  <summary className="cursor-pointer text-[13px] font-medium text-ink">Keep in mind ({s.caveats.length})</summary>
+                  <ul className="m-0 mt-2 flex flex-col gap-1.5 pl-4 text-[13px] text-ink-muted">{s.caveats.map((x, i) => <li key={i}>{x}</li>)}</ul>
+                </details>
+              )}
               <p className="text-xs text-ink-muted mt-3 mb-0">Based only on your account&apos;s numbers for this period. No result is guaranteed.</p>
             </Card>
           )}

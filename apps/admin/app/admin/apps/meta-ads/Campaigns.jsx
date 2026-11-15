@@ -5,6 +5,7 @@ import { Table, Switch, Button, Dropdown, Modal, Form, Input, InputNumber, DateP
 import { MoreHorizontal, Plus, RefreshCw, Copy, Pencil, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { RangePicker, rangeQuery, StatusTag, metricColumns, inr } from "./ads-ui";
+import { AdSetEditor, AdEditor } from "./Editors";
 
 /** Edit name / budget / end date of one object. */
 function EditModal({ target, onClose, onSaved }) {
@@ -136,21 +137,40 @@ function useRowActions({ type, reload, onEdit }) {
   return { lead, more };
 }
 
-function AdsTable({ adSetId, range, onEdit, canEdit }) {
+function AdsTable({ adSetId, range, onEdit, onAdd, canEdit, version }) {
   const [rows, setRows] = useState(null);
-  const load = useCallback(() => apiFetch(`/api/meta-ads/adsets/${adSetId}/ads?${rangeQuery(range)}`).then((d) => setRows(d.ads)).catch(() => setRows([])), [adSetId, range]);
+  const load = useCallback(() => apiFetch(`/api/meta-ads/adsets/${adSetId}/ads?${rangeQuery(range)}`).then((d) => setRows(d.ads)).catch(() => setRows([])), [adSetId, range, version]);
   useEffect(() => {
     load();
   }, [load]);
   const { lead, more } = useRowActions({ type: "ad", reload: load, onEdit });
   return (
+    <div className="flex flex-col gap-2">
+      {canEdit && rows?.length > 0 && (
+        <div className="flex justify-end">
+          <Button size="small" icon={<Plus size={13} aria-hidden="true" />} onClick={() => onAdd?.(adSetId)}>
+            Add ad
+          </Button>
+        </div>
+      )}
     <Table
       size="small"
       rowKey="id"
       loading={rows === null}
       dataSource={rows || []}
       pagination={false}
-      locale={{ emptyText: "No ads." }}
+      locale={{
+        emptyText: (
+          <div className="flex flex-col items-center gap-2 py-4">
+            <span className="text-[13px] text-ink-muted">This ad set has no ads yet, so it can't run.</span>
+            {canEdit && (
+              <Button type="primary" size="small" icon={<Plus size={13} aria-hidden="true" />} onClick={() => onAdd?.(adSetId)}>
+                Add an ad
+              </Button>
+            )}
+          </div>
+        ),
+      }}
       columns={[
         ...(canEdit ? [{ title: "", width: 48, render: (_, r) => lead(r) }] : []),
         {
@@ -175,12 +195,13 @@ function AdsTable({ adSetId, range, onEdit, canEdit }) {
         ...(canEdit ? [{ title: "", width: 40, render: (_, r) => more(r) }] : []),
       ]}
     />
+    </div>
   );
 }
 
-function AdSetsTable({ campaignId, range, onEdit, canEdit }) {
+function AdSetsTable({ campaignId, range, onEdit, onAdd, canEdit, version }) {
   const [rows, setRows] = useState(null);
-  const load = useCallback(() => apiFetch(`/api/meta-ads/campaigns/${campaignId}/adsets?${rangeQuery(range)}`).then((d) => setRows(d.adSets)).catch(() => setRows([])), [campaignId, range]);
+  const load = useCallback(() => apiFetch(`/api/meta-ads/campaigns/${campaignId}/adsets?${rangeQuery(range)}`).then((d) => setRows(d.adSets)).catch(() => setRows([])), [campaignId, range, version]);
   useEffect(() => {
     load();
   }, [load]);
@@ -192,7 +213,7 @@ function AdSetsTable({ campaignId, range, onEdit, canEdit }) {
       loading={rows === null}
       dataSource={rows || []}
       pagination={false}
-      expandable={{ expandedRowRender: (r) => <AdsTable adSetId={r.id} range={range} onEdit={onEdit} canEdit={canEdit} />, rowExpandable: () => true }}
+      expandable={{ expandedRowRender: (r) => <AdsTable adSetId={r.id} range={range} onEdit={onEdit} onAdd={onAdd} canEdit={canEdit} version={version} />, rowExpandable: () => true }}
       locale={{ emptyText: "No ad sets." }}
       columns={[
         ...(canEdit ? [{ title: "", width: 48, render: (_, r) => lead(r) }] : []),
@@ -222,6 +243,14 @@ export default function Campaigns({ onCreate, canEdit, range, setRange }) {
   const [error, setError] = useState(null);
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState(null);
+  // New ad in this ad set (AdEditor); `version` reloads the nested tables.
+  const [adding, setAdding] = useState(null);
+  const [version, setVersion] = useState(0);
+  const closeEditor = useCallback(() => {
+    setEditing(null);
+    setAdding(null);
+  }, []);
+  const refresh = useCallback(() => setVersion((n) => n + 1), []);
   const load = useCallback(async () => {
     try {
       setError(null);
@@ -257,7 +286,7 @@ export default function Campaigns({ onCreate, canEdit, range, setRange }) {
         loading={rows === null}
         dataSource={shown}
         scroll={{ x: 900 }}
-        expandable={{ expandedRowRender: (r) => <AdSetsTable campaignId={r.id} range={range} onEdit={setEditing} canEdit={canEdit} />, rowExpandable: () => true }}
+        expandable={{ expandedRowRender: (r) => <AdSetsTable campaignId={r.id} range={range} onEdit={setEditing} onAdd={setAdding} canEdit={canEdit} version={version} />, rowExpandable: () => true }}
         locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No campaigns yet. Create one — it starts paused, so nothing spends until you turn it on." /> }}
         columns={[
           ...(canEdit ? [{ title: "", width: 48, render: (_, r) => lead(r) }] : []),
@@ -281,13 +310,15 @@ export default function Campaigns({ onCreate, canEdit, range, setRange }) {
       />
       <p className="text-xs text-ink-muted m-0">Results are what Meta reports (7-day click or 1-day view). See Insights for your store&apos;s own orders from ads.</p>
       <EditModal
-        target={editing}
+        target={editing?.type === "campaign" ? editing : null}
         onClose={() => setEditing(null)}
         onSaved={() => {
           setEditing(null);
           load();
         }}
       />
+      <AdSetEditor id={editing?.type === "adset" ? editing.row.id : null} onClose={closeEditor} onSaved={refresh} />
+      <AdEditor id={editing?.type === "ad" ? editing.row.id : null} adSetId={adding} onClose={closeEditor} onSaved={refresh} />
     </div>
   );
 }
