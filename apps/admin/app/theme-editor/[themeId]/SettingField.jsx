@@ -66,7 +66,7 @@ function ImagePickerField({ value, onChange }) {
         </Button>
       </Upload>
       <Button icon={<Images size={14} aria-hidden="true" />} onClick={() => setLibraryOpen(true)}>
-        Choose from Files
+        Choose from Media
       </Button>
       {library}
     </div>

@@ -6,6 +6,10 @@ const menuItemSchema = z.object({
   url: z.string().min(1),
   // Menu ▸ submenu ▸ sub-submenu.
   depth: z.coerce.number().int().min(0).max(2).default(0),
+  // Top-level links: open as a mega menu (wide panel), with a photo and caption.
+  mega: z.boolean().optional(),
+  imageUrl: z.string().trim().max(1000).regex(/^https?:\/\//, "The photo needs a full web address").nullable().optional().or(z.literal("")),
+  imageCaption: z.string().trim().max(80).nullable().optional(),
 });
 
 const createMenuSchema = z.object({

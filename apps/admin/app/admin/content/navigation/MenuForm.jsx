@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Form, Input, Select, Button, Card, Tooltip, App } from "antd";
+import { Form, Input, Select, Button, Card, Tooltip, Switch, App } from "antd";
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable, sortableKeyboardCoordinates, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Plus, Trash2, GripVertical, IndentIncrease, IndentDecrease, CornerDownRight, ChevronDown } from "lucide-react";
 import { PageHeader, SaveBar } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { ImageUploadField } from "@/components/ImageUploadField";
 
 // Where a new menu goes on the live theme. Any number of menus can exist;
 // the footer takes up to 8 columns.
@@ -211,9 +212,32 @@ function MenuItemRow({ item, index, items, depth, collections, products, pages, 
           </Tooltip>
         </div>
       </div>
+      {/* A top-level link with sub-links can open a mega menu instead of a dropdown. */}
+      {depth === 0 && hasChildren && !dragging && (
+        <div className="flex flex-col gap-3 border-t border-app-border px-3 pt-2.5 pb-4">
+          <label className="flex w-fit cursor-pointer flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
+            <Switch size="small" checked={Boolean(item.mega)} onChange={(mega) => onChange({ mega })} />
+            <span className="font-medium text-ink">Mega menu</span>
+            <span className="text-ink-muted">A wide panel: its sub-links as columns, with a photo.</span>
+          </label>
+          {item.mega && (
+            <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <div>
+                <p className="m-0 mb-1.5 text-[12.5px] text-ink-muted">Photo (optional) — opens this link</p>
+                <ImageUploadField value={item.imageUrl || undefined} onChange={(imageUrl) => onChange({ imageUrl: imageUrl || "" })} hint="Tall photos look best — 600 × 750 px." />
+              </div>
+              <div>
+                <p className="m-0 mb-1.5 text-[12.5px] text-ink-muted">Caption under the photo</p>
+                <Input size="small" maxLength={80} value={item.imageCaption || ""} onChange={(e) => onChange({ imageCaption: e.target.value })} placeholder={item.label ? `e.g. New in ${item.label}` : "e.g. The festive edit"} aria-label="Photo caption" />
+                <p className="m-0 mt-2 text-[12px] text-ink-muted">Sub-links become column headings; links under them are listed below. On phones it shows as a normal list.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {hasChildren && (
         <span className="absolute right-2 -bottom-2 text-[10.5px] leading-none px-1.5 py-[3px] rounded-full bg-accent-soft text-accent inline-flex items-center gap-0.5">
-          <ChevronDown size={10} aria-hidden="true" /> dropdown
+          <ChevronDown size={10} aria-hidden="true" /> {depth === 0 && item.mega ? "mega menu" : "dropdown"}
         </span>
       )}
     </div>
@@ -230,7 +254,7 @@ export function MenuForm({ menu }) {
   const [products, setProducts] = useState([]);
   const [pages, setPages] = useState([]);
   const [items, setItems] = useState(() =>
-    normalize((menu?.items || []).map((item) => ({ key: item.id || newKey(), label: item.label, depth: item.depth || 0, ...parseUrl(item.url) })))
+    normalize((menu?.items || []).map((item) => ({ key: item.id || newKey(), label: item.label, depth: item.depth || 0, mega: Boolean(item.mega), imageUrl: item.imageUrl || "", imageCaption: item.imageCaption || "", ...parseUrl(item.url) })))
   );
   const [drag, setDrag] = useState(null); // { id, offset, overId }
   const [usedIn, setUsedIn] = useState(menu?.usedIn || []);
@@ -340,7 +364,17 @@ export function MenuForm({ menu }) {
         handle: values.handle || slugify(values.title),
         title: values.title,
         showIn: values.showIn,
-        items: items.map((item) => ({ label: item.label.trim(), url: buildUrl(item.linkType, String(item.target || "").trim()), depth: item.depth })),
+        items: items.map((item, i) => {
+          const mega = item.depth === 0 && Boolean(item.mega) && blockEnd(items, i) > i + 1;
+          return {
+            label: item.label.trim(),
+            url: buildUrl(item.linkType, String(item.target || "").trim()),
+            depth: item.depth,
+            mega,
+            imageUrl: mega && item.imageUrl ? item.imageUrl : null,
+            imageCaption: mega && item.imageCaption?.trim() ? item.imageCaption.trim() : null,
+          };
+        }),
       };
       if (isEdit) {
         await apiFetch(`/api/menus/${menu.id}`, { method: "PATCH", body: { title: payload.title, items: payload.items } });

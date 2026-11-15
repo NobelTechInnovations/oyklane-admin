@@ -39,7 +39,7 @@ export function ImageUploadField({ value, onChange, hint = "Square images look b
               </Button>
             </Upload>
             <Button size="small" icon={<Images size={13} aria-hidden="true" />} onClick={() => setLibrary(true)}>
-              Choose from Files
+              Choose from Media
             </Button>
             <Button size="small" type="text" danger icon={<Trash2 size={13} aria-hidden="true" />} onClick={() => onChange?.(null)}>
               Remove
@@ -58,7 +58,7 @@ export function ImageUploadField({ value, onChange, hint = "Square images look b
       {!value && (
         <div className="flex flex-wrap gap-2">
           <Button size="small" icon={<Images size={13} aria-hidden="true" />} onClick={() => setLibrary(true)}>
-            Choose from Files
+            Choose from Media
           </Button>
           <Button size="small" type="text" icon={<Link2 size={13} aria-hidden="true" />} onClick={() => setPasting((v) => !v)}>
             Paste a link
