@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Alert, App, Button, Tag, Upload } from "antd";
-import { FileCheck2, FileUp, ShieldCheck } from "lucide-react";
+import { Alert, App, Button, Input, Modal, Tag, Upload } from "antd";
+import { FileCheck2, FileUp, Lock, ShieldCheck } from "lucide-react";
 import { apiFetch, apiUpload } from "@/lib/api";
 
 /** The GST certificate: a PDF or a photo, kept private (only Oyklane can
@@ -37,6 +37,53 @@ function GstFile({ value, onChange }) {
       <p className="m-0 mt-2 text-[14px] text-ink">{busy ? "Uploading…" : name || "Drop your GST certificate here, or click to upload"}</p>
       <p className="m-0 mt-1 text-[12px] text-ink-muted">{name ? "Click or drop another file to replace it." : "PDF, or a clear photo (JPG, PNG, WebP) of your GST registration certificate (REG-06). Up to 5MB. Only Oyklane sees it."}</p>
     </Upload.Dragger>
+  );
+}
+
+/** Verified details are locked; a change goes to Oyklane as a ticket. */
+function VerifiedLocked({ code, legalName }) {
+  const { message } = App.useApp();
+  const [open, setOpen] = useState(false);
+  const [why, setWhy] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-[#B7E4C7] bg-[#F3FBF6] px-4 py-3 text-[13px]">
+      <ShieldCheck size={18} className="text-status-success" aria-hidden="true" />
+      <span className="text-ink">
+        <b className="font-medium">{code}</b> · {legalName}
+      </span>
+      <Tag color="green" className="!m-0">Verified</Tag>
+      <span className="inline-flex items-center gap-1 text-ink-muted">
+        <Lock size={12} aria-hidden="true" /> Locked
+      </span>
+      <Button size="small" className="ml-auto" onClick={() => setOpen(true)}>
+        Request a change
+      </Button>
+      <Modal
+        open={open}
+        title="Request a GST change"
+        okText="Send request"
+        confirmLoading={busy}
+        okButtonProps={{ disabled: why.trim().length < 5 }}
+        onCancel={() => setOpen(false)}
+        onOk={async () => {
+          setBusy(true);
+          try {
+            await apiFetch("/api/trust/gst/change-request", { method: "POST", body: { reason: why } });
+            message.success("Request sent — Oyklane will reply in Help ▸ Support tickets");
+            setOpen(false);
+            setWhy("");
+          } catch (err) {
+            message.error(err.message);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <p className="mt-0 text-[13.5px] text-ink-muted">Verified GST details can't be edited directly, so buyers can trust them. Tell us what needs to change — Oyklane checks it and unlocks the details for you.</p>
+        <Input.TextArea rows={4} maxLength={2000} value={why} onChange={(e) => setWhy(e.target.value)} placeholder="e.g. Our business became a private limited company — new GSTIN 27AAPFU0939F1ZV, legal name …" />
+      </Modal>
+    </div>
   );
 }
 
@@ -79,7 +126,9 @@ export function GstVerify({ gstin, legalName, verification, onDone, beforeSend, 
     );
   }
 
-  if (status === "verified" || status === "pending") {
+  if (status === "verified") return <VerifiedLocked code={code} legalName={v.legalName || legalName} />;
+
+  if (status === "pending") {
     return (
       <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border px-4 py-3 text-[13px] ${status === "verified" ? "border-[#B7E4C7] bg-[#F3FBF6]" : "border-[#FDE68A] bg-[#FFFBEB]"}`}>
         <ShieldCheck size={18} className={status === "verified" ? "text-status-success" : "text-[#B45309]"} aria-hidden="true" />

@@ -89,6 +89,7 @@ export function BillingSettings() {
   const gstRegistered = Form.useWatch("gstRegistered", detailsForm);
   // GST verification for the Verified seller tick (Trust & badge).
   const [trust, setTrust] = useState(null);
+  const gstLocked = trust?.gstStatus === "verified";
   useEffect(() => {
     apiFetch("/api/trust")
       .then((t) => setTrust(t.verification))
@@ -503,8 +504,10 @@ export function BillingSettings() {
           disabled={!canManage}
           onFinish={(values) => run("details", () => apiFetch("/api/billing/details", { method: "PATCH", body: values }), "Billing details saved — they'll appear on your next invoice")}
         >
+          {gstLocked && <Alert className="mb-4" type="success" showIcon message="Your GST details are verified and locked" description="Your GSTIN and legal name can't be edited, so buyers can trust the Verified tick. Use “Request a change” below if they need to change." />}
           <Form.Item name="gstRegistered" label="Registered under GST?" extra="Also decides your invoices to customers: “Tax invoice” with the GST split, or a plain “Invoice”.">
             <Radio.Group
+              disabled={gstLocked}
               options={[
                 { value: true, label: "Yes" },
                 { value: false, label: "No" },
@@ -512,8 +515,8 @@ export function BillingSettings() {
             />
           </Form.Item>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5">
-            <Form.Item name="billingName" label="Legal business name" extra="Leave empty to use your store name.">
-              <Input maxLength={160} />
+            <Form.Item name="billingName" label="Legal business name" extra={gstLocked ? "Locked — verified with your GSTIN." : "Leave empty to use your store name."}>
+              <Input maxLength={160} disabled={gstLocked} />
             </Form.Item>
             <Form.Item
               name="gstin"
@@ -521,7 +524,7 @@ export function BillingSettings() {
               extra="Add it to claim input tax credit on Oyklane invoices."
               rules={[{ pattern: /^[0-9]{2}[A-Za-z]{5}[0-9]{4}[A-Za-z][1-9A-Za-z][Zz][0-9A-Za-z]$/, message: "Enter a valid 15-character GSTIN, e.g. 27ABCDE1234F1Z5" }]}
             >
-              <Input maxLength={15} placeholder="27ABCDE1234F1Z5" className="uppercase" />
+              <Input maxLength={15} placeholder="27ABCDE1234F1Z5" className="uppercase" disabled={gstLocked} />
             </Form.Item>
             <Form.Item name="billingAddress" label="Billing address">
               <Input.TextArea rows={3} maxLength={500} placeholder="Street, city, PIN code" />

@@ -49,8 +49,8 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     try {
-      await apiFetch("/api/auth/register", { method: "POST", body: { ...pending.values, emailCode: code, emailTicket: pending.ticket, acquisition: acquisition() } });
-      track("sign_up", { method: "email" });
+      const reg = await apiFetch("/api/auth/register", { method: "POST", body: { ...pending.values, emailCode: code, emailTicket: pending.ticket, acquisition: acquisition() } });
+      track("sign_up", { method: "email" }, { eventID: reg?.trackEventId });
       track("store_created");
       router.push("/welcome");
       router.refresh();
@@ -77,8 +77,8 @@ export default function RegisterPage() {
         await sendCode(values);
         return;
       }
-      await apiFetch("/api/auth/google/register", { method: "POST", body: { ticket: google.ticket, storeName: values.storeName, whatsapp: values.whatsapp, acquisition: acquisition() } });
-      track("sign_up", { method: "google" });
+      const reg = await apiFetch("/api/auth/google/register", { method: "POST", body: { ticket: google.ticket, storeName: values.storeName, whatsapp: values.whatsapp, acquisition: acquisition() } });
+      track("sign_up", { method: "google" }, { eventID: reg?.trackEventId });
       track("store_created");
       router.push("/welcome");
       router.refresh();

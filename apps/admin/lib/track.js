@@ -11,9 +11,11 @@ export const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "";
 export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
 
 // Meta's standard event names, where one fits; the rest are custom events.
-const META_STANDARD = { sign_up: "CompleteRegistration" };
+const META_STANDARD = { sign_up: "CompleteRegistration", login: "Login" };
 
-export function track(event, params = {}) {
+/** `opts.eventID`: the same id the API sent to Meta's Conversions API, so
+ * Meta counts the event once. */
+export function track(event, params = {}, opts = {}) {
   if (typeof window === "undefined") return;
   if (GA_ID) {
     try {
@@ -27,17 +29,18 @@ export function track(event, params = {}) {
       window.gtag("event", event, { ...params, transport_type: "beacon" });
     } catch {}
   }
-  if (META_PIXEL_ID && window.fbq) {
+  if (window.fbq) {
     try {
-      if (META_STANDARD[event]) window.fbq("track", META_STANDARD[event], params);
-      else window.fbq("trackCustom", event, params);
+      const o = opts.eventID ? { eventID: opts.eventID } : undefined;
+      if (META_STANDARD[event] === "CompleteRegistration") window.fbq("track", "CompleteRegistration", params, o);
+      else window.fbq("trackCustom", META_STANDARD[event] || event, params, o);
     } catch {}
   }
 }
 
 /** Reports an event at most once per browser for `id` (e.g. a store's first order). */
 export function trackOnce(event, id, params = {}) {
-  if (typeof window === "undefined" || (!GA_ID && !META_PIXEL_ID)) return;
+  if (typeof window === "undefined" || (!GA_ID && !META_PIXEL_ID && !window.fbq)) return;
   const key = `oy_tracked_${event}_${id}`;
   try {
     if (window.localStorage.getItem(key)) return;

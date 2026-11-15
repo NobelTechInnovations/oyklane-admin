@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/track";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Form, Input, Button, Alert } from "antd";
@@ -28,7 +29,8 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      await apiFetch("/api/auth/login", { method: "POST", body: values });
+      const r = await apiFetch("/api/auth/login", { method: "POST", body: values });
+      track("login", { method: "email" }, { eventID: r?.trackEventId });
       // Back to where a link sent them (e.g. accepting a store)…
       const next = new URLSearchParams(window.location.search).get("next");
       if (next && next.startsWith("/") && !next.startsWith("//")) return router.push(next);
