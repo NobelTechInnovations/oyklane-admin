@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Alert, App, Button, Card, Input, Progress, Skeleton, Switch, Tag, Upload } from "antd";
-import { Check, Mail, Phone, FileCheck2, FileUp, RefreshCw, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, App, Button, Card, Input, Progress, Skeleton, Switch, Tag } from "antd";
+import { Check, Mail, Phone, FileCheck2, RefreshCw } from "lucide-react";
 import { TrustSeal, VerifiedTick } from "@shopcycle/ui";
-import { apiFetch, apiUpload } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
+import { GstVerify } from "@/components/GstVerify";
 import { SettingsSectionHeader } from "../SettingsNav";
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "");
@@ -16,12 +17,20 @@ export function TrustSettings() {
   const { message } = App.useApp();
   const [d, setD] = useState(null);
   const [busy, setBusy] = useState(null);
+  // The store's GST details live in Plan & billing ▸ Billing details.
+  const [billing, setBilling] = useState(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     apiFetch("/api/trust")
       .then(setD)
       .catch((err) => message.error(err.message));
+    apiFetch("/api/billing")
+      .then((o) => setBilling(o.billingDetails || {}))
+      .catch(() => setBilling({}));
   }, [message]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   async function run(key, fn, ok) {
     setBusy(key);
@@ -162,7 +171,7 @@ export function TrustSettings() {
             <PhoneStep v={v} busy={busy} run={run} />
           </Step>
           <Step icon={FileCheck2} title="GST registration" done={v.gstStatus === "verified"}>
-            <GstStep v={v} busy={busy} run={run} />
+            <GstVerify gstin={billing?.gstin} legalName={billing?.billingName} verification={v} editHref="/admin/settings/billing#billing-details" onDone={() => load()} />
           </Step>
         </div>
       </Card>
@@ -254,70 +263,3 @@ function PhoneStep({ v, busy, run }) {
   );
 }
 
-function GstStep({ v, busy, run }) {
-  const [edit, setEdit] = useState(v.gstStatus === "none" || v.gstStatus === "rejected");
-  const [f, setF] = useState({ gstin: v.gstin || "", legalName: v.legalName || "", docUrl: v.gstDocUrl || "" });
-  if (!edit) {
-    return (
-      <div className="text-[13px]">
-        <p className="m-0 text-ink">
-          {v.gstin} · {v.legalName}{" "}
-          {v.gstStatus === "verified" ? <Tag color="green">Verified</Tag> : <Tag color="gold">Oyklane is checking</Tag>}
-        </p>
-        {v.gstStatus === "pending" && <p className="m-0 text-ink-muted">Usually done within 1–2 working days.</p>}
-        <button type="button" className="mt-1 cursor-pointer border-0 bg-transparent p-0 text-[13px] text-ink underline" onClick={() => setEdit(true)}>
-          {v.gstStatus === "verified" ? "Change GSTIN" : "Edit details"}
-        </button>
-      </div>
-    );
-  }
-  return (
-    <div className="flex max-w-md flex-col gap-2">
-      {v.gstStatus === "rejected" && <Alert type="error" showIcon icon={<X size={14} />} message="Oyklane couldn't verify your GST details" description={v.gstNote} />}
-      <Input value={f.gstin} onChange={(e) => setF({ ...f, gstin: e.target.value.toUpperCase() })} placeholder="GSTIN, e.g. 27AAPFU0939F1ZV" maxLength={15} spellCheck={false} aria-label="GSTIN" />
-      <Input value={f.legalName} onChange={(e) => setF({ ...f, legalName: e.target.value })} placeholder="Legal name on the certificate" aria-label="Legal name" />
-      <p className="m-0 text-[12px] text-ink-muted">Own more than one store? Use the same GSTIN — once Oyklane checks it on one store, your other stores are verified straight away, without uploading the file again.</p>
-      <GstFile value={f.docUrl} onChange={(docUrl) => setF((x) => ({ ...x, docUrl }))} />
-      <div className="flex gap-2">
-        <Button type="primary" loading={busy === "gst"} disabled={f.gstin.length !== 15 || !f.legalName} onClick={async () => (await run("gst", () => apiFetch("/api/trust/gst", { method: "POST", body: f }), (r) => (r?.verification?.gstStatus === "verified" ? "GST verified" : "Sent to Oyklane for checking"))) && setEdit(false)}>
-          Send for checking
-        </Button>
-        {v.gstStatus !== "none" && v.gstStatus !== "rejected" && <Button onClick={() => setEdit(false)}>Cancel</Button>}
-      </div>
-    </div>
-  );
-}
-
-/** The GST certificate: a PDF or a photo, kept private (only Oyklane can
- * open it — it doesn't go in the store's media library). */
-function GstFile({ value, onChange }) {
-  const { message } = App.useApp();
-  const [busy, setBusy] = useState(false);
-  const [name, setName] = useState(value ? "Certificate uploaded" : "");
-  return (
-    <Upload.Dragger
-      accept=".pdf,application/pdf,image/jpeg,image/png,image/webp"
-      multiple={false}
-      showUploadList={false}
-      disabled={busy}
-      customRequest={async ({ file, onSuccess, onError }) => {
-        setBusy(true);
-        try {
-          const r = await apiUpload("/api/trust/gst/doc", file);
-          setName(r.name);
-          onChange(r.docUrl);
-          onSuccess(r);
-        } catch (err) {
-          message.error(err.message);
-          onError(err);
-        } finally {
-          setBusy(false);
-        }
-      }}
-    >
-      <p className="m-0 flex justify-center text-ink-muted">{name ? <FileCheck2 size={22} /> : <FileUp size={22} />}</p>
-      <p className="m-0 mt-2 text-[14px] text-ink">{busy ? "Uploading…" : name || "Drop your GST certificate here, or click to upload"}</p>
-      <p className="m-0 mt-1 text-[12px] text-ink-muted">{name ? "Click or drop another file to replace it." : "PDF, or a clear photo (JPG, PNG, WebP) of your GST registration certificate (REG-06). Up to 5MB. Only Oyklane sees it."}</p>
-    </Upload.Dragger>
-  );
-}

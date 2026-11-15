@@ -10,7 +10,7 @@ import { HelpProvider } from "./help/HelpDrawer";
 
 // These areas use the whole width, every page in them, so tables show
 // all their columns.
-const WIDE = [/^\/admin\/(orders|products|collections|customers|discounts|analytics|content|shipping|gift-cards|inventory)(\/|$)/];
+const WIDE = [/^\/admin\/(orders|products|collections|customers|discounts|analytics|content|shipping|gift-cards|inventory)(\/|$)/, /^\/admin\/apps\/(deal-share|meta-ads|google-ads|reviews|whatsapp|bundles|flow)(\/|$)/];
 
 /**
  * The admin frame: fixed sidebar on desktop; below `lg` the sidebar

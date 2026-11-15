@@ -1,5 +1,6 @@
 "use client";
 
+import { ColorField } from "@/components/ColorField";
 import { Button, Form, Input, InputNumber, Select, Switch } from "antd";
 import { Plus, Trash2 } from "lucide-react";
 import { PixelSetup } from "@/app/admin/apps/PixelSetup";
@@ -86,6 +87,14 @@ function SettingsField({ field }) {
     return (
       <Form.Item name={field.id} label={field.label}>
         <Input.TextArea rows={4} placeholder={field.placeholder} />
+      </Form.Item>
+    );
+  }
+  // A colour (type "color", or a text field for a hex colour): a picker.
+  if (field.type === "color" || (/colou?r|accent/i.test(`${field.id} ${field.label}`) && /^#[0-9a-f]{3,8}$/i.test(String(field.placeholder || "")))) {
+    return (
+      <Form.Item name={field.id} label={field.label} extra={field.help} rules={field.optional === false ? [{ required: true, message: "Choose a colour" }] : []}>
+        <ColorField placeholder={field.placeholder || "#111111"} />
       </Form.Item>
     );
   }

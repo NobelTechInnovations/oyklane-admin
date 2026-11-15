@@ -25,6 +25,8 @@ const imageSchema = z.object({
   // The variants this photo shows ("Black / M"…) — the product page
   // switches to it when one is picked. Matched by title when saved.
   variantTitles: z.array(z.string().trim().min(1).max(255)).max(200).optional(),
+  // false: a photo only for its options (the variant picker), not the gallery.
+  inGallery: z.boolean().optional(),
 });
 
 const createProductSchema = z.object({

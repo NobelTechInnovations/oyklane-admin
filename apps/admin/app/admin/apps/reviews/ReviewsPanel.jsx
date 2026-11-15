@@ -66,6 +66,13 @@ function SettingsModal({ open, settings, onClose, onSaved }) {
           </span>
           <Switch checked={v.showOnCards} onChange={(c) => setV({ ...v, showOnCards: c })} />
         </label>
+        <div>
+          <p className="m-0 mb-2 text-sm font-medium text-ink">Reviews on the product page</p>
+          <Radio.Group value={v.listStyle || "more"} onChange={(e) => setV({ ...v, listStyle: e.target.value })} className="flex flex-col gap-1.5">
+            <Radio value="more">The latest 5, then a “View more reviews” button</Radio>
+            <Radio value="scroll">All of them in one list — 5 more load as shoppers scroll</Radio>
+          </Radio.Group>
+        </div>
       </div>
     </Modal>
   );

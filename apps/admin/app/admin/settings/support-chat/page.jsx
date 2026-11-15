@@ -1,5 +1,6 @@
 "use client";
 
+import { ColorField } from "@/components/ColorField";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { App, Alert, Button, Card, Form, Input, Radio, Skeleton, Switch } from "antd";
@@ -56,7 +57,7 @@ export default function SupportChatSettings() {
             </Form.Item>
             <div className="grid sm:grid-cols-2 gap-x-4">
               <Form.Item name="color" label="Colour (optional)">
-                <Input maxLength={7} placeholder="#111111" />
+                <ColorField placeholder="#111111" />
               </Form.Item>
               <Form.Item name="position" label="Corner">
                 <Radio.Group optionType="button" options={[{ value: "right", label: "Bottom right" }, { value: "left", label: "Bottom left" }]} />

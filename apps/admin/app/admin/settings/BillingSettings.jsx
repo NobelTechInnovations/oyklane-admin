@@ -1,5 +1,6 @@
 "use client";
 
+import { GstVerify } from "@/components/GstVerify";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -83,6 +84,16 @@ export function BillingSettings() {
   const [cancelReason, setCancelReason] = useState("");
   const [limitOpen, setLimitOpen] = useState(false);
   const [detailsForm] = Form.useForm();
+  const watchedGstin = Form.useWatch("gstin", detailsForm);
+  const watchedName = Form.useWatch("billingName", detailsForm);
+  const gstRegistered = Form.useWatch("gstRegistered", detailsForm);
+  // GST verification for the Verified seller tick (Trust & badge).
+  const [trust, setTrust] = useState(null);
+  useEffect(() => {
+    apiFetch("/api/trust")
+      .then((t) => setTrust(t.verification))
+      .catch(() => {});
+  }, []);
   const [limitForm] = Form.useForm();
 
   const load = useCallback(async () => {
@@ -484,7 +495,7 @@ export function BillingSettings() {
       </Card>
 
       {/* ── Billing details ── */}
-      <Card size="small" title="Billing details" extra={<span className="text-xs text-ink-muted">Printed on your GST invoices</span>} styles={{ body: { padding: 24 } }}>
+      <Card id="billing-details" size="small" title="Billing and GST details" extra={<span className="text-xs text-ink-muted">Printed on your GST invoices · used for the Verified seller tick</span>} styles={{ body: { padding: 24 } }}>
         <Form
           form={detailsForm}
           layout="vertical"
@@ -527,6 +538,17 @@ export function BillingSettings() {
             </div>
           )}
         </Form>
+        {canManage && gstRegistered !== false && (
+          <div className="mt-5 border-t border-app-border pt-5">
+            <GstVerify
+              gstin={watchedGstin}
+              legalName={watchedName}
+              verification={trust}
+              beforeSend={() => apiFetch("/api/billing/details", { method: "PATCH", body: detailsForm.getFieldsValue() })}
+              onDone={() => apiFetch("/api/trust").then((t) => setTrust(t.verification)).catch(() => {})}
+            />
+          </div>
+        )}
       </Card>
 
       {canManage && ["ACTIVE", "TRIALING"].includes(sub.status) && (

@@ -315,8 +315,12 @@ export function ProductForm({ product, store, template, justCreated = false }) {
   const [images, setImages] = useState(() => {
     if (!source) return [];
     const seen = new Set();
-    return source.images.filter((img) => !seen.has(img.url) && seen.add(img.url)).map((img) => ({ uid: img.id, url: img.url }));
+    // A photo only for its options (not in the gallery) stays with them.
+    const onlyOptions = (url) => source.images.filter((x) => x.url === url).every((x) => x.inGallery === false);
+    return source.images.filter((img) => !seen.has(img.url) && seen.add(img.url)).map((img) => ({ uid: img.id, url: img.url, variantOnly: onlyOptions(img.url) }));
   });
+  // The product page's gallery: every photo except those only for options.
+  const gallery = images.filter((img) => !img.variantOnly);
   const [uploading, setUploading] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
@@ -443,8 +447,12 @@ export function ProductForm({ product, store, template, justCreated = false }) {
   async function handleImageUpload(file) {
     setUploading(true);
     try {
+      if (images.filter((img) => !img.variantOnly).length >= MAX_IMAGES) {
+        message.warning(`Up to ${MAX_IMAGES} photos — remove one to add another.`);
+        return false;
+      }
       const uploaded = await uploadImage(file);
-      setImages((prev) => [...prev, { uid: uploaded.id, url: uploaded.url }]);
+      setImages((prev) => (prev.filter((img) => !img.variantOnly).length >= MAX_IMAGES ? prev : [...prev, { uid: uploaded.id, url: uploaded.url }]));
       setDirty(true); // images live outside the form's own values
     } catch (err) {
       message.error(err.message);
@@ -454,11 +462,12 @@ export function ProductForm({ product, store, template, justCreated = false }) {
     return false; // stop antd's own XHR upload — we already uploaded via uploadImage
   }
 
-  /** Uploads a variant's photo: it joins the product's photos too. */
+  /** Uploads a variant's photo: kept for its options only — it shows when
+   * the option is picked, not in the gallery, and doesn't count in it. */
   async function uploadVariantImage(file) {
     try {
       const uploaded = await uploadImage(file);
-      setImages((prev) => [...prev, { uid: uploaded.id, url: uploaded.url }]);
+      setImages((prev) => [...prev, { uid: uploaded.id, url: uploaded.url, variantOnly: true }]);
       setDirty(true);
       return uploaded.url;
     } catch (err) {
@@ -505,11 +514,15 @@ export function ProductForm({ product, store, template, justCreated = false }) {
         metafields: metafieldPayload(values.metafields),
         // Each photo with the variants it belongs to (the product page
         // switches to it when one is picked).
-        images: images.map((img, i) => ({
-          url: img.url,
-          position: i,
-          variantTitles: (values.variants || []).filter((v) => v.imageUrl && v.imageUrl === img.url).map((v) => String(v.title || "").trim() || "Default"),
-        })),
+        images: images
+          .map((img, i) => ({
+            url: img.url,
+            position: i,
+            inGallery: !img.variantOnly,
+            variantTitles: (values.variants || []).filter((v) => v.imageUrl && v.imageUrl === img.url).map((v) => String(v.title || "").trim() || "Default"),
+          }))
+          // An options-only photo no option uses any more is dropped.
+          .filter((img) => img.inGallery || img.variantTitles.length),
       };
       if (isEdit) {
         await apiFetch(`/api/products/${product.id}`, { method: "PATCH", body: payload });
@@ -559,7 +572,7 @@ export function ProductForm({ product, store, template, justCreated = false }) {
 
   const checks = [
     { label: "A clear title", ok: String(title || "").trim().length >= 3 },
-    { label: "At least one photo", ok: images.length > 0, hint: "Products with photos sell far better." },
+    { label: "At least one photo", ok: gallery.length > 0, hint: "Products with photos sell far better." },
     { label: "A price", ok: hasPrice },
     { label: "A description", ok: String(description || "").trim().length >= 40, hint: aiAvailable ? "Write a few words, then “Write with AI”." : "A few lines on what it is and why it's great." },
     { label: "A category", ok: Boolean(categoryId), hint: "Helps shoppers filter and find it." },
@@ -617,12 +630,12 @@ export function ProductForm({ product, store, template, justCreated = false }) {
                   setImages((list) => moveByUid(list, from, to));
                   setDirty(true);
                 }}
-                fileList={images.map((img) => ({ uid: img.uid, url: img.url, status: "done", name: "image" }))}
+                fileList={gallery.map((img) => ({ uid: img.uid, url: img.url, status: "done", name: "image" }))}
                 beforeUpload={handleImageUpload}
                 onRemove={(file) => removeImage(file.uid)}
                 accept={IMAGE_ACCEPT}
               >
-                {images.length < MAX_IMAGES && (
+                {gallery.length < MAX_IMAGES && (
                   <div className="flex flex-col items-center text-xs text-ink-muted">
                     <UploadCloud size={18} aria-hidden="true" />
                     <span className="mt-1">{uploading ? "Uploading…" : "Add photo"}</span>
@@ -630,17 +643,17 @@ export function ProductForm({ product, store, template, justCreated = false }) {
                 )}
               </SortableUpload>
               <div className="flex flex-wrap items-center justify-between gap-2 mt-2">
-                <p className="text-xs text-ink-muted m-0">JPEG, PNG, WebP or GIF — up to 8MB each, {MAX_IMAGES} photos. Square photos look best.</p>
-                {images.length < MAX_IMAGES && (
+                <p className="text-xs text-ink-muted m-0">JPEG, PNG, WebP or GIF — up to 8MB each, up to {MAX_IMAGES} photos ({gallery.length} used). Photos added for an option (in Variants) don't count and stay out of the gallery.</p>
+                {gallery.length < MAX_IMAGES && (
                   <Button size="small" icon={<Images size={13} aria-hidden="true" />} onClick={() => setLibraryOpen(true)}>
-                    Choose from Files
+                    Choose from Media
                   </Button>
                 )}
               </div>
               <MediaLibraryModal
                 open={libraryOpen}
                 multiple
-                max={MAX_IMAGES - images.length}
+                max={MAX_IMAGES - gallery.length}
                 onClose={() => setLibraryOpen(false)}
                 onSelect={(urls) => {
                   setImages((list) => [...list, ...urls.map((url) => ({ uid: `lib-${url}-${Math.random().toString(36).slice(2)}`, url }))]);
