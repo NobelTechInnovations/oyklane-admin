@@ -150,7 +150,27 @@ export default function GstReturnsPage() {
       {data && (
         <>
           {data.period.open && <Alert type="info" showIcon message={`${data.period.label} isn't over yet — the return will change as more invoices are issued.`} />}
-          {data.ready ? (
+          {data.stats && (
+            <p className="m-0 text-[13px] text-ink-muted">
+              GSTR-1 counts GST invoices by their date. Orders placed in {data.period.label}: <b className="font-medium text-ink">{data.stats.orders}</b> · GST invoices dated in it:{" "}
+              <b className="font-medium text-ink">{data.stats.invoicedHere}</b>
+              {data.stats.invoicedLater > 0 && <> · invoiced in a later month: {data.stats.invoicedLater}</>}
+              {data.stats.imported > 0 && <> · imported, invoiced on your old platform: {data.stats.imported}</>}
+              {data.stats.noInvoice > 0 && <> · without a GST invoice: {data.stats.noInvoice}</>}
+            </p>
+          )}
+          {data.empty ? (
+            <Alert
+              type="info"
+              showIcon
+              message={`No GST invoices dated in ${data.period.label}`}
+              description={
+                <>
+                  Nothing to upload for this period. If you made no sales, file a Nil GSTR-1 on the portal (Returns Dashboard ▸ {data.period.label} ▸ GSTR-1 ▸ tick “File Nil GSTR-1”) — no file needed. If you sold but the invoices were made elsewhere (your old platform or billing software), file from there.
+                </>
+              }
+            />
+          ) : data.ready ? (
             <Alert type="success" showIcon message={`${data.period.label} is ready to file`} description="Check the notes below, then download the file and upload it on the GST portal." />
           ) : (
             <Alert type="error" showIcon message={`${blockers.length} ${blockers.length === 1 ? "thing" : "things"} to fix before filing ${data.period.label}`} description="The GST portal would reject the file or the numbers would be wrong. Fix them, then press Refresh." />
@@ -228,6 +248,7 @@ export default function GstReturnsPage() {
             </div>
           </Card>
 
+          {!data.empty && (
           <Card size="small" title="File it on the GST portal">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <ol className="m-0 flex max-w-[640px] flex-col gap-1.5 pl-5 text-[13.5px] text-ink">
@@ -251,7 +272,9 @@ export default function GstReturnsPage() {
             <p className="m-0 mt-3 text-[12.5px] text-ink-muted">
               Uploading again for the same period replaces invoices with the same number and adds new ones; it doesn't delete invoices already on the portal. Refunds are filed as credit notes, numbered CN-…, dated the day of the refund.
             </p>
+            <p className="m-0 mt-1 text-[12.5px] text-ink-muted">The portal takes this JSON file only — not PDF or Excel. The CSVs above are for checking, or for the GST offline tool.</p>
           </Card>
+          )}
         </>
       )}
 
