@@ -375,6 +375,7 @@ export function ProductForm({ product, store, template, justCreated = false }) {
         seoTitle: template ? undefined : source.seoTitle,
         seoDescription: source.seoDescription,
         hsnCode: source.hsnCode,
+        gstRate: source.gstRate != null ? Number(source.gstRate) : "",
         metafields: source.metafields || {},
         templateSuffix: source.templateSuffix || null,
         hiddenChannels: source.hiddenChannels || [],
@@ -941,6 +942,14 @@ export function ProductForm({ product, store, template, justCreated = false }) {
                 rules={[{ pattern: /^\d{4,8}$/, message: "HSN codes are 4 to 8 digits" }]}
               >
                 <Input inputMode="numeric" placeholder="6109" />
+              </Form.Item>
+              <Form.Item name="gstRate" label="GST rate" className="mb-0 mt-3" extra="Charged at checkout and printed on the invoice. Use “Store's rate” unless this product's rate differs (e.g. salt 0%, spices 5%).">
+                <Select
+                  options={[
+                    { value: "", label: "Store's rate (Settings ▸ Taxes)" },
+                    ...[0, 0.1, 0.25, 1, 1.5, 3, 5, 6, 7.5, 12, 18, 28, 40].map((r) => ({ value: r, label: r === 0 ? "0% — nil rated / exempt" : `${r}%` })),
+                  ]}
+                />
               </Form.Item>
             </Card>
           </div>

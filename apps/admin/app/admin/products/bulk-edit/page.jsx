@@ -22,7 +22,9 @@ const COLUMNS = [
   { key: "productType", label: "Type", level: "product", type: "text", width: 150, off: true },
   { key: "tags", label: "Tags", level: "product", type: "text", width: 200, off: true },
   { key: "hsnCode", label: "HSN", level: "product", type: "text", width: 100, off: true },
+  { key: "gstRate", label: "GST %", level: "product", type: "gst", width: 120, off: true },
 ];
+const GST_RATES = [{ value: "", label: "Store's rate" }, ...[0, 0.1, 0.25, 1, 1.5, 3, 5, 6, 7.5, 12, 18, 28, 40].map((r) => ({ value: r, label: `${r}%` }))];
 const STATUS = [
   { value: "active", label: "Active" },
   { value: "draft", label: "Draft" },
@@ -31,6 +33,7 @@ const STATUS = [
 
 function Cell({ col, value, onChange, changed }) {
   const cls = `w-full ${changed ? "!bg-[#FFF8E6] !border-[#E9B949]" : ""}`;
+  if (col.type === "gst") return <Select size="small" className={cls} value={value == null || value === "" ? "" : Number(value)} options={GST_RATES} onChange={onChange} popupMatchSelectWidth={false} />;
   if (col.type === "status") return <Select size="small" className={cls} value={value} options={STATUS} onChange={onChange} popupMatchSelectWidth={false} />;
   if (col.type === "money" || col.type === "num" || col.type === "int")
     return <InputNumber size="small" className={cls} value={value} min={col.type === "int" ? undefined : 0} precision={col.type === "int" ? 0 : col.type === "money" ? 2 : 3} controls={false} onChange={(v) => onChange(v)} />;

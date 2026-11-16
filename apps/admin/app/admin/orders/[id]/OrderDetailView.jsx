@@ -58,17 +58,21 @@ function TaxRows({ order }) {
   const t = order.taxSummary;
   const money = (n) => formatCurrency(n, order.currency);
   if (!t || !t.registered) return <SummaryRow label={t?.ratePercent ? `Tax (${t.ratePercent}%)` : "Tax"} value={money(order.tax)} />;
-  const half = Math.round((t.ratePercent / 2) * 100) / 100;
+  // One row set per GST rate (products can have their own rates).
+  const groups = (t.groups?.length ? t.groups : [{ rate: t.ratePercent, cgst: t.cgst, sgst: t.sgst, igst: t.igst }]).filter((g) => g.cgst + g.sgst + g.igst > 0);
+  const half = (r) => Math.round((r / 2) * 100) / 100;
   return (
     <>
       <SummaryRow label="Taxable value" value={money(t.taxable)} muted />
-      {t.type === "igst" ? (
-        <SummaryRow label={`IGST ${t.ratePercent}% · to ${t.placeOfSupply}`} value={money(t.igst)} />
-      ) : (
-        <>
-          <SummaryRow label={`CGST ${half}%`} value={money(t.cgst)} />
-          <SummaryRow label={`SGST ${half}%`} value={money(t.sgst)} />
-        </>
+      {groups.map((g) =>
+        t.type === "igst" ? (
+          <SummaryRow key={g.rate} label={`IGST ${g.rate}% · to ${t.placeOfSupply}`} value={money(g.igst)} />
+        ) : (
+          <div key={g.rate}>
+            <SummaryRow label={`CGST ${half(g.rate)}%`} value={money(g.cgst)} />
+            <SummaryRow label={`SGST ${half(g.rate)}%`} value={money(g.sgst)} />
+          </div>
+        ),
       )}
     </>
   );

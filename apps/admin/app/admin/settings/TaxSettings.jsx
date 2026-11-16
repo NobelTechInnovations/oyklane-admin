@@ -54,7 +54,8 @@ export function TaxSettings() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="m-0 max-w-[620px] text-[13px] text-ink-muted">Your store&apos;s GST rate applies to every product. A product with a different rate (e.g. salt 0%, spices 5%) gets its own in Products ▸ edit ▸ GST — checkout then charges each item at its rate, and the invoice shows each one.</p>
         <Button type="primary" icon={<Plus size={14} aria-hidden="true" />} onClick={() => setModalOpen(true)}>
           Add tax rate
         </Button>

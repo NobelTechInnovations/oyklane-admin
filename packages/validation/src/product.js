@@ -38,6 +38,10 @@ const createProductSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal("").transform(() => null)),
+  // GST rate for this product; null = the store's rate.
+  gstRate: z
+    .union([z.literal("").transform(() => null), z.null(), z.coerce.number().refine((n) => [0, 0.1, 0.25, 1, 1.5, 3, 5, 6, 7.5, 12, 18, 28, 40].includes(n), "Choose a GST rate")])
+    .optional(),
   description: z.string().optional().nullable(),
   status: z.enum(["active", "draft", "archived"]).default("draft"),
   vendor: z.string().optional().nullable(),
