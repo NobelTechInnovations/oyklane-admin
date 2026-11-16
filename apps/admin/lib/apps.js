@@ -23,6 +23,7 @@ export const APP_PANELS = {
   "google-shopping": "/admin/apps/google-shopping",
   "facebook-shop": "/admin/apps/facebook-shop",
   "upi-qr": "/admin/apps/upi-qr",
+  "gst-returns": "/admin/apps/gst-returns",
   "google-analytics": "/admin/apps/google-analytics",
   "xml-sitemap": "/admin/apps/xml-sitemap",
   shiprocket: "/admin/apps/couriers/shiprocket",
