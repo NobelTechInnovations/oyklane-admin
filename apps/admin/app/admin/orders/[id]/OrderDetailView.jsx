@@ -524,6 +524,22 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
                 value={`−${formatCurrency(r.amount, order.currency)}`}
               />
             ))}
+            {(() => {
+              // Refunds Oyklane has no record of: made on the store's old
+              // platform before the order was imported (or outside Oyklane).
+              const recorded = order.refunds.reduce((n, r) => n + Number(r.amount), 0);
+              const outside = Math.round((refundedTotal - recorded) * 100) / 100;
+              const where = order.importedAt ? "on your old platform" : "outside Oyklane";
+              if (outside > 0) return <SummaryRow label={`Refunded ${where}`} value={`−${formatCurrency(outside, order.currency)}`} />;
+              if (!recorded && ["partially_refunded", "refunded"].includes(order.paymentStatus)) {
+                return (
+                  <p className="m-0 mt-2 rounded-lg bg-app-bg px-3 py-2 text-xs text-ink-muted">
+                    {order.paymentStatus === "refunded" ? "Refunded" : "Partly refunded"} {where} — the amount wasn't recorded here, so the total above is what the customer paid at first. Check the refund there.
+                  </p>
+                );
+              }
+              return null;
+            })()}
             {refundedTotal > 0 && (
               <div className="border-t border-app-border mt-1 pt-1">
                 <SummaryRow label="Net payment" value={formatCurrency(Number(order.total) - refundedTotal, order.currency)} strong />
