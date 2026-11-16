@@ -6,6 +6,7 @@ import { Form, Input, Button, Alert } from "antd";
 import { MailCheck } from "lucide-react";
 import { AuthShell } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { useHumanCheck } from "@/components/HumanCheck";
 
 /** Step 1 of a password reset. The answer is the same whether or not the
  * email has an account, so this page can't be used to find out who does. */
@@ -13,15 +14,17 @@ export default function ForgotPasswordPage() {
   const [sentTo, setSentTo] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const human = useHumanCheck();
 
   async function onFinish({ email }) {
     setError(null);
     setLoading(true);
     try {
-      await apiFetch("/api/auth/password/forgot", { method: "POST", body: { email } });
+      await apiFetch("/api/auth/password/forgot", { method: "POST", body: { email, turnstileToken: human.token } });
       setSentTo(email);
     } catch (err) {
       setError(err.message);
+      human.reset();
     } finally {
       setLoading(false);
     }
@@ -57,7 +60,8 @@ export default function ForgotPasswordPage() {
         <Form.Item label="Email" name="email" rules={[{ required: true, type: "email", message: "Enter a valid email" }]}>
           <Input autoComplete="email" placeholder="you@company.com" autoFocus />
         </Form.Item>
-        <Button type="primary" htmlType="submit" block loading={loading} className="!h-11 !mt-2">
+        {human.element}
+        <Button type="primary" htmlType="submit" block loading={loading} disabled={!human.ready} className="!h-11 !mt-2">
           Send reset link
         </Button>
       </Form>

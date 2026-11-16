@@ -83,6 +83,10 @@ export async function apiDownload(path, fallbackName = "download.csv") {
 export async function serverApiFetch(path, { method = "GET", body, headers } = {}) {
   const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
+  const { headers: incoming } = await import("next/headers");
+  const h = await incoming();
+  const host = h.get("x-forwarded-host") || h.get("host");
+  const origin = host ? `${h.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https")}://${host}` : null;
 
   const res = await fetch(`${API_URL}${path}`, {
     method,
@@ -90,6 +94,9 @@ export async function serverApiFetch(path, { method = "GET", body, headers } = {
     headers: {
       ...(body !== undefined && { "Content-Type": "application/json" }),
       Cookie: cookieStore.toString(),
+      // This app's own address: the API only takes signed-in requests from
+      // our apps (lib/shield.js) — a browser sends Origin itself.
+      ...(origin && { Origin: origin }),
       ...headers,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,

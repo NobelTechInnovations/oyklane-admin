@@ -7,6 +7,7 @@ import { Form, Input, Button, Alert } from "antd";
 import { AuthShell } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { GoogleSignIn } from "@/components/GoogleSignIn";
+import { useHumanCheck } from "@/components/HumanCheck";
 
 // The marketing site — where the logo goes.
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://oyklane.com";
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const human = useHumanCheck();
 
   // Back from a Google sign-in that didn't work out (?error=…).
   useEffect(() => {
@@ -29,7 +31,7 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const r = await apiFetch("/api/auth/login", { method: "POST", body: values });
+      const r = await apiFetch("/api/auth/login", { method: "POST", body: { ...values, turnstileToken: human.token } });
       track("login", { method: "email" }, { eventID: r?.trackEventId });
       // Back to where a link sent them (e.g. accepting a store)…
       const next = new URLSearchParams(window.location.search).get("next");
@@ -40,6 +42,7 @@ export default function LoginPage() {
       router.refresh();
     } catch (err) {
       setError(err.message);
+      human.reset();
     } finally {
       setLoading(false);
     }
@@ -88,7 +91,8 @@ export default function LoginPage() {
         >
           <Input.Password autoComplete="current-password" placeholder="••••••••" />
         </Form.Item>
-        <Button type="primary" htmlType="submit" block loading={loading} size="large" className="!mt-2">
+        {human.element}
+        <Button type="primary" htmlType="submit" block loading={loading} disabled={!human.ready} size="large" className="!mt-2">
           Continue with email
         </Button>
       </Form>

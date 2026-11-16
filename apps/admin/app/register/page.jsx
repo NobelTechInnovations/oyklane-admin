@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api";
 import { acquisition, rememberUtm } from "@/lib/acquisition";
 import { track } from "@/lib/track";
 import { GoogleSignIn } from "@/components/GoogleSignIn";
+import { useHumanCheck } from "@/components/HumanCheck";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://oyklane.com";
 
@@ -27,6 +28,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const human = useHumanCheck();
   const [google, setGoogle] = useState(null);
   // Email sign-up: the 6-digit code step (values kept until it's confirmed).
   const [pending, setPending] = useState(null); // { values, ticket }
@@ -39,7 +41,12 @@ export default function RegisterPage() {
   }, [resendIn]);
 
   async function sendCode(values) {
-    const { ticket } = await apiFetch("/api/auth/register/code", { method: "POST", body: { email: values.email, name: values.name } });
+    let ticket;
+    try {
+      ({ ticket } = await apiFetch("/api/auth/register/code", { method: "POST", body: { email: values.email, name: values.name, turnstileToken: human.token } }));
+    } finally {
+      human.reset(); // a check works once
+    }
     setPending({ values, ticket });
     setCode("");
     setResendIn(45);
@@ -136,7 +143,7 @@ export default function RegisterPage() {
             </button>
             <button
               type="button"
-              disabled={resendIn > 0 || loading}
+              disabled={resendIn > 0 || loading || !human.ready}
               className="cursor-pointer border-0 bg-transparent p-0 text-ink underline underline-offset-2 disabled:cursor-default disabled:text-ink-subtle disabled:no-underline"
               onClick={async () => {
                 setError(null);
@@ -150,6 +157,7 @@ export default function RegisterPage() {
               {resendIn > 0 ? `Send again in ${resendIn}s` : "Send the code again"}
             </button>
           </div>
+          {resendIn <= 0 && human.element}
         </div>
       ) : (
         <>
@@ -185,7 +193,8 @@ export default function RegisterPage() {
         >
           <Input autoComplete="tel" inputMode="tel" placeholder="98765 43210" />
         </Form.Item>
-        <Button type="primary" htmlType="submit" block loading={loading} size="large" className="!mt-2">
+        {!google && human.element}
+        <Button type="primary" htmlType="submit" block loading={loading} disabled={!google && !human.ready} size="large" className="!mt-2">
           {google ? "Create store" : "Continue"}
         </Button>
       </Form>
