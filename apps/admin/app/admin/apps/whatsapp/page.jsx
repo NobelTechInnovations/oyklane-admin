@@ -78,7 +78,7 @@ function SharedBar({ platform, onOwn }) {
       </span>
       {rates && (
         <span className="text-[12.5px] text-ink-muted">
-          Per delivered message: updates {inr(rates.utility)} · offers {inr(rates.marketing)} · replies within 24 hours free
+          {rates.utility > 0 ? `Per delivered message: updates ${inr(rates.utility)} · offers ${inr(rates.marketing)} · replies within 24 hours free` : "Login codes and order updates: free"}
         </span>
       )}
       <Button size="small" type="primary" className="ml-auto" onClick={onOwn}>
