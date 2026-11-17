@@ -26,6 +26,13 @@ function readTicket(ticket) {
 
 export default function RegisterPage() {
   const router = useRouter();
+  // Trial length and first-month price, live from Super admin ▸ Billing.
+  const [terms, setTerms] = useState("Free trial, no card needed.");
+  useEffect(() => {
+    apiFetch("/api/auth/plans")
+      .then((p) => p?.trialDays && setTerms(`${p.trialDays}-day free trial${p.introEnabled ? `, then ₹${Number(p.introPrice).toLocaleString("en-IN")} for your first month` : ""}.`))
+      .catch(() => {});
+  }, []);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const human = useHumanCheck();
@@ -100,7 +107,7 @@ export default function RegisterPage() {
     <AuthShell
       homeHref={SITE_URL}
       title="Start your store"
-      subtitle="3-day free trial, then ₹49 for your first month."
+      subtitle={terms}
       photo="bags"
       note={
         <>
