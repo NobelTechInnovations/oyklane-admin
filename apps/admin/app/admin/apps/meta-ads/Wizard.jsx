@@ -5,6 +5,7 @@ import { Drawer, Steps, Button, Segmented, Form, Input, InputNumber, Select, Rad
 import { Plus, Trash2, Copy, Sparkles, Image as ImageIcon, Film, Eye, CheckCircle2, AlertTriangle, Rocket } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { MediaPicker } from "./Media";
+import { AdsCoachPanel } from "@shopcycle/ui";
 import { inr, useCaps } from "./ads-ui";
 
 const rid = () => Math.random().toString(36).slice(2, 9);
@@ -563,7 +564,7 @@ function AdEditor({ ad, update, caps, goal, advanced }) {
 
 const STEPS = ["Goal", "Budget & schedule", "Audiences", "Ads", "Review"];
 
-export default function Wizard({ open, onClose, draftId: initialDraftId, onPublished, storeUrl }) {
+export default function Wizard({ open, onClose, draftId: initialDraftId, onPublished, storeUrl, onAsk }) {
   const { message, modal } = App.useApp();
   const { caps } = useCaps();
   const [step, setStep] = useState(0);
@@ -575,6 +576,8 @@ export default function Wizard({ open, onClose, draftId: initialDraftId, onPubli
   const [check, setCheck] = useState(null);
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState(null);
+  // The coach beside the steps (AdsCoachPanel): checks and one-click fixes.
+  const [showCoach, setShowCoach] = useState(true);
   const dirty = useRef(false);
 
   useEffect(() => {
@@ -695,7 +698,14 @@ export default function Wizard({ open, onClose, draftId: initialDraftId, onPubli
           <Tag className="!m-0">{saveState === "saved" ? "Draft saved" : saveState === "pending" ? "Saving…" : saveState === "error" ? "Couldn't save" : "Draft"}</Tag>
         </div>
       }
-      extra={<Segmented size="small" value={advanced ? "advanced" : "simple"} onChange={(v) => setAdvanced(v === "advanced")} options={[{ value: "simple", label: "Simple" }, { value: "advanced", label: "Advanced" }]} />}
+      extra={
+        <Space size={8}>
+          <Button size="small" type={showCoach ? "primary" : "default"} ghost={showCoach} icon={<Sparkles size={13} aria-hidden="true" />} onClick={() => setShowCoach((v) => !v)} aria-pressed={showCoach}>
+            Coach
+          </Button>
+          <Segmented size="small" value={advanced ? "advanced" : "simple"} onChange={(v) => setAdvanced(v === "advanced")} options={[{ value: "simple", label: "Simple" }, { value: "advanced", label: "Advanced" }]} />
+        </Space>
+      }
       destroyOnClose
     >
       {!caps || !spec ? (
@@ -716,105 +726,114 @@ export default function Wizard({ open, onClose, draftId: initialDraftId, onPubli
         </div>
       ) : (
         <Form layout="vertical" requiredMark={false}>
-          <Steps current={step} onChange={setStep} size="small" className="mb-6" items={STEPS.map((title, i) => ({ title, status: i === step ? "process" : counts[i] ? "error" : i < step ? "finish" : "wait" }))} />
-          {step === 0 && <GoalStep spec={spec} set={set} caps={caps} advanced={advanced} />}
-          {step === 1 && <BudgetStep spec={spec} set={set} caps={caps} advanced={advanced} />}
-          {(step === 2 || step === 3) && (
-            <div className="grid lg:grid-cols-[220px_1fr] gap-4">
-              <div className="flex flex-col gap-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted m-0 mb-1">Ad sets</p>
-                {spec.adSets.map((a, i) => (
-                  <div key={a.key} className={`rounded-md border px-2 py-1.5 cursor-pointer ${i === activeSet ? "border-accent bg-accent-soft" : "border-app-border"}`} onClick={() => setActiveSet(i)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && setActiveSet(i)}>
-                    <div className="flex justify-between items-center gap-1">
-                      <span className="text-sm truncate">{a.name}</span>
-                      <span className="flex">
-                        <Tooltip title="Duplicate">
-                          <Button size="small" type="text" icon={<Copy size={12} aria-hidden="true" />} onClick={(e) => { e.stopPropagation(); set((s) => ({ ...s, adSets: [...s.adSets.slice(0, i + 1), { ...JSON.parse(JSON.stringify(a)), key: rid(), name: `${a.name} copy`, ads: a.ads.map((ad) => ({ ...ad, key: rid() })) }, ...s.adSets.slice(i + 1)] })); }} aria-label="Duplicate ad set" />
-                        </Tooltip>
-                        <Button size="small" type="text" danger disabled={spec.adSets.length === 1} icon={<Trash2 size={12} aria-hidden="true" />} onClick={(e) => { e.stopPropagation(); set((s) => ({ ...s, adSets: s.adSets.filter((_, j) => j !== i) })); setActiveSet(0); }} aria-label="Remove ad set" />
-                      </span>
-                    </div>
-                    {step === 3 && <span className="text-xs text-ink-muted">{a.ads.length} ad{a.ads.length === 1 ? "" : "s"}</span>}
-                  </div>
-                ))}
-                <Button size="small" icon={<Plus size={13} aria-hidden="true" />} onClick={() => { set((s) => ({ ...s, adSets: [...s.adSets, blankAdSet(caps, s.campaign.objective, storeUrl, s.adSets.length + 1)] })); setActiveSet(spec.adSets.length); }} disabled={spec.adSets.length >= 20}>
-                  Add ad set
-                </Button>
-                <Help>Each ad set is one audience with its own targeting. Test two audiences by giving each its own ad set.</Help>
-              </div>
-              <div>
-                {step === 2 && spec.adSets[activeSet] && <AdSetEditor adSet={spec.adSets[activeSet]} update={(p) => updateSet(activeSet, p)} caps={caps} campaign={spec.campaign} advanced={advanced} />}
-                {step === 3 && spec.adSets[activeSet] && (
-                  <div className="flex flex-col gap-3">
-                    {spec.adSets[activeSet].ads.map((ad, j) => (
-                      <Card
-                        key={ad.key}
-                        size="small"
-                        title={ad.name}
-                        extra={
-                          <Space>
-                            <Button size="small" icon={<Copy size={12} aria-hidden="true" />} onClick={() => updateSet(activeSet, { ads: [...spec.adSets[activeSet].ads, { ...JSON.parse(JSON.stringify(ad)), key: rid(), name: `${ad.name} — variation` }] })}>
-                              Variation
-                            </Button>
-                            <Button size="small" danger disabled={spec.adSets[activeSet].ads.length === 1} icon={<Trash2 size={12} aria-hidden="true" />} onClick={() => updateSet(activeSet, { ads: spec.adSets[activeSet].ads.filter((_, k) => k !== j) })} aria-label="Remove ad" />
-                          </Space>
-                        }
-                      >
-                        <AdEditor ad={ad} goal={spec.adSets[activeSet].goal} caps={caps} advanced={advanced} update={(p) => updateSet(activeSet, { ads: spec.adSets[activeSet].ads.map((x, k) => (k === j ? { ...x, ...p } : x)) })} />
-                      </Card>
+          <div className={showCoach ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]" : ""}>
+            <div className="min-w-0">
+              <Steps current={step} onChange={setStep} size="small" className="mb-6" items={STEPS.map((title, i) => ({ title, status: i === step ? "process" : counts[i] ? "error" : i < step ? "finish" : "wait" }))} />
+              {step === 0 && <GoalStep spec={spec} set={set} caps={caps} advanced={advanced} />}
+              {step === 1 && <BudgetStep spec={spec} set={set} caps={caps} advanced={advanced} />}
+              {(step === 2 || step === 3) && (
+                <div className="grid lg:grid-cols-[220px_1fr] gap-4">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted m-0 mb-1">Ad sets</p>
+                    {spec.adSets.map((a, i) => (
+                      <div key={a.key} className={`rounded-md border px-2 py-1.5 cursor-pointer ${i === activeSet ? "border-accent bg-accent-soft" : "border-app-border"}`} onClick={() => setActiveSet(i)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && setActiveSet(i)}>
+                        <div className="flex justify-between items-center gap-1">
+                          <span className="text-sm truncate">{a.name}</span>
+                          <span className="flex">
+                            <Tooltip title="Duplicate">
+                              <Button size="small" type="text" icon={<Copy size={12} aria-hidden="true" />} onClick={(e) => { e.stopPropagation(); set((s) => ({ ...s, adSets: [...s.adSets.slice(0, i + 1), { ...JSON.parse(JSON.stringify(a)), key: rid(), name: `${a.name} copy`, ads: a.ads.map((ad) => ({ ...ad, key: rid() })) }, ...s.adSets.slice(i + 1)] })); }} aria-label="Duplicate ad set" />
+                            </Tooltip>
+                            <Button size="small" type="text" danger disabled={spec.adSets.length === 1} icon={<Trash2 size={12} aria-hidden="true" />} onClick={(e) => { e.stopPropagation(); set((s) => ({ ...s, adSets: s.adSets.filter((_, j) => j !== i) })); setActiveSet(0); }} aria-label="Remove ad set" />
+                          </span>
+                        </div>
+                        {step === 3 && <span className="text-xs text-ink-muted">{a.ads.length} ad{a.ads.length === 1 ? "" : "s"}</span>}
+                      </div>
                     ))}
-                    <Button icon={<Plus size={13} aria-hidden="true" />} onClick={() => updateSet(activeSet, { ads: [...spec.adSets[activeSet].ads, blankAd(caps, storeUrl, spec.adSets[activeSet].ads.length + 1)] })}>
-                      Add another ad
+                    <Button size="small" icon={<Plus size={13} aria-hidden="true" />} onClick={() => { set((s) => ({ ...s, adSets: [...s.adSets, blankAdSet(caps, s.campaign.objective, storeUrl, s.adSets.length + 1)] })); setActiveSet(spec.adSets.length); }} disabled={spec.adSets.length >= 20}>
+                      Add ad set
                     </Button>
-                    <Help>2–4 different ads per ad set lets Meta find the one that works best. Different photos or opening lines make the biggest difference.</Help>
+                    <Help>Each ad set is one audience with its own targeting. Test two audiences by giving each its own ad set.</Help>
                   </div>
+                  <div>
+                    {step === 2 && spec.adSets[activeSet] && <AdSetEditor adSet={spec.adSets[activeSet]} update={(p) => updateSet(activeSet, p)} caps={caps} campaign={spec.campaign} advanced={advanced} />}
+                    {step === 3 && spec.adSets[activeSet] && (
+                      <div className="flex flex-col gap-3">
+                        {spec.adSets[activeSet].ads.map((ad, j) => (
+                          <Card
+                            key={ad.key}
+                            size="small"
+                            title={ad.name}
+                            extra={
+                              <Space>
+                                <Button size="small" icon={<Copy size={12} aria-hidden="true" />} onClick={() => updateSet(activeSet, { ads: [...spec.adSets[activeSet].ads, { ...JSON.parse(JSON.stringify(ad)), key: rid(), name: `${ad.name} — variation` }] })}>
+                                  Variation
+                                </Button>
+                                <Button size="small" danger disabled={spec.adSets[activeSet].ads.length === 1} icon={<Trash2 size={12} aria-hidden="true" />} onClick={() => updateSet(activeSet, { ads: spec.adSets[activeSet].ads.filter((_, k) => k !== j) })} aria-label="Remove ad" />
+                              </Space>
+                            }
+                          >
+                            <AdEditor ad={ad} goal={spec.adSets[activeSet].goal} caps={caps} advanced={advanced} update={(p) => updateSet(activeSet, { ads: spec.adSets[activeSet].ads.map((x, k) => (k === j ? { ...x, ...p } : x)) })} />
+                          </Card>
+                        ))}
+                        <Button icon={<Plus size={13} aria-hidden="true" />} onClick={() => updateSet(activeSet, { ads: [...spec.adSets[activeSet].ads, blankAd(caps, storeUrl, spec.adSets[activeSet].ads.length + 1)] })}>
+                          Add another ad
+                        </Button>
+                        <Help>2–4 different ads per ad set lets Meta find the one that works best. Different photos or opening lines make the biggest difference.</Help>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {step === 4 && (
+                <div className="flex flex-col gap-4 max-w-3xl">
+                  {check === null ? (
+                    <Spin />
+                  ) : (
+                    <>
+                      {check.errors.length ? (
+                        <Alert type="error" showIcon message={`${check.errors.length} thing${check.errors.length === 1 ? "" : "s"} to fix before publishing`} description={<ul className="m-0 pl-4">{check.errors.map((e, i) => <li key={i}>{e.text}</li>)}</ul>} />
+                      ) : (
+                        <Alert type="success" showIcon message="Ready to publish" />
+                      )}
+                      {check.warnings.length > 0 && <Alert type="warning" showIcon icon={<AlertTriangle size={16} aria-hidden="true" />} message="Worth a look" description={<ul className="m-0 pl-4">{check.warnings.map((e, i) => <li key={i}>{e.text}</li>)}</ul>} />}
+                    </>
+                  )}
+                  <Card size="small" title="Summary">
+                    <p className="m-0 text-sm">
+                      <b>{spec.campaign.name || "Untitled"}</b> · {caps.objectives[spec.campaign.objective]?.label} ·{" "}
+                      {spec.campaign.budgetLevel === "campaign" ? `${inr(spec.campaign.budget)} ${spec.campaign.budgetType === "daily" ? "a day" : "total"} shared across ad sets` : "budgets per ad set"}
+                    </p>
+                    <ul className="text-sm mt-2 mb-0 pl-4">
+                      {spec.adSets.map((a) => (
+                        <li key={a.key}>
+                          {a.name}: {caps.goals[a.goal]?.label}
+                          {spec.campaign.budgetLevel === "adset" ? `, ${inr(a.budget)}` : ""} — {a.ads.length} ad{a.ads.length === 1 ? "" : "s"}
+                        </li>
+                      ))}
+                    </ul>
+                  </Card>
+                  <Help>Every ad links back with tracking (utm_source=facebook and the campaign id), so your store can count orders from these ads separately from Meta&apos;s numbers.</Help>
+                </div>
+              )}
+              <div className="flex justify-between mt-8">
+                <Button disabled={step === 0} onClick={() => setStep(step - 1)}>
+                  Back
+                </Button>
+                {step < 4 ? (
+                  <Button type="primary" onClick={() => setStep(step + 1)}>
+                    Next
+                  </Button>
+                ) : (
+                  <Button type="primary" icon={<Rocket size={14} aria-hidden="true" />} loading={publishing} disabled={!check?.ok} onClick={doPublish}>
+                    Publish (paused)
+                  </Button>
                 )}
               </div>
             </div>
-          )}
-          {step === 4 && (
-            <div className="flex flex-col gap-4 max-w-3xl">
-              {check === null ? (
-                <Spin />
-              ) : (
-                <>
-                  {check.errors.length ? (
-                    <Alert type="error" showIcon message={`${check.errors.length} thing${check.errors.length === 1 ? "" : "s"} to fix before publishing`} description={<ul className="m-0 pl-4">{check.errors.map((e, i) => <li key={i}>{e.text}</li>)}</ul>} />
-                  ) : (
-                    <Alert type="success" showIcon message="Ready to publish" />
-                  )}
-                  {check.warnings.length > 0 && <Alert type="warning" showIcon icon={<AlertTriangle size={16} aria-hidden="true" />} message="Worth a look" description={<ul className="m-0 pl-4">{check.warnings.map((e, i) => <li key={i}>{e.text}</li>)}</ul>} />}
-                </>
-              )}
-              <Card size="small" title="Summary">
-                <p className="m-0 text-sm">
-                  <b>{spec.campaign.name || "Untitled"}</b> · {caps.objectives[spec.campaign.objective]?.label} ·{" "}
-                  {spec.campaign.budgetLevel === "campaign" ? `${inr(spec.campaign.budget)} ${spec.campaign.budgetType === "daily" ? "a day" : "total"} shared across ad sets` : "budgets per ad set"}
-                </p>
-                <ul className="text-sm mt-2 mb-0 pl-4">
-                  {spec.adSets.map((a) => (
-                    <li key={a.key}>
-                      {a.name}: {caps.goals[a.goal]?.label}
-                      {spec.campaign.budgetLevel === "adset" ? `, ${inr(a.budget)}` : ""} — {a.ads.length} ad{a.ads.length === 1 ? "" : "s"}
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-              <Help>Every ad links back with tracking (utm_source=facebook and the campaign id), so your store can count orders from these ads separately from Meta&apos;s numbers.</Help>
-            </div>
-          )}
-          <div className="flex justify-between mt-8">
-            <Button disabled={step === 0} onClick={() => setStep(step - 1)}>
-              Back
-            </Button>
-            {step < 4 ? (
-              <Button type="primary" onClick={() => setStep(step + 1)}>
-                Next
-              </Button>
-            ) : (
-              <Button type="primary" icon={<Rocket size={14} aria-hidden="true" />} loading={publishing} disabled={!check?.ok} onClick={doPublish}>
-                Publish (paused)
-              </Button>
+            {showCoach && (
+              <div className="lg:sticky lg:top-0 lg:self-start">
+                <AdsCoachPanel spec={spec} step={step} onApply={(next) => set(next)} onAsk={onAsk ? () => onAsk({ kind: "builder", screen: "Campaign builder", step: STEPS[step], draft: spec }) : undefined} />
+              </div>
             )}
           </div>
         </Form>
