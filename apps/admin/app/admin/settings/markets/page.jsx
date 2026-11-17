@@ -7,8 +7,8 @@ export default async function SettingsMarketsPage() {
   return (
     <div>
       <SettingsSectionHeader
-        title="Markets and currencies"
-        description={`Show prices in your shoppers' own currencies. Checkout still charges in ${markets.base}, your store's currency.`}
+        title="Markets and languages"
+        description={`Show your store in your shoppers' own currencies and languages. Your store's currency is ${markets.base}.`}
       />
       <MarketsSettings initial={markets} canEdit={role !== "staff"} />
     </div>

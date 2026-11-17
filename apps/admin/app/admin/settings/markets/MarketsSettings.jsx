@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, Checkbox, Switch, InputNumber, Button, Alert, App, Radio } from "antd";
 import { FixedPrices } from "./FixedPrices";
+import { Languages } from "./Languages";
 import { apiFetch } from "@/lib/api";
 import { formatCurrency } from "@shopcycle/utils";
 
@@ -108,6 +109,8 @@ export function MarketsSettings({ initial, canEdit }) {
           </Button>
         </div>
       )}
+
+      {initial.languages && <Languages initial={initial.languages} canEdit={canEdit} />}
 
       <FixedPrices base={base} currencies={(initial.currencies || []).filter((c) => currencies.includes(c))} canEdit={canEdit} />
     </div>

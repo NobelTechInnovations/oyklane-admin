@@ -12,7 +12,7 @@ export const SETTINGS_SECTIONS = [
   { href: "/admin/settings/team", icon: Users, label: "Users & permissions", hint: "Staff and roles" },
   { href: "/admin/settings/payments", icon: Wallet, label: "Payments", hint: "Gateways and cash on delivery" },
   { href: "/admin/settings/checkout", icon: ShoppingCart, label: "Checkout", hint: "Form fields at checkout" },
-  { href: "/admin/settings/markets", icon: Coins, label: "Markets and currencies", hint: "Prices in your shoppers' currencies" },
+  { href: "/admin/settings/markets", icon: Coins, label: "Markets and languages", hint: "Currencies and languages for shoppers" },
   { href: "/admin/settings/shipping", icon: Truck, label: "Shipping and delivery", hint: "Couriers, COD payouts, rates" },
   { href: "/admin/settings/taxes", icon: Percent, label: "Taxes", hint: "Tax rates at checkout" },
   { href: "/admin/settings/domains", icon: Globe, label: "Domains", hint: "Your store's address" },
