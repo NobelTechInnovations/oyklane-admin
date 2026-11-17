@@ -79,7 +79,8 @@ const SETUP_STEPS = [
     key: "hasPlan",
     icon: CreditCard,
     title: "Turn on autopay",
-    text: "Keep your store running when the free trial ends — your first month after the trial is just ₹49.",
+    // The first-month price comes from Super admin ▸ Billing (live plans).
+    text: (intro) => `Keep your store running when the free trial ends${intro ? ` — your first month after the trial is just ${intro}` : ""}.`,
     cta: "Set up billing",
     href: "/admin/settings/billing",
   },
@@ -236,6 +237,13 @@ function ToDo({ todo }) {
 }
 
 function SetupGuide({ setup }) {
+  // Today's first-month price (public plans endpoint), for the autopay step.
+  const [intro, setIntro] = useState(null);
+  useEffect(() => {
+    apiFetch("/api/auth/plans")
+      .then((p) => setIntro(p?.introEnabled ? `₹${Number(p.introPrice).toLocaleString("en-IN")}` : null))
+      .catch(() => {});
+  }, []);
   const doneCount = SETUP_STEPS.filter((s) => setup[s.key]).length;
   const total = SETUP_STEPS.length;
   // Open the first incomplete step by default — the one thing to do next.
@@ -299,7 +307,7 @@ function SetupGuide({ setup }) {
               {open && !done && (
                 <div className="flex items-start gap-4 pl-[46px] pr-3 pb-4">
                   <div className="flex-1">
-                    <p className="text-[13px] text-ink-muted mt-0 mb-3 leading-relaxed">{step.text}</p>
+                    <p className="text-[13px] text-ink-muted mt-0 mb-3 leading-relaxed">{typeof step.text === "function" ? step.text(intro) : step.text}</p>
                     <Link href={step.href}>
                       <Button type="primary">{step.cta}</Button>
                     </Link>
