@@ -2,6 +2,7 @@
 
 import { Tag } from "antd";
 import { Phone, MessageCircle } from "lucide-react";
+import { money } from "@/lib/money";
 
 export const STATUS = {
   requested: { label: "Request", color: "gold" },
@@ -17,7 +18,7 @@ export const HANDOVER = { delivery: "We deliver", store_pickup: "Customer picks 
 export const RETURNS = { collect: "We collect it back", drop_off: "Customer drops it back" };
 export const DEPOSIT = { none: "No deposit", due: "Collect on handover", held: "Holding", refunded: "Given back", kept: "Kept" };
 
-export const rupees = (n) => `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+export const rupees = (n) => money(n);
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 /** "2026-10-12" → "12 Oct". */

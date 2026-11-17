@@ -19,6 +19,7 @@ import { ThemeTemplateField } from "@/components/ThemeTemplateField";
 import { SalesChannelsCard } from "@/components/channels/SalesChannelsCard";
 import { IMAGE_ACCEPT, uploadImage } from "@/lib/uploads";
 import { storefrontUrlFor, storefrontLabelFor } from "@/lib/storefront";
+import { currencySymbol } from "@/lib/money";
 
 const STATUS_OPTIONS = [
   { value: "draft", label: "Draft" },
@@ -673,7 +674,7 @@ export function ProductForm({ product, store, template, justCreated = false }) {
                 </Form.Item>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                   <Form.Item name={["variants", 0, "price"]} label="Selling price" rules={[{ required: !rentalOn, message: "Enter the price" }]} extra={rentalOn ? "Not used while it's rented out — the rent per day below is." : "What the shopper pays, including GST."}>
-                    <InputNumber min={0} className="w-full" prefix="₹" placeholder="999" />
+                    <InputNumber min={0} className="w-full" prefix={currencySymbol()} placeholder="999" />
                   </Form.Item>
                   <Form.Item
                     name={["variants", 0, "comparePrice"]}
@@ -689,7 +690,7 @@ export function ProductForm({ product, store, template, justCreated = false }) {
                       }),
                     ]}
                   >
-                    <InputNumber min={0} className="w-full" prefix="₹" placeholder="1,299" />
+                    <InputNumber min={0} className="w-full" prefix={currencySymbol()} placeholder="1,299" />
                   </Form.Item>
                   <Form.Item name={["variants", 0, "inventoryQuantity"]} label="In stock" extra="How many you can sell. It goes down with every order.">
                     <InputNumber min={0} className="w-full" placeholder="0" />
@@ -727,10 +728,10 @@ export function ProductForm({ product, store, template, justCreated = false }) {
                               <Input placeholder="M / Black" />
                             </Form.Item>
                             <Form.Item {...restField} name={[name, "price"]} label="Price" className="mb-0" rules={[{ required: !rentalOn, message: "Required" }]}>
-                              <InputNumber min={0} className="w-full" prefix="₹" />
+                              <InputNumber min={0} className="w-full" prefix={currencySymbol()} />
                             </Form.Item>
                             <Form.Item {...restField} name={[name, "comparePrice"]} label="MRP" className="mb-0">
-                              <InputNumber min={0} className="w-full" prefix="₹" />
+                              <InputNumber min={0} className="w-full" prefix={currencySymbol()} />
                             </Form.Item>
                             <Form.Item {...restField} name={[name, "inventoryQuantity"]} label="In stock" className="mb-0">
                               <InputNumber min={0} className="w-full" />

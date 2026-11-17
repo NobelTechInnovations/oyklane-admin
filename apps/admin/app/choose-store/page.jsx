@@ -6,6 +6,7 @@ import { Alert, Button, Form, Input, Skeleton } from "antd";
 import { ChevronRight, Store } from "lucide-react";
 import { BrandMark } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
+import { CountryField, guessCountry } from "@/components/CountrySelect";
 
 const ROLE = { owner: "Owner", admin: "Admin", staff: "Staff" };
 
@@ -30,7 +31,7 @@ export default function ChooseStorePage() {
     setBusy("create");
     setError(null);
     try {
-      await apiFetch("/api/auth/stores", { method: "POST", body: { storeName: v.storeName } });
+      await apiFetch("/api/auth/stores", { method: "POST", body: { storeName: v.storeName, country: v.country } });
       window.location.href = "/admin";
     } catch (err) {
       setError(err.message);
@@ -68,7 +69,8 @@ export default function ChooseStorePage() {
               <h1 className="m-0 text-[20px] font-semibold text-ink">No store on this login</h1>
               <p className="m-0 mt-1 mb-5 text-[13.5px] text-ink-muted">This login doesn&apos;t have a store any more — it may have moved to another login or been closed. Create a new one, or sign in with the email that has your store.</p>
               {error && <Alert type="error" showIcon className="!mb-4" message={error} />}
-              <Form layout="vertical" requiredMark={false} onFinish={create}>
+              <Form layout="vertical" requiredMark={false} onFinish={create} initialValues={{ country: guessCountry() }}>
+                <CountryField />
                 <Form.Item name="storeName" label="Store name" rules={[{ required: true, message: "Give your store a name" }]}>
                   <Input maxLength={80} autoFocus />
                 </Form.Item>

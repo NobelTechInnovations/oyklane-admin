@@ -9,8 +9,9 @@ import { apiFetch } from "@/lib/api";
 import { sendWithFallback } from "@/lib/uploads";
 import { AppNotInstalled } from "@/components/apps/AppPanelParts";
 import { ImageUploadField } from "@/components/ImageUploadField";
+import { money } from "@/lib/money";
 
-const inr = (n) => (n == null ? "" : `₹${Number(n).toLocaleString("en-IN")}`);
+const inr = (n) => (n == null ? "" : money(n));
 const mb = (b) => `${Math.round(b / 1024 / 1024)} MB`;
 
 /** Products with their first image, for tagging — loaded once. */
@@ -301,7 +302,7 @@ function Preview({ s, sample }) {
                 {s.showProduct && (
                   <span className="rounded-[6px] bg-white/95 px-1.5 py-1 text-[9.5px] leading-tight text-[#111]">
                     <b className="block truncate">Product name</b>
-                    {s.showPrice && "₹499"}
+                    {s.showPrice && money(499)}
                   </span>
                 )}
               </span>

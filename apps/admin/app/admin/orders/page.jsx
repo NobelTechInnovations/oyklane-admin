@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Table, Button, App, Tooltip } from "antd";
 import { Plus, ShoppingCart, Search, Download } from "lucide-react";
 import { PageHeader, StatusBadge, EmptyState, ListCard, SearchInput } from "@shopcycle/ui";
-import { formatCurrency } from "@shopcycle/utils";
+import { formatCurrency } from "@/lib/money";
 import { apiFetch, apiDownload } from "@/lib/api";
 import { useColumnChoice } from "@/components/ColumnPicker";
 

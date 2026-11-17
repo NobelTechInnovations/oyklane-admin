@@ -7,8 +7,9 @@ import { PageHeader, useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { storefrontUrlFor } from "@/lib/storefront";
 import { AppNotInstalled } from "@/components/apps/AppPanelParts";
+import { money, currencySymbol } from "@/lib/money";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+const inr = (n) => money(n);
 const local = (d) => {
   if (!d) return "";
   const x = new Date(d);
@@ -158,7 +159,7 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
         </div>
 
         <h3 className="m-0 mb-1 border-t border-app-border pt-4 text-[13px] font-semibold text-ink">Points</h3>
-        <p className="m-0 mb-3 text-[12.5px] text-ink-muted">Shoppers see points; each point takes ₹1 off this product at checkout. A friend counts once per link, only signed in, never from the sharer's own phone or account.</p>
+        <p className="m-0 mb-3 text-[12.5px] text-ink-muted">Shoppers see points; each point takes {money(1)} off this product at checkout. A friend counts once per link, only signed in, never from the sharer's own phone or account.</p>
         <div className="grid gap-x-4 sm:grid-cols-3">
           <Form.Item name="perView" label="Points per friend who opens the link">
             <InputNumber min={0} max={10000} addonAfter="pts" className="w-full" />
@@ -177,14 +178,14 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
           <Form.Item label="Most a shopper can save">
             <div className="flex gap-2">
               <Form.Item name="capType" noStyle>
-                <Segmented options={[{ value: "percent", label: "%" }, { value: "amount", label: "₹" }]} />
+                <Segmented options={[{ value: "percent", label: "%" }, { value: "amount", label: currencySymbol() }]} />
               </Form.Item>
               <Form.Item name="capValue" noStyle>
                 <InputNumber min={0} max={v.capType === "amount" ? 1000000 : 90} className="flex-1" />
               </Form.Item>
             </div>
           </Form.Item>
-          <Form.Item name="minPrice" label="Price never below (₹)" extra="For the cheapest pack; bigger packs keep the same share. Empty: only the limit on the left.">
+          <Form.Item name="minPrice" label={`Price never below (${currencySymbol()})`} extra="For the cheapest pack; bigger packs keep the same share. Empty: only the limit on the left.">
             <InputNumber min={0} className="w-full" placeholder="e.g. 499" />
           </Form.Item>
           <Form.Item name="maxViews" label="Most friends that earn points" extra="Stops one shopper earning without end: after this many friends, more friends add no points (orders still do). 0 = no limit.">
@@ -196,7 +197,7 @@ function DealDrawer({ open, deal, onClose, onSaved }) {
           <Form.Item name="stockLimit" label="Orders that can use points" extra="How many shoppers can use their points on this deal. When that many have, the deal closes. 0 = no limit.">
             <InputNumber min={0} max={1000000} className="w-full" />
           </Form.Item>
-          <Form.Item name="budget" label="Total budget for the deal (₹)" extra="The most you'll give away across all shoppers. When it's used, the deal closes. Empty = no limit.">
+          <Form.Item name="budget" label={`Total budget for the deal (${currencySymbol()})`} extra="The most you'll give away across all shoppers. When it's used, the deal closes. Empty = no limit.">
             <InputNumber min={0} className="w-full" placeholder="e.g. 20000" />
           </Form.Item>
           <Form.Item name="live" label="Deal is on" valuePropName="checked">
@@ -286,7 +287,7 @@ function Report({ id, onClose }) {
               ["Sales from links", inr(t.revenue)],
               ["Bought during the deal", t.buyers],
               ["Shoppers who used points", t.redeemed],
-              ["Points used (₹ off)", inr(t.discountGiven)],
+              [`Points used (${currencySymbol()} off)`, inr(t.discountGiven)],
               ["Budget used", t.budget != null ? `${inr(t.spent)} of ${inr(t.budget)}` : inr(t.spent)],
             ].map(([label, value]) => (
               <div key={label} className="rounded-xl border border-app-border px-3 py-2.5">
@@ -297,7 +298,7 @@ function Report({ id, onClose }) {
           </div>
           {t.discountGiven > 0 && t.revenue > 0 && (
             <p className="m-0 text-[13px] text-ink-muted">
-              Every ₹1 of discount brought {inr(t.revenue / t.discountGiven)} in sales from shared links{t.newShoppers ? `, and ${t.newShoppers} new shoppers signed up` : ""}.
+              Every {money(1)} of discount brought {inr(t.revenue / t.discountGiven)} in sales from shared links{t.newShoppers ? `, and ${t.newShoppers} new shoppers signed up` : ""}.
             </p>
           )}
           {data.daily?.length > 0 && (

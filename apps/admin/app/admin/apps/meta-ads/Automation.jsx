@@ -5,6 +5,7 @@ import { Card, Switch, Button, Modal, Form, Select, InputNumber, Input, Table, T
 import { Plus, Trash2, Eye } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { inr } from "./ads-ui";
+import { currencySymbol } from "@/lib/money";
 
 const FIELD = {
   minSpend: { label: "Only after spending at least", prefix: "₹" },
@@ -68,7 +69,7 @@ function RuleModal({ open, onClose, kinds, rule, onSaved, base }) {
         </div>
         {kind === "raise_budget_good_roas" && (
           <Form.Item name="maxDailyBudget" label="Never raise a daily budget above" rules={[{ required: true, message: "This limit is required" }]} extra="The rule's spending limit. Raises happen in small steps, at most every 3 days per ad set.">
-            <InputNumber className="w-full" min={100} prefix="₹" />
+            <InputNumber className="w-full" min={100} prefix={currencySymbol()} />
           </Form.Item>
         )}
       </Form>

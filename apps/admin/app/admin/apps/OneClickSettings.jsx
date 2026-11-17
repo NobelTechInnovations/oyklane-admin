@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, ColorPicker, Form, Input, InputNumber, Segmented, Select, Switch } from "antd";
 import { apiFetch } from "@/lib/api";
+import { currencySymbol } from "@/lib/money";
 
 const hexOf = (c) => (typeof c === "string" ? c : c?.toHexString?.() || "");
 
@@ -172,7 +173,7 @@ export function OneClickSettings({ app, onSave, saving, onPreview }) {
             <InputNumber min={1} max={partialType === "fixed" ? 100000 : 90} addonBefore={partialType === "fixed" ? "₹" : undefined} addonAfter={partialType === "fixed" ? undefined : "%"} className="w-full" />
           </Form.Item>
           <Form.Item name="partialMinOrder" label="Only for orders from" extra="0 means every order.">
-            <InputNumber min={0} max={1000000} addonBefore="₹" className="w-full" />
+            <InputNumber min={0} max={1000000} addonBefore={currencySymbol()} className="w-full" />
           </Form.Item>
         </div>
       )}

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Form, Input, Select, Button, Card, App } from "antd";
 import { apiFetch } from "@/lib/api";
+import { countryOf } from "@shopcycle/utils";
 import { getTimezoneOptions } from "@/lib/timezones";
 import { SettingsSectionHeader } from "./SettingsNav";
 import { StoreAccess } from "./StoreAccess";
@@ -36,7 +37,7 @@ export function GeneralSettings({ store }) {
           layout="vertical"
           initialValues={{
             name: store.name,
-            currency: store.currency,
+            ...(!store.homeCountry && { currency: store.currency }),
             timezone: store.timezone,
             supportEmail: store.supportEmail,
             supportPhone: store.supportPhone,
@@ -50,15 +51,21 @@ export function GeneralSettings({ store }) {
             <Input maxLength={120} />
           </Form.Item>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-            <Form.Item name="currency" label="Currency" extra="Prices across your store are shown in this currency.">
-              <Select
-                options={[
-                  { value: "INR", label: "INR — Indian Rupee (₹)" },
-                  { value: "USD", label: "USD — US Dollar ($)" },
-                  { value: "EUR", label: "EUR — Euro (€)" },
-                ]}
-              />
-            </Form.Item>
+            {store.homeCountry ? (
+              <Form.Item label="Country and currency" extra="Set when the store was created, with its taxes and payment options. A business in another country gets its own store.">
+                <Input value={`${countryOf(store).flag} ${countryOf(store).name} · ${store.currency}`} disabled />
+              </Form.Item>
+            ) : (
+              <Form.Item name="currency" label="Currency" extra="Prices across your store are shown in this currency.">
+                <Select
+                  options={[
+                    { value: "INR", label: "INR — Indian Rupee (₹)" },
+                    { value: "USD", label: "USD — US Dollar ($)" },
+                    { value: "EUR", label: "EUR — Euro (€)" },
+                  ]}
+                />
+              </Form.Item>
+            )}
             <Form.Item name="timezone" label="Timezone" extra="Used for order times and reports.">
               <Select showSearch options={timezoneOptions} optionFilterProp="label" placeholder="Select a timezone" />
             </Form.Item>

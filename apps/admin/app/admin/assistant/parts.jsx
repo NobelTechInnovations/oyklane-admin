@@ -5,8 +5,9 @@ import { App, Button, Input, InputNumber, Modal, Form, Segmented, Select, Switch
 import { Check, X, MessageCircle, Gift, ShieldAlert, Zap, Eye, ShoppingCart, CreditCard, Search, Pencil, Trash2, Plus, Sparkles, OctagonX, Play } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { deliveryProblem } from "@/lib/whatsapp-errors";
+import { currencySymbol, money } from "@/lib/money";
 
-export const inr = (n) => (n == null ? "—" : `₹${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`);
+export const inr = (n) => (n == null ? "—" : money(n, { maxDecimals: 0 }));
 const ago = (d) => {
   if (!d) return "";
   const m = Math.round((Date.now() - new Date(d).getTime()) / 60000);
@@ -358,7 +359,7 @@ export function RulesPanel() {
               <InputNumber min={0} max={90} addonAfter="%" className="w-full" />
             </Form.Item>
             <Form.Item name="minPrice" label="Never below (optional)">
-              <InputNumber min={0} addonBefore="₹" className="w-full" />
+              <InputNumber min={0} addonBefore={currencySymbol()} className="w-full" />
             </Form.Item>
             <Form.Item name="minMarginPercent" label="Min margin over cost">
               <InputNumber min={0} max={500} addonAfter="%" className="w-full" />
@@ -446,7 +447,7 @@ export function AutopilotPanel({ settings, usage, platform, onSaved }) {
         </label>
         <label>
           <span className="text-ink-muted">Discount budget / month</span>
-          <InputNumber min={0} value={s.monthlyDiscountBudget} onChange={(v) => setS({ ...s, monthlyDiscountBudget: v })} addonBefore="₹" className="!mt-1 w-full" />
+          <InputNumber min={0} value={s.monthlyDiscountBudget} onChange={(v) => setS({ ...s, monthlyDiscountBudget: v })} addonBefore={currencySymbol()} className="!mt-1 w-full" />
         </label>
         <label>
           <span className="text-ink-muted">Ask me above</span>

@@ -7,6 +7,7 @@ import { Sidebar, SidebarNav } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { BillingBanner } from "./BillingBanner";
 import { HelpProvider } from "./help/HelpDrawer";
+import { setStoreMoney } from "@/lib/money";
 
 // These areas use the whole width, every page in them, so tables show
 // all their columns.
@@ -20,6 +21,8 @@ const WIDE = [/^\/admin\/(orders|products|collections|customers|discounts|analyt
  * the menu covering it.
  */
 export function AdminShell({ user, store, children }) {
+  // Before any page renders: amounts read in this store's currency.
+  setStoreMoney(store);
   const [navOpen, setNavOpen] = useState(false);
   const pathname = usePathname();
 

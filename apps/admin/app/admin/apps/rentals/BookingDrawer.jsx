@@ -6,6 +6,7 @@ import { App, Button, Checkbox, Descriptions, Drawer, Input, InputNumber, Select
 import { PackageCheck, Truck, CheckCircle2, XCircle, CalendarClock } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { StatusTag, ContactLinks, HANDOVER, RETURNS, DEPOSIT, rupees, dayLabel, todayDay, daysBetween } from "./shared";
+import { currencySymbol } from "@/lib/money";
 
 /**
  * One booking: who, what, when, how it travels — and the next step
@@ -158,7 +159,7 @@ export function BookingDrawer({ bookingId, onClose, onChanged, settings }) {
                 </label>
                 <label className="flex flex-col gap-1 text-[12.5px] text-ink-muted">
                   Late fee
-                  <InputNumber min={0} prefix="₹" value={lateFee ?? suggestedFee} onChange={setLateFee} className="w-[130px]" />
+                  <InputNumber min={0} prefix={currencySymbol()} value={lateFee ?? suggestedFee} onChange={setLateFee} className="w-[130px]" />
                 </label>
               </div>
               {lateDays > 0 && <p className="m-0 text-[12px] text-ink-muted">{lateDays} day{lateDays === 1 ? "" : "s"} late{settings?.lateFeePerDay ? ` × ${rupees(settings.lateFeePerDay)} a day` : " — set a late fee per day in Settings"}.</p>}

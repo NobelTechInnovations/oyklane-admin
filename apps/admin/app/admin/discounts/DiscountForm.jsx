@@ -7,6 +7,7 @@ import { Shuffle, Zap, Ticket } from "lucide-react";
 import { PageHeader, SaveBar } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { DISCOUNT_TYPES, kindOf, summaryLines } from "./discount-text";
+import { currencySymbol } from "@/lib/money";
 
 // <input type="datetime-local"> works in the browser's local time.
 const toLocal = (iso) => {
@@ -199,7 +200,7 @@ export function DiscountForm({ discount, kind: kindParam }) {
                     <Segmented options={[{ value: "percentage", label: "Percentage" }, { value: "fixed_amount", label: "Fixed amount" }]} />
                   </Form.Item>
                   <Form.Item name="value" className="mb-0" rules={[{ required: true, message: "Enter the value" }]}>
-                    <InputNumber min={0} max={v.valueType === "percentage" ? 100 : undefined} className="!w-40" {...(v.valueType === "percentage" ? { suffix: "%" } : { prefix: "₹" })} />
+                    <InputNumber min={0} max={v.valueType === "percentage" ? 100 : undefined} className="!w-40" {...(v.valueType === "percentage" ? { suffix: "%" } : { prefix: currencySymbol() })} />
                   </Form.Item>
                 </div>
                 {v.valueType === "percentage" && (
@@ -209,7 +210,7 @@ export function DiscountForm({ discount, kind: kindParam }) {
                     </Form.Item>
                     {v.capOn && (
                       <Form.Item name="maxDiscount" className="mb-0" rules={[{ required: true, message: "Enter the cap" }]}>
-                        <InputNumber min={1} prefix="₹" className="!w-36" />
+                        <InputNumber min={1} prefix={currencySymbol()} className="!w-36" />
                       </Form.Item>
                     )}
                   </div>
@@ -282,7 +283,7 @@ export function DiscountForm({ discount, kind: kindParam }) {
               </Form.Item>
               {v.minimum === "amount" && (
                 <Form.Item name="minSubtotal" className="mb-0" rules={[{ required: true, message: "Enter the amount" }]}>
-                  <InputNumber min={1} prefix="₹" className="!w-40" />
+                  <InputNumber min={1} prefix={currencySymbol()} className="!w-40" />
                 </Form.Item>
               )}
               {v.minimum === "quantity" && (

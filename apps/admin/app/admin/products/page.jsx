@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Table, Button, Dropdown, App, Select, InputNumber, Popover, Checkbox, Tag, Badge } from "antd";
 import { Plus, Package, Search, Upload, Download, ChevronDown, X, SlidersHorizontal, Columns3 } from "lucide-react";
 import { PageHeader, StatusBadge, EmptyState, ListCard, Thumb, SearchInput, DeleteIconButton, useConfirmDialog } from "@shopcycle/ui";
-import { formatCurrency } from "@shopcycle/utils";
+import { formatCurrency, money, currencySymbol } from "@/lib/money";
 import { apiFetch, apiDownload } from "@/lib/api";
 import { ProductImportModal } from "@/components/ProductImportModal";
 import { useUrlState } from "@/lib/useUrlState";
@@ -340,7 +340,7 @@ export default function ProductsPage() {
         <Select {...selectProps} placeholder="Any" value={filters.vendor} onChange={(v) => setFilter("vendor", v)} options={options.vendors.map((t) => ({ value: t, label: t }))} />
       </label>
       <label className="flex flex-col gap-1 text-xs text-ink-muted">
-        Price (₹)
+        Price ({currencySymbol()})
         <span className="flex items-center gap-2">
           <InputNumber className="!w-full" min={0} placeholder="Min" value={filters.priceMin} onChange={(v) => setFilter("priceMin", v)} />
           <span aria-hidden="true">–</span>
@@ -455,8 +455,8 @@ export default function ProductsPage() {
               filters.tag && ["tag", `Tag: ${filters.tag}`],
               filters.productType && ["productType", `Type: ${filters.productType}`],
               filters.vendor && ["vendor", `Vendor: ${filters.vendor}`],
-              filters.priceMin != null && ["priceMin", `From ₹${filters.priceMin}`],
-              filters.priceMax != null && ["priceMax", `Up to ₹${filters.priceMax}`],
+              filters.priceMin != null && ["priceMin", `From ${money(filters.priceMin)}`],
+              filters.priceMax != null && ["priceMax", `Up to ${money(filters.priceMax)}`],
               filters.channel && ["channel", CHANNEL.find((x) => x.value === filters.channel)?.label],
             ]
               .filter(Boolean)

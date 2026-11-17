@@ -5,6 +5,7 @@ import Link from "next/link";
 import { App, Button, Tooltip } from "antd";
 import { BellRing, BellOff } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { currencySymbol } from "@/lib/money";
 
 const POLL_MS = 20000;
 const SOUND_KEY = "oy-order-sound";
@@ -42,7 +43,7 @@ const money = (n, currency) => {
   try {
     return new Intl.NumberFormat("en-IN", { style: "currency", currency: currency || "INR", maximumFractionDigits: 0 }).format(Number(n) || 0);
   } catch {
-    return `₹${n}`;
+    return `${currencySymbol()}${n}`;
   }
 };
 

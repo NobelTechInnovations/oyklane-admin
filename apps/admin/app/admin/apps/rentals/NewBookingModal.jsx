@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { App, Form, Input, InputNumber, Modal, Radio, Select } from "antd";
 import { apiFetch } from "@/lib/api";
 import { todayDay } from "./shared";
+import { currencySymbol } from "@/lib/money";
 
 /**
  * "Add booking" — a rental agreed on the phone or in the shop — or
@@ -121,10 +122,10 @@ export function NewBookingModal({ kind, onClose, onCreated }) {
                 <InputNumber min={1} max={99} className="w-full" />
               </Form.Item>
               <Form.Item name="rentalTotal" label="Rent agreed" extra="Empty = your rates">
-                <InputNumber min={0} prefix="₹" className="w-full" />
+                <InputNumber min={0} prefix={currencySymbol()} className="w-full" />
               </Form.Item>
               <Form.Item name="deposit" label="Deposit" extra="Empty = your deposit">
-                <InputNumber min={0} prefix="₹" className="w-full" />
+                <InputNumber min={0} prefix={currencySymbol()} className="w-full" />
               </Form.Item>
             </div>
           </>

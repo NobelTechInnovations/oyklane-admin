@@ -5,6 +5,7 @@ import { Modal, Form, Input, InputNumber, Checkbox, Alert, Button, App } from "a
 import { Gift, Copy, Check } from "lucide-react";
 import { formatCurrency } from "@shopcycle/utils";
 import { apiFetch } from "@/lib/api";
+import { currencySymbol } from "@/lib/money";
 
 const PRESETS = [500, 1000, 2000, 5000];
 
@@ -107,7 +108,7 @@ export function IssueGiftCardModal({ open, onClose, onIssued, currency = "INR" }
       ) : (
         <Form form={form} layout="vertical" requiredMark={false} onFinish={submit} className="mt-3" initialValues={{ sendEmail: true }}>
           <Form.Item name="amount" label="Value" rules={[{ required: true, message: "Enter an amount" }]}>
-            <InputNumber className="!w-full" min={1} max={1000000} prefix="₹" placeholder="1000" />
+            <InputNumber className="!w-full" min={1} max={1000000} prefix={currencySymbol()} placeholder="1000" />
           </Form.Item>
           <div className="flex flex-wrap gap-2 -mt-3 mb-4">
             {PRESETS.map((v) => (

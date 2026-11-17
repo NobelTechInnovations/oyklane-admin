@@ -6,6 +6,7 @@ import { Undo2 } from "lucide-react";
 import { formatCurrency } from "@shopcycle/utils";
 import { apiFetch } from "@/lib/api";
 import { round2, suggestedRefund } from "./order-utils";
+import { currencySymbol } from "@/lib/money";
 
 /**
  * Refund some items and/or an amount. The amount starts at what the chosen
@@ -133,7 +134,7 @@ export function RefundModal({ order, open, onClose, onDone, preset }) {
           <span className="block text-[13px] font-medium text-ink mb-1">Amount</span>
           <InputNumber
             className="w-full"
-            prefix="₹"
+            prefix={currencySymbol()}
             min={0}
             max={max}
             precision={2}

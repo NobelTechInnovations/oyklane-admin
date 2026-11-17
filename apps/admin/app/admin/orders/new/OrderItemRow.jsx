@@ -2,6 +2,7 @@
 
 import { Form, Input, InputNumber, Select, Button, Switch } from "antd";
 import { Trash2 } from "lucide-react";
+import { currencySymbol, money } from "@/lib/money";
 
 /** Picking a real product/variant auto-fills title, price, and sku (kept as
  * hidden fields so they still travel in the form's submitted values) — a
@@ -19,7 +20,7 @@ export function OrderItemRow({ field, restField, form, products, onRemove, canRe
   const variantOptions = products.flatMap((p) =>
     p.variants.map((v) => ({
       value: v.id,
-      label: `${p.title}${v.title !== "Default" ? ` — ${v.title}` : ""} (₹${Number(v.price).toFixed(2)})`,
+      label: `${p.title}${v.title !== "Default" ? ` — ${v.title}` : ""} (${money(v.price)})`,
     }))
   );
 
@@ -86,7 +87,7 @@ export function OrderItemRow({ field, restField, form, products, onRemove, canRe
           <InputNumber min={1} className="w-full" />
         </Form.Item>
         <Form.Item {...restField} name={[field.name, "price"]} label="Price" className="mb-0">
-          <InputNumber min={0} prefix="₹" className="w-full" readOnly={!isCustom} />
+          <InputNumber min={0} prefix={currencySymbol()} className="w-full" readOnly={!isCustom} />
         </Form.Item>
 
         <div className="flex items-center gap-2">

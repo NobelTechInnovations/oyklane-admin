@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Card, Table, Form, Input, Checkbox, App } from "antd";
 import { Mail, Phone, ShoppingBag } from "lucide-react";
 import { PageHeader, StatusBadge, EmptyState, SaveBar } from "@shopcycle/ui";
-import { formatCurrency } from "@shopcycle/utils";
+import { formatCurrency } from "@/lib/money";
 import { apiFetch } from "@/lib/api";
 import { initials } from "@/lib/storefront";
 import { CustomerInsightsCard } from "@/components/CustomerInsightsCard";

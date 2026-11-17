@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
+import { currencySymbol } from "@/lib/money";
 
 /**
  * Small, dependency-free charts for the admin (SVG + a hover layer).
@@ -21,7 +22,7 @@ export function formatValue(n, kind = "number", { compact = false } = {}) {
   if (kind === "percent") return `${v.toFixed(v >= 10 ? 1 : 2)}%`;
   if (compact && Math.abs(v) >= 1000) {
     const c = new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 }).format(v);
-    return kind === "currency" ? `₹${c}` : c;
+    return kind === "currency" ? `${currencySymbol()}${c}` : c;
   }
   return kind === "currency" ? inrFmt.format(v) : numFmt.format(Math.round(v));
 }

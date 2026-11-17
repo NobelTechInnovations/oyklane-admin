@@ -5,9 +5,10 @@ import Link from "next/link";
 import { Button, Card, InputNumber, Switch } from "antd";
 import { CalendarDays, Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { currencySymbol, money } from "@/lib/money";
 
 const BLANK = { enabled: false, pricePerDay: null, tiers: [], minDays: 1, maxDays: 7, deposit: 0, units: 1, bufferDays: 1, leadDays: 1 };
-const rupees = (n) => `₹${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+const rupees = (n) => money(n);
 
 function rateFor(cfg, days) {
   let rate = Number(cfg.pricePerDay) || 0;
@@ -106,11 +107,11 @@ export const RentalProductCard = forwardRef(function RentalProductCard({ product
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <label className="flex flex-col gap-1 text-[13px] text-ink">
               Rent per day
-              <InputNumber min={1} prefix="₹" value={cfg.pricePerDay} onChange={(pricePerDay) => update({ pricePerDay })} placeholder="1,000" className="w-full" status={cfg.pricePerDay > 0 ? undefined : "warning"} />
+              <InputNumber min={1} prefix={currencySymbol()} value={cfg.pricePerDay} onChange={(pricePerDay) => update({ pricePerDay })} placeholder="1,000" className="w-full" status={cfg.pricePerDay > 0 ? undefined : "warning"} />
             </label>
             <label className="flex flex-col gap-1 text-[13px] text-ink">
               Refundable deposit
-              <InputNumber min={0} prefix="₹" value={cfg.deposit} onChange={(deposit) => update({ deposit: deposit || 0 })} className="w-full" />
+              <InputNumber min={0} prefix={currencySymbol()} value={cfg.deposit} onChange={(deposit) => update({ deposit: deposit || 0 })} className="w-full" />
             </label>
             <label className="flex flex-col gap-1 text-[13px] text-ink">
               Pieces of each size
@@ -125,7 +126,7 @@ export const RentalProductCard = forwardRef(function RentalProductCard({ product
                 From
                 <InputNumber min={2} max={365} value={t.days} onChange={(days) => update({ tiers: cfg.tiers.map((x, k) => (k === i ? { ...x, days } : x)) })} className="w-[80px]" />
                 days, each day
-                <InputNumber min={1} prefix="₹" value={t.price} onChange={(price) => update({ tiers: cfg.tiers.map((x, k) => (k === i ? { ...x, price } : x)) })} className="w-[130px]" />
+                <InputNumber min={1} prefix={currencySymbol()} value={t.price} onChange={(price) => update({ tiers: cfg.tiers.map((x, k) => (k === i ? { ...x, price } : x)) })} className="w-[130px]" />
                 <Button size="small" type="text" danger icon={<Trash2 size={13} aria-hidden="true" />} aria-label="Remove" onClick={() => update({ tiers: cfg.tiers.filter((_, k) => k !== i) })} />
               </div>
             ))}

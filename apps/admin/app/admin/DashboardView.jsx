@@ -23,7 +23,7 @@ import {
   PartyPopper,
 } from "lucide-react";
 import { StatusBadge, EmptyState } from "@shopcycle/ui";
-import { formatCurrency } from "@shopcycle/utils";
+import { formatCurrency } from "@/lib/money";
 import { apiFetch } from "@/lib/api";
 import { trackOnce } from "@/lib/track";
 import { storefrontUrlFor, storefrontLabelFor } from "@/lib/storefront";

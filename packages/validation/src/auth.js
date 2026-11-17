@@ -29,6 +29,9 @@ const registerSchema = z.object({
   // without one picks it on its first visit to the dashboard (/welcome).
   plan: z.string().trim().min(1).max(40).optional(),
   whatsapp,
+  // Where the business is registered (ISO code). Decides currency, tax,
+  // gateways and login codes, and can't be changed later. Default India.
+  country: z.string().trim().length(2).toUpperCase().optional(),
 });
 
 const loginSchema = z.object({
@@ -40,6 +43,9 @@ const createStoreSchema = z.object({
   storeName: z.string().min(2, "Store name is too short").max(120),
   plan: z.string().trim().min(1).max(40).optional(),
   whatsapp,
+  // Where the business is registered (ISO code). Decides currency, tax,
+  // gateways and login codes, and can't be changed later. Default India.
+  country: z.string().trim().length(2).toUpperCase().optional(),
 });
 
 const switchStoreSchema = z.object({

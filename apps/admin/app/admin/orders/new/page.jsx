@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Form, InputNumber, Select, Button, Card } from "antd";
 import { Plus } from "lucide-react";
 import { PageHeader } from "@shopcycle/ui";
-import { formatCurrency } from "@shopcycle/utils";
+import { formatCurrency, currencySymbol } from "@/lib/money";
 import { apiFetch } from "@/lib/api";
 import { OrderItemRow } from "./OrderItemRow";
 
@@ -110,13 +110,13 @@ export default function NewOrderPage() {
                 />
               </Form.Item>
               <Form.Item name="discount" label="Discount" className="mb-3">
-                <InputNumber min={0} prefix="₹" className="w-full" />
+                <InputNumber min={0} prefix={currencySymbol()} className="w-full" />
               </Form.Item>
               <Form.Item name="shipping" label="Shipping" className="mb-3">
-                <InputNumber min={0} prefix="₹" className="w-full" />
+                <InputNumber min={0} prefix={currencySymbol()} className="w-full" />
               </Form.Item>
               <Form.Item name="tax" label="Tax" className="mb-0">
-                <InputNumber min={0} prefix="₹" className="w-full" />
+                <InputNumber min={0} prefix={currencySymbol()} className="w-full" />
               </Form.Item>
             </Card>
 

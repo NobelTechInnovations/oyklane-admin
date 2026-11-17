@@ -9,9 +9,14 @@ function slugify(input) {
     .replace(/^-+|-+$/g, "");
 }
 
-function formatCurrency(amount, currency = "INR") {
+const countries = require("./countries");
+
+/** ₹1,00,000.00 · $100,000.00 · 100.000,00 € · ￥100,000 — each currency
+ * written the way its own country writes it (or `locale`, if given). */
+function formatCurrency(amount, currency = "INR", locale) {
   const value = typeof amount === "string" ? Number(amount) : amount;
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(value || 0);
+  const code = String(currency || "INR").toUpperCase();
+  return new Intl.NumberFormat(locale || countries.CURRENCY_LOCALE[code] || "en-IN", { style: "currency", currency: code }).format(value || 0);
 }
 
 /** Wraps an async Fastify handler so thrown errors reach the error handler
@@ -81,4 +86,4 @@ const APP_ICON_KEYS = [
   "store",
 ];
 
-module.exports = { slugify, formatCurrency, asyncHandler, HttpError, detectDeviceType, APP_ICON_KEYS };
+module.exports = { slugify, formatCurrency, asyncHandler, HttpError, detectDeviceType, APP_ICON_KEYS, ...countries };

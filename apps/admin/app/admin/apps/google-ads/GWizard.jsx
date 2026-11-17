@@ -5,6 +5,7 @@ import { Drawer, Steps, Button, Form, Input, InputNumber, Select, Radio, DatePic
 import { Plus, Trash2, Sparkles, Lightbulb, Rocket, CheckCircle2, ShieldCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { GImagePicker, SLOT } from "./GMedia";
+import { currencySymbol } from "@/lib/money";
 
 const rid = () => Math.random().toString(36).slice(2, 9);
 const STEPS = ["Type", "Budget & bidding", "Where & who", "Ads", "Review"];
@@ -376,7 +377,7 @@ export default function GWizard({ open, onClose, draftId: initialDraft, caps, st
           {step === 1 && (
             <div className="flex flex-col gap-4 max-w-2xl">
               <Form.Item label="Average daily budget" className="!mb-0">
-                <InputNumber prefix="₹" min={1} value={c.budget} onChange={(budget) => setC({ budget })} />
+                <InputNumber prefix={currencySymbol()} min={1} value={c.budget} onChange={(budget) => setC({ budget })} />
                 <Help>Google may spend up to 2× on a busy day, but never more than about 30.4× this in a month.</Help>
               </Form.Item>
               <Form.Item label="What should Google bid for?" className="!mb-0">
@@ -393,7 +394,7 @@ export default function GWizard({ open, onClose, draftId: initialDraft, caps, st
               </Form.Item>
               {c.bidding === "MAXIMIZE_CONVERSIONS" && (
                 <Form.Item label="Target cost per purchase (optional)" className="!mb-0">
-                  <InputNumber prefix="₹" min={1} value={c.targetCpa} onChange={(targetCpa) => setC({ targetCpa })} />
+                  <InputNumber prefix={currencySymbol()} min={1} value={c.targetCpa} onChange={(targetCpa) => setC({ targetCpa })} />
                   <Help>Leave empty at first; set it after you see what a purchase costs.</Help>
                 </Form.Item>
               )}
@@ -404,7 +405,7 @@ export default function GWizard({ open, onClose, draftId: initialDraft, caps, st
               )}
               {c.bidding === "MAXIMIZE_CLICKS" && (
                 <Form.Item label="Maximum per click (optional)" className="!mb-0">
-                  <InputNumber prefix="₹" min={1} value={c.maxCpc} onChange={(maxCpc) => setC({ maxCpc })} />
+                  <InputNumber prefix={currencySymbol()} min={1} value={c.maxCpc} onChange={(maxCpc) => setC({ maxCpc })} />
                 </Form.Item>
               )}
               <div className="grid sm:grid-cols-2 gap-3">
@@ -467,7 +468,7 @@ export default function GWizard({ open, onClose, draftId: initialDraft, caps, st
                       </Form.Item>
                       {(c.bidding === "MANUAL_CPC" || c.type === "SHOPPING") && (
                         <Form.Item label="Max cost per click" className="!mb-0">
-                          <InputNumber prefix="₹" min={0.5} step={0.5} value={g.cpc} onChange={(cpc) => updG(active, { cpc })} />
+                          <InputNumber prefix={currencySymbol()} min={0.5} step={0.5} value={g.cpc} onChange={(cpc) => updG(active, { cpc })} />
                         </Form.Item>
                       )}
                     </div>

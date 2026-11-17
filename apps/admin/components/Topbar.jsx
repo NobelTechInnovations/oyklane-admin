@@ -18,6 +18,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { CountryField, guessCountry } from "@/components/CountrySelect";
 import { track } from "@/lib/track";
 import { storefrontUrlFor, initials } from "@/lib/storefront";
 import { CommandPalette } from "./CommandPalette";
@@ -86,7 +87,7 @@ export function Topbar({ user, store, onOpenNav }) {
 
   async function handleCreateStore(values) {
     try {
-      await apiFetch("/api/auth/stores", { method: "POST", body: { storeName: values.storeName } });
+      await apiFetch("/api/auth/stores", { method: "POST", body: { storeName: values.storeName, country: values.country } });
       track("store_created");
       // A moment for the analytics beacon before the full page load.
       setTimeout(() => (window.location.href = "/admin"), 250);
@@ -233,7 +234,8 @@ export function Topbar({ user, store, onOpenNav }) {
         okText="Create store"
         destroyOnHidden
       >
-        <Form layout="vertical" form={form} onFinish={handleCreateStore} requiredMark={false}>
+        <Form layout="vertical" form={form} onFinish={handleCreateStore} requiredMark={false} initialValues={{ country: guessCountry() }}>
+          <CountryField />
           <Form.Item name="storeName" label="Store name" rules={[{ required: true, min: 2, message: "Too short" }]} extra="You'll choose its plan next.">
             <Input placeholder="My New Shop" autoFocus />
           </Form.Item>

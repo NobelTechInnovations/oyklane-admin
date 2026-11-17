@@ -7,6 +7,7 @@ import { PageHeader, SaveBar } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { ImageUploadField } from "@/components/ImageUploadField";
 import { storefrontUrlFor } from "@/lib/storefront";
+import { money } from "@/lib/money";
 
 const TITLE_MAX = 70;
 const DESCRIPTION_MAX = 160;
@@ -239,7 +240,7 @@ function CartSketch({ on, strip }) {
       {strip && <div className="truncate bg-[#111] px-3 py-1.5 text-center text-[10.5px] text-white">{strip}</div>}
       {on.showOffers && (
         <div className="border-b border-app-border px-3 py-2.5">
-          <p className="m-0 mb-1.5 text-[10.5px] text-ink-muted">Add ₹320 more for ₹100 off</p>
+          <p className="m-0 mb-1.5 text-[10.5px] text-ink-muted">Add {money(320)} more for {money(100)} off</p>
           <div className="h-1.5 overflow-hidden rounded-full bg-app-bg">
             <div className="h-full w-3/5 rounded-full bg-[#16a34a]" />
           </div>
@@ -251,10 +252,10 @@ function CartSketch({ on, strip }) {
           <span className="flex flex-1 flex-col gap-1.5 pt-0.5">
             <span className={`${bar} w-3/4`} />
             <span className="flex items-center gap-1.5">
-              <b className="font-semibold">₹499</b>
+              <b className="font-semibold">{money(499)}</b>
               {on.showSavings && (
                 <>
-                  <s className="text-ink-subtle">₹699</s>
+                  <s className="text-ink-subtle">{money(699)}</s>
                   <span className="text-[#16a34a]">29% off</span>
                 </>
               )}
@@ -269,9 +270,9 @@ function CartSketch({ on, strip }) {
         </div>
       )}
       <div className="flex flex-col gap-2 px-3 py-3">
-        {on.showSavings && <p className="m-0 text-center text-[10.5px] text-[#16a34a]">₹400 saved so far</p>}
+        {on.showSavings && <p className="m-0 text-center text-[10.5px] text-[#16a34a]">{money(400)} saved so far</p>}
         <div className="flex items-center justify-center gap-1.5 rounded-lg bg-[#111] py-2.5 font-semibold text-white">
-          Checkout · ₹998
+          Checkout · {money(998)}
           {on.showPayIcons && <span className="ml-1 flex gap-0.5">{["#5f6368", "#5f259f", "#00baf2"].map((col) => <i key={col} className="h-3 w-3 rounded-full" style={{ background: col }} />)}</span>}
         </div>
         {on.viewCartButton && <div className="rounded-lg border border-app-border py-2 text-center font-medium">View cart</div>}

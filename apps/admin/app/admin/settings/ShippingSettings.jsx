@@ -6,6 +6,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { COUNTRY_OPTIONS } from "@/lib/countries";
+import { currencySymbol } from "@/lib/money";
 
 export function ShippingSettings() {
   const { message } = App.useApp();
@@ -143,10 +144,10 @@ export function ShippingSettings() {
             <Input placeholder="Standard" />
           </Form.Item>
           <Form.Item name="price" label="Price" rules={[{ required: true, message: "Required" }]}>
-            <InputNumber min={0} className="w-full" prefix="₹" />
+            <InputNumber min={0} className="w-full" prefix={currencySymbol()} />
           </Form.Item>
           <Form.Item name="freeAbove" label="Free above (optional)" className="mb-0">
-            <InputNumber min={0} className="w-full" prefix="₹" />
+            <InputNumber min={0} className="w-full" prefix={currencySymbol()} />
           </Form.Item>
         </Form>
       </Modal>

@@ -9,6 +9,7 @@ import { acquisition, rememberUtm } from "@/lib/acquisition";
 import { track } from "@/lib/track";
 import { GoogleSignIn } from "@/components/GoogleSignIn";
 import { useHumanCheck } from "@/components/HumanCheck";
+import { CountryField, guessCountry } from "@/components/CountrySelect";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://oyklane.com";
 
@@ -84,7 +85,7 @@ export default function RegisterPage() {
         await sendCode(values);
         return;
       }
-      const reg = await apiFetch("/api/auth/google/register", { method: "POST", body: { ticket: google.ticket, storeName: values.storeName, whatsapp: values.whatsapp, acquisition: acquisition() } });
+      const reg = await apiFetch("/api/auth/google/register", { method: "POST", body: { ticket: google.ticket, storeName: values.storeName, country: values.country, whatsapp: values.whatsapp, acquisition: acquisition() } });
       track("sign_up", { method: "google" }, { eventID: reg?.trackEventId });
       track("store_created");
       router.push("/welcome");
@@ -163,9 +164,10 @@ export default function RegisterPage() {
         <>
       {!google && <GoogleSignIn divider="Or sign up with email" />}
 
-      <Form layout="vertical" onFinish={onFinish} requiredMark={false} size="large">
+      <Form layout="vertical" onFinish={onFinish} requiredMark={false} size="large" initialValues={{ country: guessCountry() }}>
+        <CountryField />
         <Form.Item label="Store name" name="storeName" rules={[{ required: true, min: 2, message: "Store name is too short" }]}>
-          <Input placeholder="Aurora Goods" autoFocus />
+          <Input placeholder="Aurora Goods" />
         </Form.Item>
         {!google && (
           <>

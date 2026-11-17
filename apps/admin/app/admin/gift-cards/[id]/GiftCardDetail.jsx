@@ -9,6 +9,7 @@ import { PageHeader, StatusBadge, useConfirmDialog } from "@shopcycle/ui";
 import { formatCurrency } from "@shopcycle/utils";
 import { apiFetch } from "@/lib/api";
 import { cardState, CARD_STATE_BADGE, dateLabel } from "../gift-card-state";
+import { currencySymbol } from "@/lib/money";
 
 const KIND_LABEL = {
   issued: "Issued",
@@ -195,7 +196,7 @@ export function GiftCardDetail({ card, canManage }) {
               { value: "remove", label: "Remove money" },
             ]}
           />
-          <InputNumber className="!w-full" min={1} max={direction === "remove" ? Number(card.balance) : 1000000} prefix="₹" value={amount} onChange={setAmount} />
+          <InputNumber className="!w-full" min={1} max={direction === "remove" ? Number(card.balance) : 1000000} prefix={currencySymbol()} value={amount} onChange={setAmount} />
           <Input.TextArea rows={2} maxLength={500} placeholder="Reason (only staff see this)" value={note} onChange={(e) => setNote(e.target.value)} />
           {amount > 0 && (
             <p className="m-0 text-sm text-ink-muted tabular-nums">

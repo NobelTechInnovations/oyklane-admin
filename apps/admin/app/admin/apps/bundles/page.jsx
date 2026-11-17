@@ -9,8 +9,9 @@ import { apiFetch } from "@/lib/api";
 import { storefrontUrlFor } from "@/lib/storefront";
 import { AppNotInstalled } from "@/components/apps/AppPanelParts";
 import { ImageUploadField } from "@/components/ImageUploadField";
+import { money, currencySymbol } from "@/lib/money";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
+const inr = (n) => money(n);
 
 function BundleModal({ open, bundle, onClose, onSaved }) {
   const { message } = App.useApp();
@@ -73,7 +74,7 @@ function BundleModal({ open, bundle, onClose, onSaved }) {
           <Form.Item name="size" label="Items in the box" rules={[{ required: true }]}>
             <InputNumber min={2} max={20} className="w-full" />
           </Form.Item>
-          <Form.Item name="price" label="Box price (₹)" rules={[{ required: true }]}>
+          <Form.Item name="price" label={`Box price (${currencySymbol()})`} rules={[{ required: true }]}>
             <InputNumber min={1} className="w-full" />
           </Form.Item>
         </div>

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { App, Table, Button, Dropdown } from "antd";
 import { Plus, Tag as TagIcon, Zap, MoreHorizontal, Copy, Pencil, Trash2, Power, Search } from "lucide-react";
 import { PageHeader, StatusBadge, EmptyState, ListCard, SearchInput, useConfirmDialog } from "@shopcycle/ui";
-import { formatCurrency } from "@shopcycle/utils";
+import { formatCurrency } from "@/lib/money";
 import { apiFetch } from "@/lib/api";
 import { summaryLines, TYPE_INFO } from "./discount-text";
 import { TypePicker } from "./TypePicker";

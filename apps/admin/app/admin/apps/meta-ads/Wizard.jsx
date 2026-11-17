@@ -6,6 +6,7 @@ import { Plus, Trash2, Copy, Sparkles, Image as ImageIcon, Film, Eye, CheckCircl
 import { apiFetch } from "@/lib/api";
 import { MediaPicker } from "./Media";
 import { inr, useCaps } from "./ads-ui";
+import { currencySymbol } from "@/lib/money";
 
 const rid = () => Math.random().toString(36).slice(2, 9);
 
@@ -110,7 +111,7 @@ function BudgetStep({ spec, set, caps, advanced }) {
         </Form.Item>
         {c.budgetLevel === "campaign" && (
           <Form.Item label={c.budgetType === "daily" ? "Daily budget" : "Total budget"} className="!mb-0">
-            <InputNumber className="w-full" min={1} prefix="₹" value={c.budget} onChange={(budget) => setC({ budget })} />
+            <InputNumber className="w-full" min={1} prefix={currencySymbol()} value={c.budget} onChange={(budget) => setC({ budget })} />
             {c.budgetType === "daily" && Number(c.budget) < caps.minDaily && <Help>Under ₹{caps.minDaily} a day usually delivers very little.</Help>}
           </Form.Item>
         )}
@@ -135,7 +136,7 @@ function BudgetStep({ spec, set, caps, advanced }) {
           </Form.Item>
           {["COST_CAP", "LOWEST_COST_WITH_BID_CAP"].includes(c.bidStrategy) && (
             <Form.Item label={c.bidStrategy === "COST_CAP" ? "Target cost per result" : "Bid cap"} className="!mb-0 mt-3">
-              <InputNumber prefix="₹" min={1} value={c.bidAmount} onChange={(bidAmount) => setC({ bidAmount })} />
+              <InputNumber prefix={currencySymbol()} min={1} value={c.bidAmount} onChange={(bidAmount) => setC({ bidAmount })} />
             </Form.Item>
           )}
           {c.bidStrategy === "LOWEST_COST_WITH_MIN_ROAS" && (
@@ -247,7 +248,7 @@ function AdSetEditor({ adSet, update, caps, campaign, advanced }) {
       )}
       {campaign.budgetLevel === "adset" && (
         <Form.Item label={campaign.budgetType === "daily" ? "Daily budget for this ad set" : "Total budget for this ad set"} className="!mb-0">
-          <InputNumber prefix="₹" min={1} value={adSet.budget} onChange={(budget) => update({ budget })} />
+          <InputNumber prefix={currencySymbol()} min={1} value={adSet.budget} onChange={(budget) => update({ budget })} />
         </Form.Item>
       )}
       <div>

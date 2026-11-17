@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Card, Button, Modal, Form, Input, App } from "antd";
 import { Plus, Trash2, Copy, Megaphone } from "lucide-react";
 import { PageHeader, EmptyState, useConfirmDialog } from "@shopcycle/ui";
-import { formatCurrency } from "@shopcycle/utils";
+import { formatCurrency } from "@/lib/money";
 import { apiFetch } from "@/lib/api";
 
 export default function CampaignsPage() {

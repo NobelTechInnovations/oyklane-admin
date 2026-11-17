@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Table, Button, Tooltip, App } from "antd";
 import { ShoppingBag, Copy, Mail, CheckCircle2 } from "lucide-react";
 import { PageHeader, EmptyState, ListCard, StatusBadge, Thumb } from "@shopcycle/ui";
-import { formatCurrency } from "@shopcycle/utils";
+import { formatCurrency } from "@/lib/money";
 import { apiFetch } from "@/lib/api";
 
 function ago(iso) {

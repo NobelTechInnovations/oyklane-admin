@@ -1,5 +1,5 @@
 import { Percent, ShoppingBag, Gift, Truck } from "lucide-react";
-import { formatCurrency } from "@shopcycle/utils";
+import { formatCurrency } from "@/lib/money";
 
 /** The four kinds, as the "Create discount" picker shows them. */
 export const DISCOUNT_TYPES = [

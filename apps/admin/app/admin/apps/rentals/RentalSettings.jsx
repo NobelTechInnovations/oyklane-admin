@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { App, Button, Card, Form, Input, InputNumber, Radio, Skeleton, Switch } from "antd";
 import { apiFetch } from "@/lib/api";
+import { currencySymbol } from "@/lib/money";
 
 /** How bookings work in this store: pay at checkout or request first,
  * delivery and pickup, the deposit, late fees, terms. */
@@ -121,7 +122,7 @@ export function RentalSettings({ settings, onSaved }) {
             </Radio.Group>
           </Form.Item>
           <Form.Item name="lateFeePerDay" label="Late fee per day, per piece" className="mb-0" extra="Suggested when you mark a late return. Leave 0 for none.">
-            <InputNumber min={0} prefix="₹" className="w-[180px]" />
+            <InputNumber min={0} prefix={currencySymbol()} className="w-[180px]" />
           </Form.Item>
         </Card>
 
