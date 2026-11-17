@@ -26,6 +26,8 @@ const checkoutSchema = z.object({
   // The shopper's currency (the storefront's switcher): Stripe/PayPal charge
   // in it when the store shows it (Settings ▸ Markets).
   currency: z.string().trim().length(3).toUpperCase().optional(),
+  // The shopper's language (/de/…): its currency when no currency was picked.
+  lang: z.string().trim().max(5).toLowerCase().optional(),
   // The storefront address the shopper is on — where a gateway sends them
   // back after paying (…/checkout/return/:provider).
   returnBase: z.string().url().max(500).optional(),

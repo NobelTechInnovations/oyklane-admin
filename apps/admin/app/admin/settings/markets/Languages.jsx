@@ -21,7 +21,7 @@ export function Languages({ initial, canEdit }) {
     setSaving(true);
     try {
       await apiFetch("/api/store", { method: "PATCH", body: { settings: { languages: { list } } } });
-      message.success(list.length ? "Languages saved. Pages are translated as shoppers visit them." : "Your store shows one language");
+      message.success(list.length ? "Languages saved. Your whole store is being translated — it takes a few minutes. Prices show in each language's currency (German → euros)." : "Your store shows one language");
     } catch (err) {
       message.error(err.message);
     } finally {
@@ -105,6 +105,15 @@ function Translations({ langs, options, canEdit }) {
     }
   }
 
+  async function translateAll() {
+    try {
+      const r = await apiFetch("/api/store/translations/translate-store", { method: "POST", body: { lang } });
+      message.success(r.started ? "Translating every page of your store. It takes a few minutes; reload to see progress." : "Already translating this language");
+    } catch (err) {
+      message.error(err.message);
+    }
+  }
+
   async function retry() {
     try {
       const r = await apiFetch("/api/store/translations/retry", { method: "POST", body: { lang } });
@@ -134,6 +143,7 @@ function Translations({ langs, options, canEdit }) {
         />
         <Input.Search placeholder="Search text" allowClear className="max-w-xs" onSearch={(v) => (setPage(1), setQ(v))} />
         {status === "failed" && canEdit && <Button onClick={retry}>Try again</Button>}
+        {canEdit && <Button onClick={translateAll}>Translate whole store</Button>}
       </div>
       <Table
         className="mt-3"
