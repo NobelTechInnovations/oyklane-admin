@@ -23,6 +23,9 @@ const checkoutSchema = z.object({
   paymentMethod: z.enum(["cod", "gift_card", "razorpay", "cashfree", "payu", "stripe", "paypal", "upi_qr"]).default("cod"),
   // The way to pay the shopper picked (UPI, card, …): the gateway opens on it.
   payMode: z.enum(["upi", "card", "netbanking", "wallet", "emi", "paylater", "paypal", "cod", "partial"]).optional().catch(undefined),
+  // The shopper's currency (the storefront's switcher): Stripe/PayPal charge
+  // in it when the store shows it (Settings ▸ Markets).
+  currency: z.string().trim().length(3).toUpperCase().optional(),
   // The storefront address the shopper is on — where a gateway sends them
   // back after paying (…/checkout/return/:provider).
   returnBase: z.string().url().max(500).optional(),

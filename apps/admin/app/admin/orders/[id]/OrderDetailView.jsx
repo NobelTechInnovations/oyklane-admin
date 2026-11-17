@@ -492,6 +492,9 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
             {Number(order.tax) > 0 && <TaxRows order={order} />}
             <div className="border-t border-app-border mt-1 pt-1">
               <SummaryRow label="Total" value={formatCurrency(order.total, order.currency)} strong />
+              {order.presentmentCurrency && (
+                <SummaryRow label={`Shopper paid in ${order.presentmentCurrency}`} value={formatCurrency(Number(order.presentmentTotal), order.presentmentCurrency)} />
+              )}
             </div>
             {Number(order.giftCardAmount) > 0 && (
               <>

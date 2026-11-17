@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Checkbox, Switch, InputNumber, Button, Alert, App } from "antd";
+import { Card, Checkbox, Switch, InputNumber, Button, Alert, App, Radio } from "antd";
+import { FixedPrices } from "./FixedPrices";
 import { apiFetch } from "@/lib/api";
 import { formatCurrency } from "@shopcycle/utils";
 
@@ -13,6 +14,7 @@ export function MarketsSettings({ initial, canEdit }) {
   const [currencies, setCurrencies] = useState(initial.currencies || []);
   const [autoDetect, setAutoDetect] = useState(initial.autoDetect !== false);
   const [buffer, setBuffer] = useState(initial.buffer || 0);
+  const [rounding, setRounding] = useState(initial.rounding || "none");
   const [saving, setSaving] = useState(false);
   const base = initial.base;
   const sample = base === "JPY" ? 10000 : base === "INR" ? 1000 : 100;
@@ -20,7 +22,7 @@ export function MarketsSettings({ initial, canEdit }) {
   async function save() {
     setSaving(true);
     try {
-      await apiFetch("/api/store", { method: "PATCH", body: { settings: { markets: { currencies, autoDetect, buffer: Number(buffer) || 0 } } } });
+      await apiFetch("/api/store", { method: "PATCH", body: { settings: { markets: { currencies, autoDetect, buffer: Number(buffer) || 0, rounding } } } });
       message.success(currencies.length ? "Currencies saved" : "Shoppers see prices in your store's currency only");
     } catch (err) {
       message.error(err.message);
@@ -78,11 +80,25 @@ export function MarketsSettings({ initial, canEdit }) {
           <InputNumber min={0} max={10} step={0.5} value={buffer} onChange={setBuffer} disabled={!canEdit} className="!w-32" />
           <p className="m-0 mt-1 text-[12.5px] text-ink-muted">Added to the exchange rate to cover your card provider&apos;s conversion fee. Most stores use 0 to 3.</p>
         </div>
+        <div className="mt-5">
+          <div className="mb-1.5 text-[13px] font-medium text-ink">Converted prices</div>
+          <Radio.Group
+            value={rounding}
+            onChange={(e) => setRounding(e.target.value)}
+            disabled={!canEdit}
+            options={[
+              { value: "none", label: "Exact (11.14)" },
+              { value: "99", label: "Round up to .99 (11.99)" },
+              { value: "whole", label: "Whole numbers (11)" },
+            ]}
+          />
+          <p className="m-0 mt-1 text-[12.5px] text-ink-muted">Yen always uses whole numbers. A fixed price below always wins.</p>
+        </div>
       </Card>
 
       <p className="m-0 text-[12.5px] text-ink-muted">
         {initial.ratesDate ? `Exchange rates: ${initial.source || "European Central Bank"}, ${initial.ratesDate}. ` : ""}
-        Checkout and order emails stay in {base}; checkout shows the shopper about how much that is in their currency.
+        With Stripe or PayPal connected, shoppers pay in their own currency; otherwise checkout is in {base} and shows about how much that is.
       </p>
 
       {canEdit && (
@@ -92,6 +108,8 @@ export function MarketsSettings({ initial, canEdit }) {
           </Button>
         </div>
       )}
+
+      <FixedPrices base={base} currencies={(initial.currencies || []).filter((c) => currencies.includes(c))} canEdit={canEdit} />
     </div>
   );
 }
