@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, Segmented, Button, App, Alert } from "antd";
 import { Lock } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { storeCountry } from "@/lib/money";
 
 const THREE = [
   { value: "hidden", label: "Hidden" },
@@ -15,7 +16,8 @@ const TWO = [
   { value: "optional", label: "Optional" },
 ];
 
-const GROUPS = [
+// Built when the page renders: labels follow the store's country.
+const groups = (country) => [
   {
     title: "Contact",
     rows: [
@@ -35,14 +37,14 @@ const GROUPS = [
   {
     title: "Delivery address",
     rows: [
-      { key: "name", label: "Full name, address, city, state, PIN code", hint: "Needed to deliver the order.", fixed: "Always required" },
+      { key: "name", label: `Full name, address, city, ${{ IN: "state, PIN code", US: "state, ZIP code", GB: "county, postcode", JP: "prefecture, postcode" }[country.code] || "region, postcode"}`, hint: "Needed to deliver the order.", fixed: "Always required" },
       { key: "address2", label: "Apartment, landmark", hint: "A second address line.", options: THREE },
       {
         key: "country",
         label: "Country",
-        hint: "Ship within India only to leave the country menu out.",
+        hint: `Ship within ${country.name} only to leave the country menu out.`,
         options: [
-          { value: "india", label: "India only" },
+          { value: "india", label: `${country.name} only` },
           { value: "show", label: "Show menu" },
         ],
       },
@@ -52,7 +54,7 @@ const GROUPS = [
     title: "Business buyers and notes",
     rows: [
       { key: "company", label: "Company name", hint: "Shown on the order and the GST invoice.", options: THREE },
-      { key: "gstin", label: "GSTIN", hint: "Checked for the right format and printed on the GST invoice.", options: TWO },
+      ...(country.code === "IN" ? [{ key: "gstin", label: "GSTIN", hint: "Checked for the right format and printed on the GST invoice.", options: TWO }] : []),
       { key: "note", label: "Order note", hint: "Delivery instructions or a gift message, shown on the order.", options: TWO },
     ],
   },
@@ -137,7 +139,7 @@ export function CheckoutSettings({ initial, storeName, canEdit }) {
     <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
       <div className="flex flex-col gap-4 min-w-0">
         {!canEdit && <Alert type="info" showIcon message="Only the store owner or an admin can change checkout." />}
-        {GROUPS.map((g) => (
+        {groups(storeCountry()).map((g) => (
           <Card key={g.title} size="small" title={g.title}>
             <ul className="m-0 p-0 list-none divide-y divide-app-border">
               {g.rows.map((r) => (
