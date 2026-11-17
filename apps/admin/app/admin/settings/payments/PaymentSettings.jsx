@@ -212,6 +212,14 @@ function SetupDrawer({ provider, open, onClose, onSaved, canEdit }) {
         </span>
         <Switch checked={testMode} onChange={setTestMode} disabled={!canEdit} />
       </label>
+      {provider.connected && provider.savedModes && (
+        <p className="m-0 -mt-2 mb-4 text-xs text-ink-muted">
+          Test and live keys are kept separately.{" "}
+          {provider.savedModes[testMode ? "test" : "live"]
+            ? `Your ${testMode ? "test" : "live"} keys are saved — leave the fields empty to use them.`
+            : `Enter your ${testMode ? "test" : "live"} keys below.`}
+        </p>
+      )}
 
       <div className="flex flex-col gap-4">
         {provider.fields.map((f) => (
@@ -220,7 +228,7 @@ function SetupDrawer({ provider, open, onClose, onSaved, canEdit }) {
             {f.secret ? (
               <Input.Password
                 autoComplete="off"
-                placeholder={f.saved ? `Saved (${f.saved}) — leave empty to keep` : f.placeholder || ""}
+                placeholder={f.saved && testMode === provider.testMode ? `Saved (${f.saved}) — leave empty to keep` : f.placeholder || ""}
                 value={values[f.key] ?? ""}
                 onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
                 disabled={!canEdit}
@@ -229,7 +237,7 @@ function SetupDrawer({ provider, open, onClose, onSaved, canEdit }) {
               <Input
                 autoComplete="off"
                 placeholder={f.placeholder || ""}
-                value={values[f.key] ?? f.value}
+                value={values[f.key] ?? (testMode === provider.testMode ? f.value : "")}
                 onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
                 disabled={!canEdit}
               />

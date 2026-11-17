@@ -28,6 +28,9 @@ export const APP_PANELS = {
   "xml-sitemap": "/admin/apps/xml-sitemap",
   shiprocket: "/admin/apps/couriers/shiprocket",
   "ithink-logistics": "/admin/apps/couriers/ithink-logistics",
+  // Payment gateways: their keys live in Settings ▸ Payments.
+  stripe: "/admin/settings/payments",
+  paypal: "/admin/settings/payments",
 };
 
 export const detailsHref = (app) => `/admin/apps/details/${app.key}`;
