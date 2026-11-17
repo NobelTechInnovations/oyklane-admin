@@ -181,7 +181,47 @@ function Suite() {
   );
 }
 
+/** Oyklane runs this store's ads (Super admin ▸ Ads Manager): results live in Meta. */
+function ManagedByOyklane() {
+  return (
+    <Card size="small" styles={{ body: { padding: 28 } }} className="max-w-2xl">
+      <div className="flex items-start gap-3">
+        <ShieldCheck size={22} className="mt-0.5 shrink-0 text-[#16A34A]" aria-hidden="true" />
+        <div>
+          <h2 className="m-0 text-[16px] font-medium text-ink">Your ads are managed by Oyklane</h2>
+          <p className="m-0 mt-1.5 text-[13.5px] text-ink-muted">
+            Oyklane runs your Facebook and Instagram ads. See every ad and its results any time in Meta Ads Manager or the Meta Ads app. Your card stays with Meta, and Meta bills you directly.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a href="https://adsmanager.facebook.com/" target="_blank" rel="noopener noreferrer">
+              <Button type="primary">Open Meta Ads Manager</Button>
+            </a>
+            <a href="https://www.facebook.com/business/tools/ads-manager" target="_blank" rel="noopener noreferrer">
+              <Button>Get the Meta Ads app</Button>
+            </a>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export default function MetaAdsPage() {
+  const [managed, setManaged] = useState(null);
+  useEffect(() => {
+    apiFetch("/api/meta-ads/managed")
+      .then((r) => setManaged(Boolean(r?.managed)))
+      .catch(() => setManaged(false));
+  }, []);
+  if (managed === null) return <Skeleton active />;
+  if (managed) {
+    return (
+      <div>
+        <PageHeader title="Meta Ads" />
+        <ManagedByOyklane />
+      </div>
+    );
+  }
   return (
     <div>
       <PageHeader
