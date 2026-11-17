@@ -266,6 +266,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
         meta={
           <>
             <StatusBadge status={order.paymentStatus} />
+            {order.isTest && <StatusBadge status="draft" label="Test order" />}
             <StatusBadge status={order.fulfillmentStatus} />
           </>
         }
@@ -524,7 +525,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
             {order.refunds.map((r) => (
               <SummaryRow
                 key={r.id}
-                label={`Refunded ${dateOnly(r.createdAt)}${r.reason ? ` · ${r.reason}` : ""}${r.method === "manual" ? " · manual" : r.method === "gift_card" ? " · to gift card" : ""}`}
+                label={`Refunded ${dateOnly(r.createdAt)}${r.reason ? ` · ${r.reason}` : ""}${r.method === "manual" ? " · manual" : r.method === "gift_card" ? " · to gift card" : r.method === "stripe" ? " · via Stripe" : r.method === "paypal" ? " · via PayPal" : ""}`}
                 value={`−${formatCurrency(r.amount, order.currency)}`}
               />
             ))}

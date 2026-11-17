@@ -154,7 +154,7 @@ export default function OrdersPage({ searchParams }) {
         );
       },
     },
-    { choice: "payment", title: "Payment", responsive: ["md"], dataIndex: "paymentStatus", width: 130, render: (s) => <StatusBadge status={s} /> },
+    { choice: "payment", title: "Payment", responsive: ["md"], dataIndex: "paymentStatus", width: 130, render: (s, r) => (r.isTest ? <Tooltip title="Paid with test-mode keys: no real money, no Oyklane fee"><span><StatusBadge status="draft" label="Test" /></span></Tooltip> : <StatusBadge status={s} />) },
     { choice: "method", title: "Payment method", width: 150, render: (_, row) => <span className="text-[13px]">{METHOD[row.paymentMethod] || row.paymentMethod || "—"}</span> },
     { choice: "fulfillment", title: "Fulfillment", responsive: ["sm"], dataIndex: "fulfillmentStatus", width: 140, render: (s) => <StatusBadge status={s} /> },
     { choice: "discount", title: "Discount code", width: 140, render: (_, row) => (row.discountCode ? <span className="font-mono text-[12.5px]">{row.discountCode}</span> : dash) },

@@ -55,8 +55,19 @@ function Gateway({ p, featured = false, currency, canEdit, busy, toggle, disconn
           {p.key === "payu" && <Tag color="green" className="!m-0">Partner</Tag>}
           {p.connected && <StatusBadge status={p.enabled ? "active" : "disabled"} label={p.enabled ? "On" : "Off"} />}
           {p.connected && p.testMode && <Tag color="gold" className="!m-0">Test mode</Tag>}
+          {p.connected && p.webhook && !p.webhook.on && (
+            <Tag color="orange" className="!m-0" title={p.webhook.error || "Save the keys again to turn on payment updates."}>
+              Payment updates off
+            </Tag>
+          )}
           {p.key !== "payu" && p.recommended && !p.connected && <Tag color="blue" className="!m-0">Recommended</Tag>}
         </p>
+        {p.connected && p.webhook && !p.webhook.on && (
+          <p className="m-0 mt-1 text-[13px] text-ink-muted">
+            {p.name} isn&apos;t sending payment updates, so an order is only marked paid when the shopper comes back to your store. Save the keys again to fix it
+            {p.webhook.error ? ` (${p.name} said: ${p.webhook.error})` : ""}.
+          </p>
+        )}
         {unsupported ? (
           <p className="m-0 mt-1 text-[13px] text-ink-muted">Not available for {currency} stores.</p>
         ) : (
