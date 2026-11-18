@@ -64,6 +64,16 @@ const createProductSchema = z.object({
   googleCategory: z.string().trim().max(250).optional().nullable(),
   // The product's id where it came from (an import) — unique per store.
   externalId: z.string().trim().min(1).max(120).optional().nullable(),
+  // Pre-orders: sold while out of stock, shipped later. null turns them off.
+  preorder: z
+    .object({
+      enabled: z.boolean(),
+      shipsOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date").nullable().optional(),
+      note: z.string().trim().max(160).nullable().optional(),
+    })
+    .nullable()
+    .optional()
+    .transform((v) => (v === null ? { enabled: false } : v)),
 });
 
 const updateProductSchema = createProductSchema.partial().extend({

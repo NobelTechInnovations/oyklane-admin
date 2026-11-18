@@ -394,6 +394,9 @@ export default function ProductsPage() {
                 Import / export
               </Button>
             </Dropdown>
+            <Link href="/admin/products/back-in-stock">
+              <Button>Back in stock</Button>
+            </Link>
             <Link href="/admin/products/new">
               <Button type="primary" icon={<Plus size={15} aria-hidden="true" />}>
                 Add product

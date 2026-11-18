@@ -15,6 +15,7 @@ import { ProductPackageCard } from "@/components/shipping/ProductPackageCard";
 import { track } from "@/lib/track";
 import { useApps } from "@/lib/apps";
 import { RentalProductCard } from "@/components/RentalProductCard";
+import { PreorderCard } from "@/components/PreorderCard";
 import { ThemeTemplateField } from "@/components/ThemeTemplateField";
 import { SalesChannelsCard } from "@/components/channels/SalesChannelsCard";
 import { IMAGE_ACCEPT, uploadImage } from "@/lib/uploads";
@@ -377,6 +378,7 @@ export function ProductForm({ product, store, template, justCreated = false }) {
         seoDescription: source.seoDescription,
         hsnCode: source.hsnCode,
         gstRate: source.gstRate != null ? Number(source.gstRate) : "",
+        preorder: { enabled: Boolean(source.preorder?.enabled), shipsOn: source.preorder?.shipsOn || null, note: source.preorder?.note || "" },
         metafields: source.metafields || {},
         templateSuffix: source.templateSuffix || null,
         hiddenChannels: source.hiddenChannels || [],
@@ -764,6 +766,8 @@ export function ProductForm({ product, store, template, justCreated = false }) {
             <VariantOptionsModal open={optionsOpen} onClose={() => setOptionsOpen(false)} onApply={applyVariantTitles} />
 
             {hasApp("rentals") && <RentalProductCard ref={rentalRef} productId={isEdit ? product.id : null} onEnabled={setRentalOn} onChange={() => setDirty(true)} />}
+
+            {!rentalOn && <PreorderCard productId={isEdit ? product.id : null} />}
 
             <CustomDataFields ownerType="product" />
 
