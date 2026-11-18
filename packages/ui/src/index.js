@@ -19,6 +19,7 @@ export { TrustSeal, VerifiedTick } from "./components/TrustSeal";
 export { AdsCoachProvider, useAdsCoach, streamNdjson } from "./components/ads/context";
 export { AdsChat } from "./components/ads/AdsChat";
 export { AdsPlanner } from "./components/ads/AdsPlanner";
-export { AdsCoachPanel } from "./components/ads/CoachPanel";
+export { CampaignBuilder } from "./components/ads/builder/CampaignBuilder";
+export { AdsMediaLibrary, MediaPicker as AdsMediaPicker } from "./components/ads/builder/Media";
 export { AdsTests } from "./components/ads/AdsTests";
 export { AdsAnalytics } from "./components/ads/AdsAnalytics";

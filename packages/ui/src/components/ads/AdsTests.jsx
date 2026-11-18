@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Alert, App, Button, Card, Dropdown, Empty, Skeleton, Table, Tag } from "antd";
-import { FlaskConical, MessageSquare, Sparkles, Trophy } from "lucide-react";
+import { FlaskConical, MessageSquare, Trophy } from "lucide-react";
 import { useAdsCoach } from "./context";
 
 const VERDICT = {
@@ -147,8 +147,8 @@ export function AdsTests({ onPlan, onAsk }) {
           }
         >
           {onPlan && (
-            <Button type="primary" icon={<Sparkles size={14} aria-hidden="true" />} onClick={onPlan}>
-              Plan a test with AI
+            <Button type="primary" onClick={onPlan}>
+              Plan a test
             </Button>
           )}
         </Empty>

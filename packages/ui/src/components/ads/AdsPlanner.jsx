@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Alert, App, Button, Form, Input, InputNumber, Modal, Radio, Segmented, Select, Spin, Switch, Tag } from "antd";
-import { ArrowLeft, ClipboardList, ImageOff, Lightbulb, Megaphone, MessageCircle, MousePointerClick, ShoppingBag, Sparkles } from "lucide-react";
+import { ArrowLeft, ImageOff } from "lucide-react";
 import { useAdsCoach } from "./context";
 
 const GOALS = [
-  { value: "sales", label: "Sales", hint: "Find people likely to buy. Works best with the Meta Pixel on the store.", Icon: ShoppingBag },
-  { value: "whatsapp", label: "WhatsApp chats", hint: "For products people like to ask about before buying.", Icon: MessageCircle },
-  { value: "traffic", label: "Store visits", hint: "More visitors for less. They may not buy yet.", Icon: MousePointerClick },
-  { value: "leads", label: "Leads", hint: "Collect enquiries on the website or on WhatsApp.", Icon: ClipboardList },
-  { value: "awareness", label: "Awareness", hint: "Show the brand to as many people as possible.", Icon: Megaphone },
+  { value: "sales", label: "Sales", hint: "Find people likely to buy. Works best with the Meta Pixel on the store." },
+  { value: "whatsapp", label: "WhatsApp chats", hint: "For products people like to ask about before buying." },
+  { value: "traffic", label: "Store visits", hint: "More visitors for less. They may not buy yet." },
+  { value: "leads", label: "Leads", hint: "Collect enquiries on the website or on WhatsApp." },
+  { value: "awareness", label: "Awareness", hint: "Show the brand to as many people as possible." },
 ];
 const TESTS = [
   { value: "none", label: "No test", hint: "2–3 ads in each ad set; Meta shows the best one more." },
@@ -136,10 +136,7 @@ export function AdsPlanner({ open, onClose, onOpen }) {
       onCancel={onClose}
       width="min(760px, 100vw)"
       title={
-        <span className="inline-flex items-center gap-2">
-          <Sparkles size={16} className="text-accent" aria-hidden="true" />
-          {result ? "Your campaign plan" : "Plan a campaign with AI"}
-        </span>
+        result ? "Campaign plan" : "Plan a campaign"
       }
       footer={
         result ? (
@@ -154,8 +151,8 @@ export function AdsPlanner({ open, onClose, onOpen }) {
         ) : (
           <div className="flex justify-end gap-2">
             <Button onClick={onClose}>Cancel</Button>
-            <Button type="primary" loading={busy} icon={<Sparkles size={14} aria-hidden="true" />} onClick={() => form.submit()}>
-              {busy ? "Planning…" : "Make the plan"}
+            <Button type="primary" loading={busy} onClick={() => form.submit()}>
+              {busy ? "Planning…" : "Create plan"}
             </Button>
           </div>
         )
@@ -165,17 +162,12 @@ export function AdsPlanner({ open, onClose, onOpen }) {
       <div className={result ? "hidden" : ""}>
         <Form form={form} layout="vertical" requiredMark={false} onFinish={make} initialValues={{ goal: "sales", dailyBudget: START[cur] || 1000, days: 0, test: "none", useProductImages: true, places: [{ value: `country:${home[0]}`, label: home[1] }] }}>
           <Form.Item name="goal" label="What should the ads do?">
-            <Radio.Group className="!grid w-full gap-2 sm:grid-cols-2">
-              {GOALS.map(({ value, label, hint, Icon }) => (
-                <Radio.Button key={value} value={value} className="!h-auto !rounded-md !border !py-2 !leading-snug before:!hidden">
-                  <span className="flex items-start gap-2">
-                    <Icon size={16} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-                    <span>
-                      <span className="block text-sm font-medium">{label}</span>
-                      <span className="block text-xs text-ink-muted">{hint}</span>
-                    </span>
-                  </span>
-                </Radio.Button>
+            <Radio.Group className="!flex w-full flex-col overflow-hidden rounded-md border border-app-border">
+              {GOALS.map(({ value, label, hint }) => (
+                <Radio key={value} value={value} className="!m-0 border-b border-app-border px-3 py-2 last:border-b-0">
+                  <span className="block text-[13.5px] font-medium">{label}</span>
+                  <span className="block text-[12px] text-ink-muted">{hint}</span>
+                </Radio>
               ))}
             </Radio.Group>
           </Form.Item>
@@ -220,7 +212,7 @@ export function AdsPlanner({ open, onClose, onOpen }) {
 
       {result && (
         <div className="flex flex-col gap-4">
-          <Alert type="info" showIcon icon={<Sparkles size={16} aria-hidden="true" />} message={result.plan.summary} description={result.plan.source === "ai" ? "Audiences and ad text are AI suggestions. Check them in the builder before publishing." : "AI writing isn't switched on, so the ad text is plain. Edit it in the builder."} />
+          <Alert type="info" showIcon message={result.plan.summary} description={result.plan.source === "ai" ? "Audiences and ad text are AI suggestions. Check them in the builder before publishing." : "AI writing isn't switched on, so the ad text is plain. Edit it in the builder."} />
           {result.plan.warnings.length > 0 && (
             <Alert
               type="warning"
@@ -285,10 +277,7 @@ export function AdsPlanner({ open, onClose, onOpen }) {
           </section>
           {result.plan.tips?.length > 0 && (
             <section>
-              <h3 className="m-0 mb-1 inline-flex items-center gap-1.5 text-sm font-semibold">
-                <Lightbulb size={14} className="text-accent" aria-hidden="true" />
-                Tips
-              </h3>
+              <h3 className="m-0 mb-1 text-sm font-semibold">Tips</h3>
               <ul className="m-0 pl-4 text-sm text-ink-muted">
                 {result.plan.tips.map((t) => (
                   <li key={t}>{t}</li>

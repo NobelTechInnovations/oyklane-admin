@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Drawer, Input, Tooltip } from "antd";
-import { RotateCcw, Send, Sparkles, Square } from "lucide-react";
+import { MessageSquare, RotateCcw, Send, Square } from "lucide-react";
 import { Markdown } from "../Markdown";
 import { streamNdjson, useAdsCoach } from "./context";
 
@@ -89,8 +89,8 @@ export function AdsChat({ open, onClose, context }) {
       width="min(440px, 100vw)"
       title={
         <span className="inline-flex items-center gap-2">
-          <Sparkles size={16} className="text-accent" aria-hidden="true" />
-          Ads coach
+          <MessageSquare size={16} className="text-accent" aria-hidden="true" />
+          Ask AI about your ads
         </span>
       }
       extra={

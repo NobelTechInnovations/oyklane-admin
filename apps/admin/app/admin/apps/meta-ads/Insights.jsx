@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Card, Statistic, Alert, Button, Tag, Table, App, Skeleton, Tooltip, Empty } from "antd";
-import { Sparkles, RefreshCw, ThumbsUp, Info } from "lucide-react";
+import { RefreshCw, ThumbsUp, Info } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { RangePicker, rangeQuery, inr, num, pct, x2 } from "./ads-ui";
 import { UrlTabs } from "@/components/UrlTabs";
@@ -119,7 +119,7 @@ export default function Insights({ range, setRange, canEdit }) {
               size="small"
               title={
                 <span className="flex items-center gap-2">
-                  <Sparkles size={15} className="text-accent" aria-hidden="true" /> What happened {s.source === "ai" ? <Tag className="!m-0">AI summary</Tag> : null}
+                  What happened {s.source === "ai" ? <Tag className="!m-0">AI summary</Tag> : null}
                 </span>
               }
               extra={<Tag color={CONF[s.confidence]?.[0]}>{CONF[s.confidence]?.[1]}</Tag>}

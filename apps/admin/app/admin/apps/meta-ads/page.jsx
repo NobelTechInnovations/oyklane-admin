@@ -4,16 +4,14 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, Alert, Card, Tag, Button, App, Popconfirm, Skeleton } from "antd";
-import { Megaphone, LineChart, Images, Bot, ShieldCheck, FileClock, Sparkles, BarChart3, FlaskConical } from "lucide-react";
-import { PageHeader, AdsCoachProvider, AdsChat, AdsPlanner, AdsTests, AdsAnalytics } from "@shopcycle/ui";
+import { Megaphone, LineChart, Images, Bot, ShieldCheck, FileClock, MessageSquare, BarChart3, FlaskConical } from "lucide-react";
+import { PageHeader, AdsCoachProvider, AdsChat, AdsPlanner, AdsTests, AdsAnalytics, CampaignBuilder, AdsMediaLibrary } from "@shopcycle/ui";
 import { apiFetch, API_URL } from "@/lib/api";
 import { MetaConnectPanel } from "@/components/MetaConnectPanel";
 import { CapsProvider, useCaps, inr } from "./ads-ui";
 import Campaigns from "./Campaigns";
 import Insights from "./Insights";
-import MediaLibrary from "./Media";
 import Automation from "./Automation";
-import Wizard from "./Wizard";
 
 const TABS = ["campaigns", "insights", "analytics", "tests", "media", "automation", "setup"];
 // Where the AI chat was opened from, for its starter questions.
@@ -166,7 +164,7 @@ function Suite() {
         <Problems compact />
         <Tabs
           tabBarExtraContent={
-            <Button icon={<Sparkles size={14} aria-hidden="true" />} onClick={() => openChat({ kind: (CHAT_FROM[tab] || CHAT_FROM.campaigns)[0], screen: (CHAT_FROM[tab] || CHAT_FROM.campaigns)[1], range })}>
+            <Button icon={<MessageSquare size={14} aria-hidden="true" />} onClick={() => openChat({ kind: (CHAT_FROM[tab] || CHAT_FROM.campaigns)[0], screen: (CHAT_FROM[tab] || CHAT_FROM.campaigns)[1], range })}>
               Ask AI
             </Button>
           }
@@ -189,13 +187,14 @@ function Suite() {
             { key: "insights", label: label(LineChart, "Insights"), children: <Insights range={range} setRange={setRange} canEdit={canEdit} /> },
             { key: "analytics", label: label(BarChart3, "Analytics"), children: <AdsAnalytics onAsk={openChat} /> },
             { key: "tests", label: label(FlaskConical, "A/B tests"), children: <AdsTests onPlan={plan} onAsk={openChat} /> },
-            { key: "media", label: label(Images, "Media library"), children: <MediaLibrary /> },
+            { key: "media", label: label(Images, "Media library"), children: <AdsMediaLibrary /> },
             { key: "automation", label: label(Bot, "Automation & activity"), children: <Automation canEdit={canEdit} /> },
             { key: "setup", label: label(ShieldCheck, "Account check"), children: <Setup /> },
           ]}
           destroyOnHidden
         />
-        <Wizard
+        <CampaignBuilder
+          caps={caps}
           onAsk={openChat}
           open={wizard.open}
           draftId={wizard.draftId}
