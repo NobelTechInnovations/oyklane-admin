@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Table, Switch, Button, Dropdown, Modal, Form, Input, InputNumber, DatePicker, App, Empty, Alert, Tooltip, Space } from "antd";
-import { MoreHorizontal, Plus, RefreshCw, Copy, Pencil, Trash2, Sparkles } from "lucide-react";
+import { MoreHorizontal, Plus, RefreshCw, Copy, Pencil, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { RangePicker, rangeQuery, StatusTag, metricColumns, inr } from "./ads-ui";
 import { AdSetEditor, AdEditor } from "./Editors";
@@ -277,7 +277,7 @@ export default function Campaigns({ onCreate, onPlan, canEdit, range, setRange }
         {canEdit && (
           <Space wrap>
             {onPlan && (
-              <Button icon={<Sparkles size={14} aria-hidden="true" />} onClick={onPlan}>
+              <Button onClick={onPlan}>
                 Plan with AI
               </Button>
             )}
