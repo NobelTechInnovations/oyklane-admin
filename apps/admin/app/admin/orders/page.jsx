@@ -41,6 +41,7 @@ const ORDER_COLUMNS = [
   { key: "payment", label: "Payment" },
   { key: "method", label: "Payment method", default: false },
   { key: "fulfillment", label: "Fulfillment" },
+  { key: "risk", label: "Delivery risk" },
   { key: "discount", label: "Discount code", default: false },
   { key: "channel", label: "Checkout", default: false },
   { key: "invoice", label: "Invoice no.", default: false },
@@ -157,6 +158,21 @@ export default function OrdersPage({ searchParams }) {
     { choice: "payment", title: "Payment", responsive: ["md"], dataIndex: "paymentStatus", width: 130, render: (s, r) => (r.isTest ? <Tooltip title="Paid with test-mode keys: no real money, no Oyklane fee"><span><StatusBadge status="draft" label="Test" /></span></Tooltip> : <StatusBadge status={s} />) },
     { choice: "method", title: "Payment method", width: 150, render: (_, row) => <span className="text-[13px]">{METHOD[row.paymentMethod] || row.paymentMethod || "—"}</span> },
     { choice: "fulfillment", title: "Fulfillment", responsive: ["sm"], dataIndex: "fulfillmentStatus", width: 140, render: (s) => <StatusBadge status={s} /> },
+    {
+      choice: "risk",
+      title: "Risk",
+      width: 100,
+      render: (_, row) =>
+        row.risk && row.risk.level !== "low" ? (
+          <Tooltip title={`Delivery risk ${row.risk.score}/100: how likely the order is to come back undelivered`}>
+            <span className={`inline-block rounded px-1.5 py-0.5 text-[12px] font-medium ${row.risk.level === "high" ? "bg-[#FEE2E2] text-[#B91C1C]" : "bg-[#FEF3C7] text-[#92400E]"}`}>
+              {row.risk.level === "high" ? "High" : "Medium"} · {row.risk.score}
+            </span>
+          </Tooltip>
+        ) : (
+          dash
+        ),
+    },
     { choice: "discount", title: "Discount code", width: 140, render: (_, row) => (row.discountCode ? <span className="font-mono text-[12.5px]">{row.discountCode}</span> : dash) },
     { choice: "channel", title: "Checkout", width: 120, render: (_, row) => <span className="text-[13px]">{row.oneClickCheckout ? "One-Click" : "Standard"}</span> },
     { choice: "invoice", title: "Invoice no.", width: 140, render: (_, row) => row.invoiceNumber || dash },

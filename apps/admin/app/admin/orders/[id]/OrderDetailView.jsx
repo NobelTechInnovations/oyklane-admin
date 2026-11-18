@@ -31,6 +31,7 @@ import { RefundModal } from "./RefundModal";
 import { CancelModal } from "./CancelModal";
 import { ReturnModal } from "./ReturnModal";
 import { EditOrderDrawer } from "./EditOrderDrawer";
+import { OrderRiskCard } from "./OrderRiskCard";
 import { Timeline } from "./Timeline";
 import { dateTime, dateOnly } from "./order-utils";
 import { CustomerInsightsCard } from "@/components/CustomerInsightsCard";
@@ -609,6 +610,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
             </div>
           </Card>
 
+          {!order.isTest && !order.externalId && <OrderRiskCard orderId={order.id} cod={order.paymentMethod === "cod"} />}
           {(order.phone || order.email) && <CustomerInsightsCard path={`/api/orders/${order.id}/insights`} forOrder />}
 
           {order.customerNote && (
