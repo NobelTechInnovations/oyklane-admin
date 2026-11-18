@@ -34,6 +34,7 @@ import { EditOrderDrawer } from "./EditOrderDrawer";
 import { OrderRiskCard } from "./OrderRiskCard";
 import { DownloadsCard } from "./DownloadsCard";
 import { LocalDeliveryCard } from "./LocalDeliveryCard";
+import { SubscriptionCard } from "./SubscriptionCard";
 import { Timeline } from "./Timeline";
 import { dateTime, dateOnly } from "./order-utils";
 import { CustomerInsightsCard } from "@/components/CustomerInsightsCard";
@@ -613,6 +614,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
           </Card>
 
           <DownloadsCard orderId={order.id} paid={order.paymentStatus === "paid"} />
+          <SubscriptionCard orderId={order.id} />
           <LocalDeliveryCard orderId={order.id} currency={order.currency} cod={order.paymentMethod === "cod" && order.paymentStatus === "pending"} cancelled={Boolean(order.cancelledAt)} onChange={() => router.refresh()} />
           {!order.isTest && !order.externalId && <OrderRiskCard orderId={order.id} cod={order.paymentMethod === "cod"} />}
           {(order.phone || order.email) && <CustomerInsightsCard path={`/api/orders/${order.id}/insights`} forOrder />}

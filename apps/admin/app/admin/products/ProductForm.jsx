@@ -17,6 +17,7 @@ import { useApps } from "@/lib/apps";
 import { RentalProductCard } from "@/components/RentalProductCard";
 import { PreorderCard } from "@/components/PreorderCard";
 import { DigitalFilesCard } from "@/components/DigitalFilesCard";
+import { SubscriptionPlanCard } from "@/components/SubscriptionPlanCard";
 import { ThemeTemplateField } from "@/components/ThemeTemplateField";
 import { SalesChannelsCard } from "@/components/channels/SalesChannelsCard";
 import { IMAGE_ACCEPT, uploadImage } from "@/lib/uploads";
@@ -770,6 +771,7 @@ export function ProductForm({ product, store, template, justCreated = false }) {
 
             {!rentalOn && <PreorderCard productId={isEdit ? product.id : null} />}
             {!rentalOn && <DigitalFilesCard productId={isEdit ? product.id : null} variants={isEdit ? product.variants : []} />}
+            {!rentalOn && <SubscriptionPlanCard productId={isEdit ? product.id : null} />}
 
             <CustomDataFields ownerType="product" />
 
