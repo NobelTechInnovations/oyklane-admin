@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Table, Switch, Button, Dropdown, Modal, Form, Input, InputNumber, DatePicker, App, Empty, Alert, Tooltip } from "antd";
-import { MoreHorizontal, Plus, RefreshCw, Copy, Pencil, Trash2 } from "lucide-react";
+import { Table, Switch, Button, Dropdown, Modal, Form, Input, InputNumber, DatePicker, App, Empty, Alert, Tooltip, Space } from "antd";
+import { MoreHorizontal, Plus, RefreshCw, Copy, Pencil, Trash2, Sparkles } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { RangePicker, rangeQuery, StatusTag, metricColumns, inr } from "./ads-ui";
 import { AdSetEditor, AdEditor } from "./Editors";
@@ -238,7 +238,7 @@ function AdSetsTable({ campaignId, range, onEdit, onAdd, canEdit, version }) {
   );
 }
 
-export default function Campaigns({ onCreate, canEdit, range, setRange }) {
+export default function Campaigns({ onCreate, onPlan, canEdit, range, setRange }) {
   const [rows, setRows] = useState(null);
   const [error, setError] = useState(null);
   const [q, setQ] = useState("");
@@ -275,9 +275,16 @@ export default function Campaigns({ onCreate, canEdit, range, setRange }) {
           <Button icon={<RefreshCw size={14} aria-hidden="true" />} onClick={load} aria-label="Refresh" />
         </div>
         {canEdit && (
-          <Button type="primary" icon={<Plus size={14} aria-hidden="true" />} onClick={onCreate}>
-            Create campaign
-          </Button>
+          <Space wrap>
+            {onPlan && (
+              <Button icon={<Sparkles size={14} aria-hidden="true" />} onClick={onPlan}>
+                Plan with AI
+              </Button>
+            )}
+            <Button type="primary" icon={<Plus size={14} aria-hidden="true" />} onClick={onCreate}>
+              Create campaign
+            </Button>
+          </Space>
         )}
       </div>
       {error && <Alert type="error" showIcon message="Couldn't load your campaigns from Meta" description={error} />}

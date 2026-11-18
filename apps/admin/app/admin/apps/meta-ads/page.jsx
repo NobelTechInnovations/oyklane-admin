@@ -1,21 +1,23 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, Alert, Card, Tag, Button, App, Popconfirm, Skeleton } from "antd";
-import { Megaphone, LineChart, Images, Bot, ShieldCheck, FileClock } from "lucide-react";
-import { PageHeader } from "@shopcycle/ui";
-import { apiFetch } from "@/lib/api";
+import { Megaphone, LineChart, Images, Bot, ShieldCheck, FileClock, Sparkles, BarChart3, FlaskConical } from "lucide-react";
+import { PageHeader, AdsCoachProvider, AdsChat, AdsPlanner, AdsTests, AdsAnalytics } from "@shopcycle/ui";
+import { apiFetch, API_URL } from "@/lib/api";
 import { MetaConnectPanel } from "@/components/MetaConnectPanel";
-import { CapsProvider, useCaps } from "./ads-ui";
+import { CapsProvider, useCaps, inr } from "./ads-ui";
 import Campaigns from "./Campaigns";
 import Insights from "./Insights";
 import MediaLibrary from "./Media";
 import Automation from "./Automation";
 import Wizard from "./Wizard";
 
-const TABS = ["campaigns", "insights", "media", "automation", "setup"];
+const TABS = ["campaigns", "insights", "analytics", "tests", "media", "automation", "setup"];
+// Where the AI chat was opened from, for its starter questions.
+const CHAT_FROM = { campaigns: ["campaigns", "Campaigns"], insights: ["insights", "Insights"], analytics: ["analytics", "Analytics"], tests: ["tests", "A/B tests"] };
 
 /** Problems with the account (no payment method, no Pixel, missing
  * permission) — shown on every tab until they're fixed. */
@@ -134,6 +136,24 @@ function Suite() {
       .catch(() => setStore({ role: "staff" }));
   }, []);
   const canEdit = store && store.role !== "staff";
+  // The ads coach (planner, chat, tips, A/B tests, analytics) on this store's ad account.
+  const { caps } = useCaps();
+  const [planner, setPlanner] = useState(false);
+  const [chat, setChat] = useState({ open: false, context: null });
+  const openChat = useCallback((context) => setChat({ open: true, context }), []);
+  const coachApi = useMemo(
+    () => ({
+      request: (path, opts) => apiFetch(`/api/meta-ads${path}`, opts),
+      url: (path) => `${API_URL}/api/meta-ads${path}`,
+      products: () => apiFetch("/api/products?pageSize=50").then((d) => d.products || d.items || []),
+      money: (n, d) => inr(n, d),
+      currency: caps?.adAccount?.currency || "INR",
+      mode: "seller",
+      canEdit: Boolean(canEdit),
+    }),
+    [caps?.adAccount?.currency, canEdit]
+  );
+  const plan = canEdit ? () => setPlanner(true) : undefined;
   const label = (Icon, text) => (
     <span className="inline-flex items-center gap-1.5">
       <Icon size={14} aria-hidden="true" />
@@ -141,43 +161,63 @@ function Suite() {
     </span>
   );
   return (
-    <div className="flex flex-col gap-3">
-      <Problems compact />
-      <Tabs
-        activeKey={tab}
-        onChange={(k) => {
-          setTab(k);
-          router.replace(`/admin/apps/meta-ads?tab=${k}`, { scroll: false });
-        }}
-        items={[
-          {
-            key: "campaigns",
-            label: label(Megaphone, "Campaigns"),
-            children: (
-              <div className="flex flex-col gap-3">
-                <Drafts refreshKey={refreshKey} onOpen={(id) => setWizard({ open: true, draftId: id })} />
-                <Campaigns key={refreshKey} canEdit={canEdit} range={range} setRange={setRange} onCreate={() => setWizard({ open: true })} />
-              </div>
-            ),
-          },
-          { key: "insights", label: label(LineChart, "Insights"), children: <Insights range={range} setRange={setRange} canEdit={canEdit} /> },
-          { key: "media", label: label(Images, "Media library"), children: <MediaLibrary /> },
-          { key: "automation", label: label(Bot, "Automation & activity"), children: <Automation canEdit={canEdit} /> },
-          { key: "setup", label: label(ShieldCheck, "Account check"), children: <Setup /> },
-        ]}
-        destroyOnHidden
-      />
-      <Wizard
-        open={wizard.open}
-        draftId={wizard.draftId}
-        storeUrl={store?.store?.publicUrl}
-        onClose={() => {
-          setWizard({ open: false });
-          setRefreshKey((k) => k + 1);
-        }}
-        onPublished={() => setRefreshKey((k) => k + 1)}
-      />
-    </div>
+    <AdsCoachProvider api={coachApi}>
+      <div className="flex flex-col gap-3">
+        <Problems compact />
+        <Tabs
+          tabBarExtraContent={
+            <Button icon={<Sparkles size={14} aria-hidden="true" />} onClick={() => openChat({ kind: (CHAT_FROM[tab] || CHAT_FROM.campaigns)[0], screen: (CHAT_FROM[tab] || CHAT_FROM.campaigns)[1], range })}>
+              Ask AI
+            </Button>
+          }
+          activeKey={tab}
+          onChange={(k) => {
+            setTab(k);
+            router.replace(`/admin/apps/meta-ads?tab=${k}`, { scroll: false });
+          }}
+          items={[
+            {
+              key: "campaigns",
+              label: label(Megaphone, "Campaigns"),
+              children: (
+                <div className="flex flex-col gap-3">
+                  <Drafts refreshKey={refreshKey} onOpen={(id) => setWizard({ open: true, draftId: id })} />
+                  <Campaigns key={refreshKey} canEdit={canEdit} range={range} setRange={setRange} onCreate={() => setWizard({ open: true })} onPlan={plan} />
+                </div>
+              ),
+            },
+            { key: "insights", label: label(LineChart, "Insights"), children: <Insights range={range} setRange={setRange} canEdit={canEdit} /> },
+            { key: "analytics", label: label(BarChart3, "Analytics"), children: <AdsAnalytics onAsk={openChat} /> },
+            { key: "tests", label: label(FlaskConical, "A/B tests"), children: <AdsTests onPlan={plan} onAsk={openChat} /> },
+            { key: "media", label: label(Images, "Media library"), children: <MediaLibrary /> },
+            { key: "automation", label: label(Bot, "Automation & activity"), children: <Automation canEdit={canEdit} /> },
+            { key: "setup", label: label(ShieldCheck, "Account check"), children: <Setup /> },
+          ]}
+          destroyOnHidden
+        />
+        <Wizard
+          onAsk={openChat}
+          open={wizard.open}
+          draftId={wizard.draftId}
+          storeUrl={store?.store?.publicUrl}
+          onClose={() => {
+            setWizard({ open: false });
+            setRefreshKey((k) => k + 1);
+          }}
+          onPublished={() => setRefreshKey((k) => k + 1)}
+        />
+        <AdsPlanner
+          open={planner}
+          onClose={() => setPlanner(false)}
+          onOpen={(draftId) => {
+            setPlanner(false);
+            setWizard({ open: true, draftId });
+            setRefreshKey((k) => k + 1);
+          }}
+        />
+        <AdsChat open={chat.open} onClose={() => setChat((c) => ({ ...c, open: false }))} context={chat.context} />
+      </div>
+    </AdsCoachProvider>
   );
 }
 
