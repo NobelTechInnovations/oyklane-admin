@@ -16,6 +16,7 @@ import { track } from "@/lib/track";
 import { useApps } from "@/lib/apps";
 import { RentalProductCard } from "@/components/RentalProductCard";
 import { PreorderCard } from "@/components/PreorderCard";
+import { DigitalFilesCard } from "@/components/DigitalFilesCard";
 import { ThemeTemplateField } from "@/components/ThemeTemplateField";
 import { SalesChannelsCard } from "@/components/channels/SalesChannelsCard";
 import { IMAGE_ACCEPT, uploadImage } from "@/lib/uploads";
@@ -768,6 +769,7 @@ export function ProductForm({ product, store, template, justCreated = false }) {
             {hasApp("rentals") && <RentalProductCard ref={rentalRef} productId={isEdit ? product.id : null} onEnabled={setRentalOn} onChange={() => setDirty(true)} />}
 
             {!rentalOn && <PreorderCard productId={isEdit ? product.id : null} />}
+            {!rentalOn && <DigitalFilesCard productId={isEdit ? product.id : null} variants={isEdit ? product.variants : []} />}
 
             <CustomDataFields ownerType="product" />
 
