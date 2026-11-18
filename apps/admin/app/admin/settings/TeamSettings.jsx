@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Card, Button, Modal, Form, Input, Select, Tag, App } from "antd";
+import { StaffRoles } from "./StaffRoles";
 import { Plus, Trash2, Copy } from "lucide-react";
 import { useConfirmDialog } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
@@ -18,6 +19,7 @@ export function TeamSettings() {
   const { message } = App.useApp();
   const { confirmDialog } = useConfirmDialog();
   const [members, setMembers] = useState([]);
+  const [roleData, setRoleData] = useState(null);
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -29,6 +31,8 @@ export function TeamSettings() {
       const data = await apiFetch("/api/team");
       setMembers(data.members);
       setInvitations(data.invitations);
+      // Custom roles (Settings ▸ Team ▸ Roles).
+      setRoleData(await apiFetch("/api/team/roles").catch(() => null));
     } finally {
       setLoading(false);
     }
@@ -45,6 +49,16 @@ export function TeamSettings() {
       setInviteOpen(false);
       form.resetFields();
       load();
+    } catch (err) {
+      message.error(err.message);
+    }
+  }
+
+  async function handleCustomRole(member, roleId) {
+    try {
+      const r = await apiFetch(`/api/team/${member.id}/custom-role`, { method: "PUT", body: { roleId: roleId || null } });
+      setRoleData((d) => ({ ...d, assignments: r.assignments }));
+      message.success("Role updated. It applies on their next page load.");
     } catch (err) {
       message.error(err.message);
     }
@@ -117,11 +131,16 @@ export function TeamSettings() {
                 style={{ width: 100 }}
                 onChange={(role) => handleRoleChange(member, role)}
               />
+              {member.role === "staff" && roleData?.roles?.length > 0 && (
+                <Select size="small" value={roleData.assignments?.[member.id] || ""} style={{ width: 150 }} onChange={(roleId) => handleCustomRole(member, roleId)} options={[{ value: "", label: "Staff access" }, ...roleData.roles.map((r) => ({ value: r.id, label: r.name }))]} aria-label={`Role for ${member.user.name}`} />
+              )}
               <Button type="text" danger size="small" icon={<Trash2 size={13} aria-hidden="true" />} onClick={() => handleRemove(member)} />
             </div>
           </div>
         ))}
       </Card>
+
+      {roleData && <StaffRoles roles={roleData.roles || []} areas={roleData.areas || {}} onSaved={(r) => setRoleData((d) => ({ ...d, ...r }))} />}
 
       {invitations.length > 0 && (
         <Card size="small" title="Pending invitations">

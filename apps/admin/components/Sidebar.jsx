@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePermissions, canOpen } from "@/lib/permissions";
 import SiyaaMark from "@/components/SiyaaMark";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -274,8 +275,25 @@ function PinnedApps({ pathname }) {
 /** The navigation itself — brand, menu, pinned apps, settings and help.
  * Rendered in the fixed desktop sidebar and, below `lg`, inside the
  * slide-out drawer (see AdminShell). */
+// Custom staff roles: which area each menu entry belongs to (lib/permissions.js).
+const NAV_AREA = {
+  "orders-group": "orders",
+  "shipping-group": "orders",
+  "products-group": "products",
+  "/admin/collections": "products",
+  "customers-group": "customers",
+  "analytics-group": "analytics",
+  "/admin/discounts": "marketing",
+  "content-group": "content",
+  "online-store-group": "content",
+  "/admin/settings": "settings",
+};
+
 export function SidebarNav() {
   const pathname = usePathname();
+  const perms = usePermissions();
+  const items = perms ? NAV_ITEMS.filter((item) => canOpen(perms, NAV_AREA[item.key])) : NAV_ITEMS;
+  const bottom = perms ? BOTTOM_ITEMS.filter((item) => canOpen(perms, NAV_AREA[item.key])) : BOTTOM_ITEMS;
   const openKeys = [];
   if (pathname.startsWith("/admin/content")) openKeys.push("content-group");
   if (pathname.startsWith("/admin/online-store")) openKeys.push("online-store-group");
@@ -291,11 +309,11 @@ export function SidebarNav() {
         <BrandMark size={24} />
       </Link>
       <div className="oy-side__scroll flex-1 min-h-0 overflow-y-auto pb-3">
-        <Menu mode="inline" items={NAV_ITEMS} selectedKeys={selectedKeyFor(pathname, NAV_ITEMS)} defaultOpenKeys={openKeys} style={{ border: "none", paddingTop: 4, background: "transparent" }} />
+        <Menu mode="inline" items={items} selectedKeys={selectedKeyFor(pathname, items)} defaultOpenKeys={openKeys} style={{ border: "none", paddingTop: 4, background: "transparent" }} />
         <PinnedApps pathname={pathname} />
       </div>
       <div className="oy-side__foot shrink-0 pt-1.5 pb-2">
-        <Menu mode="inline" items={BOTTOM_ITEMS} selectedKeys={selectedKeyFor(pathname, BOTTOM_ITEMS)} style={{ border: "none", background: "transparent" }} />
+        <Menu mode="inline" items={bottom} selectedKeys={selectedKeyFor(pathname, bottom)} style={{ border: "none", background: "transparent" }} />
       </div>
     </div>
   );
