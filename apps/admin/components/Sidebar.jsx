@@ -46,6 +46,7 @@ import {
   IndianRupee,
   TriangleAlert,
   Calculator,
+  Bike,
 } from "lucide-react";
 import { useApps, appHref, detailsHref } from "@/lib/apps";
 import { apiFetch } from "@/lib/api";
@@ -104,6 +105,7 @@ const NAV_ITEMS = [
       { key: "/admin/orders", icon: <ShoppingCart size={14} aria-hidden="true" />, label: <Link href="/admin/orders">All orders</Link> },
       { key: "/admin/orders/returns", icon: <RotateCcw size={14} aria-hidden="true" />, label: <Link href="/admin/orders/returns">Returns</Link> },
       { key: "/admin/orders/abandoned", icon: <ShoppingBag size={14} aria-hidden="true" />, label: <Link href="/admin/orders/abandoned">Abandoned checkouts</Link> },
+      { key: "/admin/orders/local-delivery", icon: <Bike size={14} aria-hidden="true" />, label: <Link href="/admin/orders/local-delivery">Local delivery</Link> },
     ],
   },
   {

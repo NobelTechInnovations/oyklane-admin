@@ -43,6 +43,8 @@ const checkoutSchema = z.object({
   // Store pickup (Settings ▸ Shipping): no delivery charge, and the API
   // fills the address in from the store's own.
   fulfillment: z.enum(["delivery", "pickup"]).default("delivery"),
+  // Local delivery: "2026-11-20|10:00-13:00" from the checkout's slot picker.
+  deliverySlot: z.string().trim().max(40).optional().nullable(),
 });
 
 const verifyRazorpayPaymentSchema = z.object({

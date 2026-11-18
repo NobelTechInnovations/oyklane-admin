@@ -1,6 +1,7 @@
 import { ShippingSettings } from "../ShippingSettings";
 import { OyklaneShippingSettings } from "../OyklaneShippingSettings";
 import { StorePickup } from "../StorePickup";
+import { LocalDelivery } from "../LocalDelivery";
 import { SettingsSectionHeader } from "../SettingsNav";
 
 export default function SettingsShippingPage() {
@@ -12,6 +13,7 @@ export default function SettingsShippingPage() {
           <div className="flex flex-col gap-5">
             <ShippingSettings />
             <StorePickup />
+            <LocalDelivery />
           </div>
         }
       />
