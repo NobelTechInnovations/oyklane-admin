@@ -17,6 +17,7 @@ import {
   IndianRupee,
   RotateCcw,
   Crown,
+  Pencil,
 } from "lucide-react";
 import { PageHeader, StatusBadge } from "@shopcycle/ui";
 import { formatCurrency } from "@shopcycle/utils";
@@ -29,6 +30,7 @@ import { FulfillmentMenu } from "./FulfillmentMenu";
 import { RefundModal } from "./RefundModal";
 import { CancelModal } from "./CancelModal";
 import { ReturnModal } from "./ReturnModal";
+import { EditOrderDrawer } from "./EditOrderDrawer";
 import { Timeline } from "./Timeline";
 import { dateTime, dateOnly } from "./order-utils";
 import { CustomerInsightsCard } from "@/components/CustomerInsightsCard";
@@ -146,6 +148,9 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
   const balance = Math.max(0, Math.round((Number(order.total) - Number(order.giftCardAmount || 0) - advance) * 100) / 100);
   const canCancel = !cancelled && liveShipments.length === 0;
   const refundedTotal = Number(order.refundedAmount || 0);
+  // Order editing (Shopify-style): while something hasn't shipped, and no
+  // refund or return is under way.
+  const canEdit = !cancelled && waiting.length > 0 && !order.isTest && !order.externalId && refundedTotal === 0 && !(order.returns || []).some((r) => r.status !== "declined");
 
   function done() {
     setDialog(null);
@@ -273,6 +278,11 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
         subtitle={`Placed ${dateTime(order.createdAt)} · ${orderSource(order)}`}
         actions={
           <>
+            {canEdit && (
+              <Button icon={<Pencil size={15} aria-hidden="true" />} onClick={() => setDialog("edit")}>
+                Edit
+              </Button>
+            )}
             {paid && canRefund && order.refundable > 0 && (
               <Button icon={<Undo2 size={15} aria-hidden="true" />} onClick={() => setDialog("refund")}>
                 Refund
@@ -678,6 +688,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
       />
       <ReturnModal order={order} open={dialog === "return"} onClose={() => setDialog(null)} onDone={done} />
       <CancelModal order={order} open={dialog === "cancel"} canRefund={canRefund} onClose={() => setDialog(null)} onDone={done} />
+      <EditOrderDrawer order={order} open={dialog === "edit"} onClose={() => setDialog(null)} onDone={done} />
     </div>
   );
 }
