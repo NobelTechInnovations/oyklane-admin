@@ -505,6 +505,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
               />
             )}
             <SummaryRow label="Shipping" value={Number(order.shipping) > 0 ? formatCurrency(order.shipping, order.currency) : "Free"} />
+            {Number(order.duties) > 0 && <SummaryRow label="Duties and import taxes" value={formatCurrency(order.duties, order.currency)} />}
             {Number(order.tax) > 0 && <TaxRows order={order} />}
             <div className="border-t border-app-border mt-1 pt-1">
               <SummaryRow label="Total" value={formatCurrency(order.total, order.currency)} strong />

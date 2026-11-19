@@ -1,4 +1,4 @@
-import { ShippingSettings } from "../ShippingSettings";
+import { ShippingSettings, DutiesSettings } from "../ShippingSettings";
 import { OyklaneShippingSettings } from "../OyklaneShippingSettings";
 import { StorePickup } from "../StorePickup";
 import { LocalDelivery } from "../LocalDelivery";
@@ -12,6 +12,7 @@ export default function SettingsShippingPage() {
         checkout={
           <div className="flex flex-col gap-5">
             <ShippingSettings />
+            <DutiesSettings />
             <StorePickup />
             <LocalDelivery />
           </div>
