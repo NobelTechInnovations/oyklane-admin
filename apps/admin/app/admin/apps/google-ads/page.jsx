@@ -3,8 +3,8 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Tabs, Alert, Card, Tag, Button, App, Skeleton, Select, Popconfirm, Form, Input } from "antd";
-import { Megaphone, LineChart, Images, Bot, ShieldCheck, FileClock, CheckCircle2, AlertTriangle, HelpCircle, ExternalLink } from "lucide-react";
+import { Tabs, Alert, Card, Tag, Button, App, Skeleton, Select, Popconfirm, Form, Input, Table } from "antd";
+import { Megaphone, LineChart, Images, Bot, ShieldCheck, CheckCircle2, AlertTriangle, HelpCircle, ExternalLink } from "lucide-react";
 import { PageHeader } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { AccountSignIn, AccountLine } from "@/components/accounts/AccountConnect";
@@ -332,18 +332,47 @@ function Drafts({ onOpen, refreshKey }) {
   }, [load, refreshKey]);
   if (!drafts.length) return null;
   return (
-    <Card size="small" title={<span className="flex items-center gap-1.5"><FileClock size={14} aria-hidden="true" /> Unfinished campaigns</span>}>
-      {drafts.map((d) => (
-        <div key={d.id} className="flex items-center justify-between gap-2 text-sm py-0.5">
-          <span className="truncate">{d.name} {d.status === "failed" && <Tag color="red">Not created</Tag>}{d.error && <span className="block text-xs text-status-danger">{d.error}</span>}</span>
-          <span className="flex gap-1 shrink-0">
-            <Button size="small" onClick={() => onOpen(d.id)}>Continue</Button>
-            <Popconfirm title="Delete this draft?" onConfirm={() => apiFetch(`/api/google-ads/drafts/${d.id}`, { method: "DELETE" }).then(load)}>
-              <Button size="small" type="text" danger>Delete</Button>
-            </Popconfirm>
-          </span>
-        </div>
-      ))}
+    <Card size="small" title={`Drafts (${drafts.length})`} extra={<span className="text-xs text-ink-muted">Started but not created</span>} styles={{ body: { padding: 0 } }}>
+      <Table
+        size="small"
+        rowKey="id"
+        pagination={false}
+        dataSource={drafts}
+        columns={[
+          {
+            title: "Campaign name",
+            dataIndex: "name",
+            render: (name, d) => (
+              <span className="block min-w-0">
+                <Button type="link" size="small" className="!h-auto !p-0 !font-medium" onClick={() => onOpen(d.id)}>
+                  {name}
+                </Button>
+                {d.error && <span className="block text-xs text-status-danger">{d.error}</span>}
+              </span>
+            ),
+          },
+          { title: "Status", dataIndex: "status", width: 150, render: (status) => (status === "failed" ? <Tag color="red">Not created</Tag> : <Tag>Draft</Tag>) },
+          { title: "Last saved", dataIndex: "updatedAt", width: 170, render: (at) => (at ? new Date(at).toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "—") },
+          {
+            title: "",
+            key: "actions",
+            width: 200,
+            align: "right",
+            render: (_, d) => (
+              <span className="inline-flex gap-1">
+                <Button size="small" onClick={() => onOpen(d.id)}>
+                  Continue editing
+                </Button>
+                <Popconfirm title="Delete this draft?" okText="Delete" okButtonProps={{ danger: true }} onConfirm={() => apiFetch(`/api/google-ads/drafts/${d.id}`, { method: "DELETE" }).then(load)}>
+                  <Button size="small" type="text" danger>
+                    Delete
+                  </Button>
+                </Popconfirm>
+              </span>
+            ),
+          },
+        ]}
+      />
     </Card>
   );
 }
@@ -380,7 +409,7 @@ function Suite({ storeInfo }) {
         }}
         destroyOnHidden
         items={[
-          { key: "campaigns", label: label(Megaphone, "Campaigns"), children: <div className="flex flex-col gap-3"><Drafts refreshKey={refreshKey} onOpen={(id) => setWizard({ open: true, draftId: id })} /><GCampaigns key={refreshKey} canEdit={canEdit} range={range} setRange={setRange} onCreate={() => setWizard({ open: true })} /></div> },
+          { key: "campaigns", label: label(Megaphone, "Campaigns"), children: <div className="flex flex-col gap-6"><Drafts refreshKey={refreshKey} onOpen={(id) => setWizard({ open: true, draftId: id })} /><GCampaigns key={refreshKey} canEdit={canEdit} range={range} setRange={setRange} onCreate={() => setWizard({ open: true })} /></div> },
           { key: "insights", label: label(LineChart, "Insights"), children: <GInsights range={range} setRange={setRange} canEdit={canEdit} /> },
           { key: "media", label: label(Images, "Images"), children: <GMedia /> },
           { key: "automation", label: label(Bot, "Automation & activity"), children: <Automation canEdit={canEdit} base="/api/google-ads" unit="campaigns" /> },

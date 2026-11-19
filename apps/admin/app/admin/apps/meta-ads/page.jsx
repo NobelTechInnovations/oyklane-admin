@@ -3,8 +3,8 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Tabs, Alert, Card, Tag, Button, App, Popconfirm, Skeleton } from "antd";
-import { Megaphone, LineChart, Images, Bot, ShieldCheck, FileClock, MessageSquare, BarChart3, FlaskConical } from "lucide-react";
+import { Tabs, Alert, Card, Tag, Button, App, Popconfirm, Skeleton, Table } from "antd";
+import { Megaphone, LineChart, Images, Bot, ShieldCheck, MessageSquare, BarChart3, FlaskConical } from "lucide-react";
 import { PageHeader, AdsCoachProvider, AdsChat, AdsPlanner, AdsTests, AdsAnalytics, CampaignBuilder, AdsMediaLibrary } from "@shopcycle/ui";
 import { apiFetch, API_URL } from "@/lib/api";
 import { MetaConnectPanel } from "@/components/MetaConnectPanel";
@@ -98,24 +98,47 @@ function Drafts({ onOpen, refreshKey }) {
   }, [load, refreshKey]);
   if (!drafts.length) return null;
   return (
-    <Card size="small" title={<span className="flex items-center gap-1.5"><FileClock size={14} aria-hidden="true" /> Unfinished campaigns</span>}>
-      <div className="flex flex-col gap-1">
-        {drafts.map((d) => (
-          <div key={d.id} className="flex items-center justify-between gap-2 text-sm">
-            <span className="truncate">
-              {d.name} {d.status === "failed" && <Tag color="red">Publishing stopped</Tag>}
-              <span className="text-xs text-ink-muted"> · saved {new Date(d.updatedAt).toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</span>
-              {d.error && <span className="block text-xs text-status-danger">{d.error}</span>}
-            </span>
-            <span className="flex gap-1 shrink-0">
-              <Button size="small" onClick={() => onOpen(d.id)}>Continue</Button>
-              <Popconfirm title="Delete this draft?" onConfirm={() => apiFetch(`/api/meta-ads/drafts/${d.id}`, { method: "DELETE" }).then(load)}>
-                <Button size="small" type="text" danger>Delete</Button>
-              </Popconfirm>
-            </span>
-          </div>
-        ))}
-      </div>
+    <Card size="small" title={`Drafts (${drafts.length})`} extra={<span className="text-xs text-ink-muted">Started but not published</span>} styles={{ body: { padding: 0 } }}>
+      <Table
+        size="small"
+        rowKey="id"
+        pagination={false}
+        dataSource={drafts}
+        columns={[
+          {
+            title: "Campaign name",
+            dataIndex: "name",
+            render: (name, d) => (
+              <span className="block min-w-0">
+                <Button type="link" size="small" className="!h-auto !p-0 !font-medium" onClick={() => onOpen(d.id)}>
+                  {name}
+                </Button>
+                {d.error && <span className="block text-xs text-status-danger">{d.error}</span>}
+              </span>
+            ),
+          },
+          { title: "Status", dataIndex: "status", width: 170, render: (status) => (status === "failed" ? <Tag color="red">Publishing stopped</Tag> : <Tag>Draft</Tag>) },
+          { title: "Last saved", dataIndex: "updatedAt", width: 170, render: (at) => new Date(at).toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) },
+          {
+            title: "",
+            key: "actions",
+            width: 200,
+            align: "right",
+            render: (_, d) => (
+              <span className="inline-flex gap-1">
+                <Button size="small" onClick={() => onOpen(d.id)}>
+                  Continue editing
+                </Button>
+                <Popconfirm title="Delete this draft?" okText="Delete" okButtonProps={{ danger: true }} onConfirm={() => apiFetch(`/api/meta-ads/drafts/${d.id}`, { method: "DELETE" }).then(load)}>
+                  <Button size="small" type="text" danger>
+                    Delete
+                  </Button>
+                </Popconfirm>
+              </span>
+            ),
+          },
+        ]}
+      />
     </Card>
   );
 }
@@ -178,7 +201,7 @@ function Suite() {
               key: "campaigns",
               label: label(Megaphone, "Campaigns"),
               children: (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-6">
                   <Drafts refreshKey={refreshKey} onOpen={(id) => setWizard({ open: true, draftId: id })} />
                   <Campaigns key={refreshKey} canEdit={canEdit} range={range} setRange={setRange} onCreate={() => setWizard({ open: true })} onPlan={plan} />
                 </div>
