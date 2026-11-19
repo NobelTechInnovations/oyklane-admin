@@ -35,6 +35,7 @@ import { OrderRiskCard } from "./OrderRiskCard";
 import { DownloadsCard } from "./DownloadsCard";
 import { LocalDeliveryCard } from "./LocalDeliveryCard";
 import { SubscriptionCard } from "./SubscriptionCard";
+import { OrderExtrasCard } from "./OrderExtrasCard";
 import { Timeline } from "./Timeline";
 import { dateTime, dateOnly } from "./order-utils";
 import { CustomerInsightsCard } from "@/components/CustomerInsightsCard";
@@ -527,7 +528,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
                 />
                 {!advance && Number(order.total) - Number(order.giftCardAmount) > 0 && (
                   <SummaryRow
-                    label={order.paymentMethod === "cod" ? "Cash on delivery" : order.paymentMethod === "upi_qr" ? "UPI QR payment" : "Online payment"}
+                    label={order.paymentMethod === "net_terms" ? "Pay later (on credit)" : order.paymentMethod === "cod" ? "Cash on delivery" : order.paymentMethod === "upi_qr" ? "UPI QR payment" : "Online payment"}
                     value={formatCurrency(Number(order.total) - Number(order.giftCardAmount), order.currency)}
                   />
                 )}
@@ -570,11 +571,13 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
             {codPending && (
               <div className="flex items-center justify-between gap-3 mt-3 rounded-lg bg-app-bg px-3 py-2.5">
                 <span className="text-sm text-ink-muted">
-                  {order.paymentMethod === "cod"
-                    ? `Collect ${formatCurrency(balance, order.currency)} ${advance > 0 ? "balance" : "cash"} on delivery, then mark it paid.`
-                    : "Waiting for the online payment."}
+                  {order.paymentMethod === "net_terms"
+                    ? `On credit: the business buyer pays ${formatCurrency(balance, order.currency)} later. Mark it paid when it arrives.`
+                    : order.paymentMethod === "cod"
+                      ? `Collect ${formatCurrency(balance, order.currency)} ${advance > 0 ? "balance" : "cash"} on delivery, then mark it paid.`
+                      : "Waiting for the online payment."}
                 </span>
-                {order.paymentMethod === "cod" && (
+                {(order.paymentMethod === "cod" || order.paymentMethod === "net_terms") && (
                   <Button size="small" loading={busy === "paid"} onClick={markPaid}>
                     Mark as paid
                   </Button>
@@ -615,6 +618,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
 
           <DownloadsCard orderId={order.id} paid={order.paymentStatus === "paid"} />
           <SubscriptionCard orderId={order.id} />
+          <OrderExtrasCard order={order} />
           <LocalDeliveryCard orderId={order.id} currency={order.currency} cod={order.paymentMethod === "cod" && order.paymentStatus === "pending"} cancelled={Boolean(order.cancelledAt)} onChange={() => router.refresh()} />
           {!order.isTest && !order.externalId && <OrderRiskCard orderId={order.id} cod={order.paymentMethod === "cod"} />}
           {(order.phone || order.email) && <CustomerInsightsCard path={`/api/orders/${order.id}/insights`} forOrder />}

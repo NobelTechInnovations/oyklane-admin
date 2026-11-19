@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Coins, Store, CreditCard, Users, Truck, Percent, Globe, Bell, Wallet, Braces, Code2, Search, ShoppingCart, FileText, Link2, MessageCircle, BadgeCheck } from "lucide-react";
+import { Coins, Store, CreditCard, Users, Truck, Percent, Globe, Bell, Wallet, Braces, Code2, Search, ShoppingCart, FileText, Link2, MessageCircle, BadgeCheck, Warehouse } from "lucide-react";
 
 // Shopify-style: one compact row per section, grouped, with a filter.
 export const SETTINGS_SECTIONS = [
@@ -14,6 +14,7 @@ export const SETTINGS_SECTIONS = [
   { href: "/admin/settings/checkout", icon: ShoppingCart, label: "Checkout", hint: "Form fields at checkout" },
   { href: "/admin/settings/markets", icon: Coins, label: "Markets and languages", hint: "Currencies and languages for shoppers" },
   { href: "/admin/settings/shipping", icon: Truck, label: "Shipping and delivery", hint: "Couriers, COD payouts, rates" },
+  { href: "/admin/settings/locations", icon: Warehouse, label: "Locations", hint: "Warehouses and shops you keep stock in" },
   { href: "/admin/settings/taxes", icon: Percent, label: "Taxes", hint: "Tax rates at checkout" },
   { href: "/admin/settings/domains", icon: Globe, label: "Domains", hint: "Your store's address" },
   { href: "/admin/settings/trust", icon: BadgeCheck, label: "Trust & badge", hint: "Seller badge, score, verified seller" },
