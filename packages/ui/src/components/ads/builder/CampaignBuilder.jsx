@@ -297,9 +297,19 @@ export function CampaignBuilder({ open, onClose, draftId: initialDraftId, onPubl
   const runCheck = useCallback(async () => {
     if (!spec) return null;
     const r = await api.request("/check", { method: "POST", body: spec }).catch(() => null);
-    setCheck(r);
-    return r;
-  }, [spec]); // eslint-disable-line react-hooks/exhaustive-deps
+    // An ad on a Page Oyklane can't run ads from yet (caps marks it): Meta
+    // would refuse it, so it's a problem to fix before publishing.
+    const blocked = new Map((caps?.pages || []).filter((p) => p.blocked).map((p) => [p.id, p.name]));
+    const extra = [];
+    if (r && blocked.size) {
+      for (const s of spec.adSets || []) for (const a of s.ads || []) {
+        if (blocked.has(a.identity?.pageId)) extra.push({ at: `ad:${a.key}`, text: `${a.name}: ${caps.pageProblem || `Oyklane can't run ads from ${blocked.get(a.identity.pageId)} yet.`}` });
+      }
+    }
+    const out = r && extra.length ? { ...r, ok: false, errors: [...(r.errors || []), ...extra] } : r;
+    setCheck(out);
+    return out;
+  }, [spec, caps]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!spec) return undefined;
     const t = setTimeout(runCheck, 700);

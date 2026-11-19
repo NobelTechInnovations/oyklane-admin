@@ -157,7 +157,7 @@ export function AdForm({ ad, update, caps, goal, advanced, storeUrl }) {
               value={ad.identity.pageId}
               placeholder={caps.pages.length ? "Choose a Page" : "No Page available"}
               onChange={(pageId) => update({ identity: { pageId, instagramId: caps.pages.find((p) => p.id === pageId)?.instagram?.id || ad.identity.instagramId || null } })}
-              options={caps.pages.map((p) => ({ value: p.id, label: p.name }))}
+              options={caps.pages.map((p) => ({ value: p.id, label: p.blocked ? `${p.name} · can't run ads yet` : p.name }))}
               notFoundContent={api.mode === "managed" ? "No Page shared yet. Ask the seller to share their Page with Oyklane." : "No Page found. Reconnect Facebook and allow your Pages."}
             />
           </Form.Item>
@@ -172,6 +172,9 @@ export function AdForm({ ad, update, caps, goal, advanced, storeUrl }) {
             />
           </Form.Item>
         </div>
+        {caps.pageProblem && caps.pages.find((p) => p.id === ad.identity.pageId)?.blocked && (
+          <Note tone="warn">{caps.pageProblem} How to fix it is under Account check.</Note>
+        )}
         {!caps.pages.length && <Note tone="warn">{api.mode === "managed" ? "No Facebook Page is shared with Oyklane for this client. Ask the seller to share it (Business settings ▸ Partners ▸ Oyklane ▸ Pages), then set it in Details." : "No Facebook Page found. Ads run from a Page: create one, or reconnect Facebook and allow your Pages."}</Note>}
       </Section>
 
