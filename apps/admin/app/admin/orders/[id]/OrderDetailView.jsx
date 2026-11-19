@@ -528,7 +528,7 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
                 />
                 {!advance && Number(order.total) - Number(order.giftCardAmount) > 0 && (
                   <SummaryRow
-                    label={order.paymentMethod === "net_terms" ? "Pay later (on credit)" : order.paymentMethod === "cod" ? "Cash on delivery" : order.paymentMethod === "upi_qr" ? "UPI QR payment" : "Online payment"}
+                    label={String(order.paymentMethod).startsWith("pos_") ? "Paid in store" : ["amazon", "flipkart", "meesho"].includes(order.paymentMethod) ? `Paid on ${order.paymentMethod[0].toUpperCase()}${order.paymentMethod.slice(1)}` : order.paymentMethod === "net_terms" ? "Pay later (on credit)" : order.paymentMethod === "cod" ? "Cash on delivery" : order.paymentMethod === "upi_qr" ? "UPI QR payment" : "Online payment"}
                     value={formatCurrency(Number(order.total) - Number(order.giftCardAmount), order.currency)}
                   />
                 )}

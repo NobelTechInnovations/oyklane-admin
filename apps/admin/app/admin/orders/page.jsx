@@ -47,7 +47,7 @@ const ORDER_COLUMNS = [
   { key: "invoice", label: "Invoice no.", default: false },
   { key: "total", label: "Total" },
 ];
-const METHOD = { net_terms: "Pay later", cod: "Cash on delivery", razorpay: "Razorpay", upi: "UPI", manual: "Manual", gift_card: "Gift card", partial_cod: "Part COD" };
+const METHOD = { pos_cash: "Cash (store)", pos_upi: "UPI (store)", pos_card: "Card (store)", amazon: "Amazon", flipkart: "Flipkart", meesho: "Meesho", net_terms: "Pay later", cod: "Cash on delivery", razorpay: "Razorpay", upi: "UPI", manual: "Manual", gift_card: "Gift card", partial_cod: "Part COD" };
 
 export default function OrdersPage({ searchParams }) {
   // /admin/orders?status=unfulfilled — the Home page's to-do links.

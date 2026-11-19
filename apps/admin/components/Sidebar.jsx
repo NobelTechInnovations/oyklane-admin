@@ -109,6 +109,8 @@ const NAV_ITEMS = [
       { key: "/admin/orders/abandoned", icon: <ShoppingBag size={14} aria-hidden="true" />, label: <Link href="/admin/orders/abandoned">Abandoned checkouts</Link> },
       { key: "/admin/orders/subscriptions", icon: <Repeat size={14} aria-hidden="true" />, label: <Link href="/admin/orders/subscriptions">Subscriptions</Link> },
       { key: "/admin/orders/local-delivery", icon: <Bike size={14} aria-hidden="true" />, label: <Link href="/admin/orders/local-delivery">Local delivery</Link> },
+      { key: "/admin/orders/marketplaces", icon: <Store size={14} aria-hidden="true" />, label: <Link href="/admin/orders/marketplaces">Marketplaces</Link> },
+      { key: "/admin/pos", icon: <Calculator size={14} aria-hidden="true" />, label: <Link href="/admin/pos">Point of sale</Link> },
     ],
   },
   {
@@ -305,7 +307,7 @@ export function SidebarNav() {
   if (pathname.startsWith("/admin/online-store")) openKeys.push("online-store-group");
   if (pathname.startsWith("/admin/analytics")) openKeys.push("analytics-group");
   if (pathname.startsWith("/admin/products") || pathname.startsWith("/admin/gift-cards")) openKeys.push("products-group");
-  if (pathname.startsWith("/admin/orders")) openKeys.push("orders-group");
+  if (pathname.startsWith("/admin/orders") || pathname.startsWith("/admin/pos")) openKeys.push("orders-group");
   if (pathname.startsWith("/admin/shipping")) openKeys.push("shipping-group");
   if (pathname.startsWith("/admin/customers")) openKeys.push("customers-group");
 
