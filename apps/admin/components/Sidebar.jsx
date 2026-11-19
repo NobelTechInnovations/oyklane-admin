@@ -132,6 +132,7 @@ const NAV_ITEMS = [
     children: [
       { key: "/admin/products", icon: <Package size={14} aria-hidden="true" />, label: <Link href="/admin/products">All products</Link> },
       { key: "/admin/products/inventory", icon: <Boxes size={14} aria-hidden="true" />, label: <Link href="/admin/products/inventory">Inventory</Link> },
+      { key: "/admin/products/suppliers", icon: <Truck size={14} aria-hidden="true" />, label: <Link href="/admin/products/suppliers">Suppliers</Link> },
       { key: "/admin/products/brands", icon: <Tag size={14} aria-hidden="true" />, label: <Link href="/admin/products/brands">Brands</Link> },
       { key: "/admin/products/categories", icon: <Grid3x3 size={14} aria-hidden="true" />, label: <Link href="/admin/products/categories">Categories</Link> },
       { key: "/admin/gift-cards", icon: <Gift size={14} aria-hidden="true" />, label: <Link href="/admin/gift-cards">Gift cards</Link> },
