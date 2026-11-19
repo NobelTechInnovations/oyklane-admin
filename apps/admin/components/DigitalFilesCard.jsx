@@ -35,7 +35,7 @@ function send({ method, url, headers = {}, body, withCredentials }, onProgress) 
  * the product. Buyers get a download link for each once their order is
  * paid; a product with files needs no shipping.
  */
-export function DigitalFilesCard({ productId, variants = [] }) {
+export function DigitalFilesCard({ productId, variants = [], optional = false }) {
   const { message } = App.useApp();
   const [files, setFiles] = useState(null);
   const [progress, setProgress] = useState(null);
@@ -94,6 +94,8 @@ export function DigitalFilesCard({ productId, variants = [] }) {
     }
   }
 
+  // Optional (Settings ▸ Custom data ▸ Product page sections): shown only once the product has a file.
+  if (optional && !files?.length) return null;
   return (
     <Card size="small" title="Digital product">
       <p className="m-0 text-[13px] text-ink-muted">Sell a file with this product: an e-book, course, music or template. Buyers get a download link once their order is paid, and nothing is shipped.</p>

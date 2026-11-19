@@ -31,6 +31,7 @@ import {
   Boxes,
   ShoppingBag,
   RotateCcw,
+  Award,
   Gift,
   Newspaper,
   SlidersHorizontal,
@@ -162,6 +163,7 @@ const NAV_ITEMS = [
     ],
   },
   { key: "/admin/discounts", icon: <Tag size={16} aria-hidden="true" />, label: <Link href="/admin/discounts">Discounts</Link> },
+  { key: "/admin/loyalty", icon: <Award size={16} aria-hidden="true" />, label: <Link href="/admin/loyalty">Loyalty points</Link> },
   {
     key: "content-group",
     icon: <FileText size={16} aria-hidden="true" />,
@@ -293,6 +295,7 @@ const NAV_AREA = {
   "customers-group": "customers",
   "analytics-group": "analytics",
   "/admin/discounts": "marketing",
+  "/admin/loyalty": "marketing",
   "content-group": "content",
   "online-store-group": "content",
   "/admin/settings": "settings",

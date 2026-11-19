@@ -341,6 +341,8 @@ export function ProductForm({ product, store, template, justCreated = false }) {
   const [form] = Form.useForm();
   const { apps } = useApps();
   const hasApp = (key) => Boolean(apps?.some((a) => a.key === key && a.installed));
+  // Optional product sections, turned on in Settings ▸ Custom data.
+  const sections = store?.settings?.productSections || {};
   const rentalRef = useRef(null);
   const [rentalOn, setRentalOn] = useState(false);
   const seoTitle = Form.useWatch("seoTitle", form);
@@ -770,12 +772,21 @@ export function ProductForm({ product, store, template, justCreated = false }) {
 
             {hasApp("rentals") && <RentalProductCard ref={rentalRef} productId={isEdit ? product.id : null} onEnabled={setRentalOn} onChange={() => setDirty(true)} />}
 
-            {!rentalOn && <PreorderCard productId={isEdit ? product.id : null} />}
-            {!rentalOn && <DigitalFilesCard productId={isEdit ? product.id : null} variants={isEdit ? product.variants : []} />}
-            {!rentalOn && <SubscriptionPlanCard productId={isEdit ? product.id : null} />}
+            {!rentalOn && (sections.preorder || product?.preorder?.enabled) && <PreorderCard productId={isEdit ? product.id : null} />}
+            {!rentalOn && <DigitalFilesCard productId={isEdit ? product.id : null} variants={isEdit ? product.variants : []} optional={!sections.digital} />}
+            {!rentalOn && <SubscriptionPlanCard productId={isEdit ? product.id : null} optional={!sections.subscriptions} />}
             {isEdit && <StockByLocationCard productId={product.id} />}
 
             <CustomDataFields ownerType="product" />
+            {!rentalOn && !(sections.preorder && sections.digital && sections.subscriptions) && (
+              <p className="m-0 -mt-2 text-[12px] text-ink-muted">
+                Need pre-orders, digital files or subscriptions on products? Turn them on in{" "}
+                <Link href="/admin/settings/custom-data" className="text-accent">
+                  Settings ▸ Custom data
+                </Link>
+                .
+              </p>
+            )}
 
             <Card
               size="small"

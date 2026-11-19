@@ -22,7 +22,7 @@ export const SETTINGS_SECTIONS = [
   { href: "/admin/settings/notifications", icon: Bell, label: "Notifications", hint: "Emails, returns, invoices" },
   { href: "/admin/settings/policies", icon: FileText, label: "Policies", hint: "Refund, shipping, privacy, terms" },
   { href: "/admin/settings/support-chat", icon: MessageCircle, label: "Support chat", hint: "AI chat on your store, tickets to you" },
-  { href: "/admin/settings/custom-data", icon: Braces, label: "Custom data", hint: "Extra fields for products" },
+  { href: "/admin/settings/custom-data", icon: Braces, label: "Custom data", hint: "Product sections and extra fields" },
   { href: "/admin/settings/api", icon: Code2, label: "API & webhooks", hint: "Access keys and event hooks" },
 ];
 

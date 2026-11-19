@@ -27,7 +27,7 @@ const label = (v) => {
  * this product on repeat, every N days, weeks or months, with a discount.
  * Saved on its own, separately from the product form.
  */
-export function SubscriptionPlanCard({ productId }) {
+export function SubscriptionPlanCard({ productId, optional = false }) {
   const { message } = App.useApp();
   const [plan, setPlan] = useState(null);
   const [loaded, setLoaded] = useState(false);
@@ -72,6 +72,8 @@ export function SubscriptionPlanCard({ productId }) {
   }
 
   const extra = picked.filter((v) => !PRESETS.some((p) => p.value === v));
+  // Optional (Settings ▸ Custom data ▸ Product page sections): shown only once the product has a plan.
+  if (optional && !plan) return null;
   return (
     <Card size="small" title="Subscriptions">
       <div className="flex items-start justify-between gap-3">
