@@ -1,0 +1,18 @@
+# Seller admin on the AWS server: store.oyklane.com.
+# HTTPS comes from the shared proxy (~/apps/proxy), which reaches it as
+# "oyklane-admin" on the "web" network.
+# Run from the repo root:  docker compose -f deploy/docker-compose.prod.yml up -d --build
+name: oyklane-admin
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://api.oyklane.com
+        NEXT_PUBLIC_STOREFRONT_ROOT_DOMAIN: oyklane.com
+    restart: unless-stopped
+    networks:
+      web: { aliases: [oyklane-admin] }
+networks:
+  web: { external: true }

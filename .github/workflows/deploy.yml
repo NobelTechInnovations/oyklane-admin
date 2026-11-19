@@ -1,0 +1,29 @@
+# Deploys main to the Lightsail server over SSH. The key in AWS_SSH_KEY can
+# only run ~/apps/bin/deploy-oyklane-admin.sh (forced command in the server's
+# authorized_keys): pull main, rebuild, restart.
+# Repo secrets: AWS_HOST, AWS_USER, AWS_SSH_KEY, AWS_HOST_FINGERPRINT.
+name: Deploy seller admin
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency: { group: deploy-oyklane-admin, cancel-in-progress: false }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check secrets
+        id: check
+        env: { HOST: "${{ secrets.AWS_HOST }}", KEY: "${{ secrets.AWS_SSH_KEY }}" }
+        run: echo "ready=$([ -n "$HOST" ] && [ -n "$KEY" ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
+      - name: Deploy
+        if: steps.check.outputs.ready == 'yes'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USER }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          fingerprint: ${{ secrets.AWS_HOST_FINGERPRINT }}
+          command_timeout: 20m
+          script: ~/apps/bin/deploy-oyklane-admin.sh

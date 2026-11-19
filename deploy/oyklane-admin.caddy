@@ -1,0 +1,6 @@
+# Copied to ~/apps/proxy/sites/ on the server. Point store.oyklane.com's
+# A record at the server's static IP; the certificate is automatic.
+store.oyklane.com {
+	encode gzip
+	reverse_proxy oyklane-admin:3000
+}
