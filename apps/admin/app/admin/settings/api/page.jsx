@@ -3,6 +3,7 @@ import { Lock } from "lucide-react";
 import { serverApiFetch } from "@/lib/api";
 import { SettingsSectionHeader } from "../SettingsNav";
 import { DeveloperSettings } from "./DeveloperSettings";
+import { StorefrontTokens } from "./StorefrontTokens";
 
 export default async function SettingsApiPage() {
   const [{ role }, me] = await Promise.all([serverApiFetch("/api/store"), serverApiFetch("/api/auth/me")]);
@@ -27,6 +28,7 @@ export default async function SettingsApiPage() {
           </Link>
         </div>
       )}
+      <StorefrontTokens canEdit={canEdit} />
       <DeveloperSettings initialKeys={keys} initialHooks={hooks} canEdit={canEdit && included} />
     </div>
   );

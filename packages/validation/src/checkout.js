@@ -11,6 +11,8 @@ const checkoutSchema = z.object({
   company: z.string().trim().max(120).optional().nullable(),
   gstin: z.string().trim().max(20).optional().nullable(),
   note: z.string().trim().max(1000).optional().nullable(),
+  // Extra checkout fields the store added (Settings ▸ Checkout ▸ Extra fields): { key: value }.
+  attributes: z.record(z.string().max(40), z.string().max(500)).optional(),
   shippingName: z.string().min(1, "Name is required"),
   shippingAddress1: z.string().min(1, "Address is required"),
   shippingAddress2: z.string().optional().nullable(),

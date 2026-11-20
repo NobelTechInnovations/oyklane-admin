@@ -8,6 +8,7 @@ import { AuthShell } from "@shopcycle/ui";
 import { apiFetch } from "@/lib/api";
 import { GoogleSignIn } from "@/components/GoogleSignIn";
 import { useHumanCheck } from "@/components/HumanCheck";
+import { ContinueAs } from "@/components/SaveLoginPrompt";
 
 // The marketing site — where the logo goes.
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://oyklane.com";
@@ -17,6 +18,20 @@ export default function LoginPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const human = useHumanCheck();
+  // A saved login on this device: "Continue as …" (API remember/service.js).
+  const [known, setKnown] = useState(null);
+  useEffect(() => {
+    apiFetch("/api/auth/remembered")
+      .then((d) => setKnown(d.known || null))
+      .catch(() => {});
+  }, []);
+  async function afterSignIn() {
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next && next.startsWith("/") && !next.startsWith("//")) return router.push(next);
+    const mine = await apiFetch("/api/auth/my-stores").catch(() => ({ stores: [] }));
+    router.push(mine.stores?.length === 1 ? "/admin" : "/choose-store");
+    router.refresh();
+  }
 
   // Back from a Google sign-in that didn't work out (?error=…).
   useEffect(() => {
@@ -71,6 +86,7 @@ export default function LoginPage() {
       }
     >
       {error && <Alert type="error" message={error} showIcon className="mb-5" />}
+      {known && <ContinueAs known={known} onSignedIn={afterSignIn} onForget={() => setKnown(null)} />}
       <GoogleSignIn />
 
       <Form layout="vertical" onFinish={onFinish} requiredMark={false} size="large">

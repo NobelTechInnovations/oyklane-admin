@@ -24,6 +24,7 @@ import { storefrontUrlFor, initials } from "@/lib/storefront";
 import { CommandPalette } from "./CommandPalette";
 import { NewOrderAlerts } from "./NewOrderAlerts";
 import { useHelp } from "./help/HelpDrawer";
+import { SaveLoginPrompt } from "./SaveLoginPrompt";
 
 export function Topbar({ user, store, onOpenNav }) {
   const router = useRouter();
@@ -52,8 +53,13 @@ export function Topbar({ user, store, onOpenNav }) {
       .catch(() => {});
   }, []);
 
-  async function handleLogout() {
-    await apiFetch("/api/auth/logout", { method: "POST" });
+  // Signing out asks whether to save the login on this device (SaveLoginPrompt).
+  const [saveAsk, setSaveAsk] = useState(false);
+  function handleLogout() {
+    setSaveAsk(true);
+  }
+  function afterLogout() {
+    setSaveAsk(false);
     router.push("/login");
     router.refresh();
   }
@@ -241,6 +247,7 @@ export function Topbar({ user, store, onOpenNav }) {
           </Form.Item>
         </Form>
       </Modal>
+      <SaveLoginPrompt open={saveAsk} onClose={() => setSaveAsk(false)} onDone={afterLogout} />
     </header>
   );
 }

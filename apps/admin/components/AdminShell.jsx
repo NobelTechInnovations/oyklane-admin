@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ConfigProvider, Drawer } from "antd";
 import { Sidebar, SidebarNav } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { ActivityBeacon } from "./ActivityBeacon";
 import { BillingBanner } from "./BillingBanner";
 import { HelpProvider } from "./help/HelpDrawer";
 import { setStoreMoney } from "@/lib/money";
@@ -53,6 +54,7 @@ export function AdminShell({ user, store, children }) {
         </Drawer>
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar user={user} store={store} onOpenNav={() => setNavOpen(true)} />
+          <ActivityBeacon />
           {/* The AI Assistant is a full-width, full-height workspace. */}
           <main className={pathname.startsWith("/admin/assistant") ? "flex-1 w-full min-w-0" : `oy-main flex-1 w-full mx-auto${WIDE.some((r) => r.test(pathname)) ? " oy-main--wide" : ""}`}>
             <BillingBanner />

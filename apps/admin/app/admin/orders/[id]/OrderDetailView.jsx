@@ -629,6 +629,18 @@ export function OrderDetailView({ order, role, hasGstInvoices }) {
           {!order.isTest && !order.externalId && <OrderRiskCard orderId={order.id} cod={order.paymentMethod === "cod"} />}
           {(order.phone || order.email) && <CustomerInsightsCard path={`/api/orders/${order.id}/insights`} forOrder />}
 
+          {order.attributes?.length > 0 && (
+            <Card size="small" title="Checkout answers">
+              <dl className="m-0 flex flex-col gap-2 text-[13px]">
+                {order.attributes.map((a) => (
+                  <div key={a.key}>
+                    <dt className="text-ink-muted">{a.label}</dt>
+                    <dd className="m-0 whitespace-pre-line break-words text-ink">{a.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Card>
+          )}
           {order.customerNote && (
             <Card size="small" title="Note from customer">
               <p className="m-0 text-sm text-ink whitespace-pre-line break-words">{order.customerNote}</p>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Coins, Store, CreditCard, Users, Truck, Percent, Globe, Bell, Wallet, Braces, Code2, Search, ShoppingCart, FileText, Link2, MessageCircle, BadgeCheck, Warehouse } from "lucide-react";
+import { Coins, Store, CreditCard, Users, Truck, Percent, Globe, Bell, Wallet, Braces, Code2, Search, ShoppingCart, FileText, Link2, MessageCircle, BadgeCheck, Warehouse, KeyRound } from "lucide-react";
 
 // Shopify-style: one compact row per section, grouped, with a filter.
 export const SETTINGS_SECTIONS = [
@@ -19,6 +19,7 @@ export const SETTINGS_SECTIONS = [
   { href: "/admin/settings/domains", icon: Globe, label: "Domains", hint: "Your store's address" },
   { href: "/admin/settings/trust", icon: BadgeCheck, label: "Trust & badge", hint: "Seller badge, score, verified seller" },
   { href: "/admin/settings/accounts", icon: Link2, label: "Connected accounts", hint: "Google and Facebook, for your apps" },
+  { href: "/admin/settings/sign-in", icon: KeyRound, label: "Sign-in and privacy", hint: "Saved logins on devices" },
   { href: "/admin/settings/notifications", icon: Bell, label: "Notifications", hint: "Emails, returns, invoices" },
   { href: "/admin/settings/policies", icon: FileText, label: "Policies", hint: "Refund, shipping, privacy, terms" },
   { href: "/admin/settings/support-chat", icon: MessageCircle, label: "Support chat", hint: "AI chat on your store, tickets to you" },
