@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button, Checkbox, Modal } from "antd";
+import { CircleCheck, ShieldCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
 /**
@@ -10,7 +11,8 @@ import { apiFetch } from "@/lib/api";
  * `open` shows it; `onDone` runs after the session ends.
  */
 export function SaveLoginPrompt({ open, onClose, onDone }) {
-  const [track, setTrack] = useState(false);
+  // On by default; the merchant can untick it here or change it in Settings ▸ Sign-in and privacy.
+  const [track, setTrack] = useState(true);
   const [busy, setBusy] = useState(null);
   async function signOut(remember) {
     setBusy(remember ? "save" : "plain");
@@ -19,24 +21,32 @@ export function SaveLoginPrompt({ open, onClose, onDone }) {
     onDone();
   }
   return (
-    <Modal
-      open={open}
-      title="Save your login on this device?"
-      onCancel={onClose}
-      footer={[
-        <Button key="plain" loading={busy === "plain"} onClick={() => signOut(false)}>
-          Just sign out
-        </Button>,
-        <Button key="save" type="primary" loading={busy === "save"} onClick={() => signOut(true)}>
+    <Modal open={open} onCancel={onClose} footer={null} width={380} centered destroyOnHidden styles={{ content: { padding: 20, borderRadius: 12 } }}>
+      <div className="flex items-center gap-3 pr-7">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#eaf1ff] text-[#2563eb]" aria-hidden="true">
+          <ShieldCheck size={22} strokeWidth={2} />
+        </span>
+        <div className="min-w-0">
+          <h2 className="m-0 text-[16px] font-semibold leading-snug text-ink">Save login on this device?</h2>
+          <p className="m-0 text-[12.5px] text-ink-muted">Oyklane dashboard</p>
+        </div>
+      </div>
+      <p className="mb-0 mt-3 flex items-start gap-1.5 text-[13px] text-ink">
+        <CircleCheck size={15} className="mt-0.5 shrink-0 text-[#2563eb]" aria-hidden="true" />
+        <span>Next time, continue in one click without your password.</span>
+      </p>
+      <p className="mb-0 mt-1.5 text-[12.5px] text-ink-muted">Only on this device, for 30 days. Don&apos;t save it on a shared computer.</p>
+      <label className="mt-3 flex cursor-pointer items-start gap-2 text-[12.5px] text-ink-muted">
+        <Checkbox checked={track} onChange={(e) => setTrack(e.target.checked)} className="mt-px" />
+        <span>Help improve Oyklane by learning from how I use the dashboard. Change it anytime in Settings ▸ Sign-in and privacy.</span>
+      </label>
+      <div className="mt-4 flex flex-col gap-1.5">
+        <Button type="primary" block loading={busy === "save"} disabled={busy === "plain"} onClick={() => signOut(true)}>
           Save and sign out
-        </Button>,
-      ]}
-    >
-      <div className="flex flex-col gap-3 text-[13px]">
-        <p className="m-0 text-ink-muted">Next time you open your dashboard here, continue in one click, without your password. Only on this device, for 30 days. Don&apos;t save it on a shared computer.</p>
-        <Checkbox checked={track} onChange={(e) => setTrack(e.target.checked)}>
-          Help improve Oyklane: let it learn from how I use the dashboard. You can turn this off in Settings ▸ Sign-in and privacy.
-        </Checkbox>
+        </Button>
+        <Button type="text" block loading={busy === "plain"} disabled={busy === "save"} onClick={() => signOut(false)}>
+          Just sign out
+        </Button>
       </div>
     </Modal>
   );
